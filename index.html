@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhino USA — Vendor QBR Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080a0f;
+  --bg2:       #0f1117;
+  --bg3:       #161820;
+  --bg4:       #1c1f2a;
+  --border:    #1e2235;
+  --border2:   #252a3a;
+  --green:     #22c55e;
+  --green-dim: #15803d;
+  --red:       #ef4444;
+  --red-dim:   #991b1b;
+  --amber:     #f59e0b;
+  --amber-dim: #92400e;
+  --blue:      #3b82f6;
+  --cyan:      #06b6d4;
+  --purple:    #a855f7;
+  --txt:       #f1f5f9;
+  --txt2:      #94a3b8;
+  --txt3:      #64748b;
+  --mono:      'Space Mono', monospace;
+  --sans:      'Inter', sans-serif;
+  --radius:    10px;
+  --radius-lg: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--txt); font-family: var(--sans); min-height: 100vh; -webkit-font-smoothing: antialiased; font-size: 14px; }
+
+/* ── LOADER ── */
+#loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 20px; transition: opacity 0.5s; }
+#loader.hidden { opacity: 0; pointer-events: none; }
+.ld-logo { display: flex; align-items: center; gap: 10px; }
+.ld-logo-bar { width: 3px; height: 32px; background: var(--green); border-radius: 2px; }
+.ld-logo-text { font-size: 13px; font-weight: 700; letter-spacing: 0.15em; color: var(--txt2); }
+.ld-bar-wrap { width: 200px; height: 2px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.ld-bar { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 2px; animation: ldpulse 1.6s ease-in-out infinite; }
+@keyframes ldpulse { 0%{width:0;margin-left:0} 50%{width:65%;margin-left:18%} 100%{width:0;margin-left:100%} }
+.ld-msg { font-size: 11px; color: var(--txt3); font-family: var(--mono); letter-spacing: 0.06em; }
+
+/* ── ERROR ── */
+#err-screen { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 998; gap: 16px; padding: 32px; }
+#err-screen.show { display: flex; }
+.err-code { font-size: 48px; font-weight: 800; color: var(--red); font-family: var(--mono); opacity: 0.3; }
+.err-title { font-size: 20px; font-weight: 700; }
+.err-msg { font-size: 13px; color: var(--txt2); text-align: center; max-width: 440px; line-height: 1.8; }
+.btn-primary { background: var(--green); border: none; border-radius: var(--radius); padding: 10px 24px; font-size: 12px; font-weight: 700; color: #080a0f; cursor: pointer; font-family: var(--mono); letter-spacing: 0.05em; transition: opacity 0.2s; }
+.btn-primary:hover { opacity: 0.85; }
+
+/* ── HEADER ── */
+header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 36px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 50; }
+.hdr-left { display: flex; align-items: center; gap: 14px; }
+.hdr-accent { width: 3px; height: 34px; background: linear-gradient(180deg, var(--green), var(--cyan)); border-radius: 2px; }
+.hdr-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.hdr-sub { font-size: 11px; color: var(--txt3); margin-top: 2px; font-family: var(--mono); }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+.status-pill { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--txt2); font-family: var(--mono); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt3); }
+.status-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.btn-refresh { background: transparent; border: 1px solid var(--border2); border-radius: 20px; padding: 5px 14px; font-size: 11px; color: var(--txt2); cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+.btn-refresh:hover { border-color: var(--green); color: var(--green); }
+.btn-refresh:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 1360px; margin: 0 auto; padding: 28px 36px 64px; }
+
+/* ── SECTION HEADER ── */
+.sec { margin: 36px 0 16px; }
+.sec-eyebrow { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--txt3); font-family: var(--mono); margin-bottom: 4px; }
+.sec-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+.sec-desc { font-size: 13px; color: var(--txt2); margin-top: 4px; }
+
+/* ── KPI CARDS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 4px; }
+.kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; position: relative; overflow: hidden; transition: border-color 0.2s, transform 0.2s; cursor: default; }
+.kpi-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.kpi-card.kc-green::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.kpi-card.kc-blue::before  { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+.kpi-card.kc-amber::before { background: linear-gradient(90deg, var(--amber), #f97316); }
+.kpi-card.kc-red::before   { background: linear-gradient(90deg, var(--red), var(--purple)); }
+.kpi-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; margin-bottom: 12px; }
+.kpi-badge.pass  { background: rgba(34,197,94,0.12);  color: var(--green); }
+.kpi-badge.fail  { background: rgba(239,68,68,0.12);  color: var(--red); }
+.kpi-badge.warn  { background: rgba(245,158,11,0.12); color: var(--amber); }
+.kpi-label { font-size: 11px; color: var(--txt3); margin-bottom: 8px; font-weight: 500; }
+.kpi-val { font-size: 36px; font-weight: 700; font-family: var(--mono); line-height: 1; margin-bottom: 6px; letter-spacing: -1px; }
+.kpi-card.kc-green .kpi-val { color: var(--green); }
+.kpi-card.kc-blue  .kpi-val { color: var(--blue); }
+.kpi-card.kc-amber .kpi-val { color: var(--amber); }
+.kpi-card.kc-red   .kpi-val { color: var(--red); }
+.kpi-meta { font-size: 12px; color: var(--txt2); margin-bottom: 12px; line-height: 1.5; }
+.kpi-meta b { color: var(--txt); font-weight: 600; }
+.kpi-trend { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--mono); }
+.trend-up   { color: var(--green); }
+.trend-down { color: var(--red); }
+.trend-warn { color: var(--amber); }
+.kpi-glow { position: absolute; right: -20px; bottom: -20px; width: 90px; height: 90px; border-radius: 50%; opacity: 0.05; }
+.kpi-card.kc-green .kpi-glow { background: var(--green); }
+.kpi-card.kc-blue  .kpi-glow { background: var(--blue); }
+.kpi-card.kc-amber .kpi-glow { background: var(--amber); }
+.kpi-card.kc-red   .kpi-glow { background: var(--red); }
+
+/* ── INSIGHT BANNER ── */
+.insight-bar { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--cyan); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 4px; display: flex; gap: 14px; align-items: flex-start; }
+.insight-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.insight-content {}
+.insight-title { font-size: 12px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; font-family: var(--mono); }
+.insight-text { font-size: 13px; color: var(--txt2); line-height: 1.7; }
+.insight-text b { color: var(--txt); font-weight: 600; }
+.insight-text .tag-pass { color: var(--green); font-weight: 600; }
+.insight-text .tag-fail { color: var(--red); font-weight: 600; }
+.insight-text .tag-warn { color: var(--amber); font-weight: 600; }
+
+/* ── SCORE CARD BREAKDOWN ── */
+.scorecard-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 4px; }
+.sc-element { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.sc-label { font-size: 10px; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--mono); margin-bottom: 6px; }
+.sc-weight { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--txt); margin-bottom: 4px; }
+.sc-desc { font-size: 11px; color: var(--txt2); line-height: 1.5; }
+.sc-bar-wrap { height: 3px; background: var(--border2); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.sc-bar { height: 100%; border-radius: 2px; }
+
+/* ── TABLE ── */
+.tbl-wrap-outer { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.tbl-header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.tbl-header-title { font-size: 14px; font-weight: 700; }
+.tbl-header-sub { font-size: 11px; color: var(--txt3); font-family: var(--mono); }
+.tbl-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th { padding: 10px 16px; text-align: right; font-size: 10px; font-weight: 600; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: help; }
+thead th:first-child { text-align: left; min-width: 230px; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 14px 16px; text-align: right; font-family: var(--mono); font-size: 12px; color: var(--txt2); white-space: nowrap; }
+tbody td:first-child { text-align: left; font-family: var(--sans); font-size: 13px; font-weight: 600; }
+.req-cell { text-align: center !important; font-weight: 700 !important; color: var(--green) !important; }
+.cell-fail { color: #f87171 !important; background: rgba(239,68,68,0.08); border-radius: 4px; }
+.cell-warn { color: #fbbf24 !important; }
+.cell-pass { color: var(--green) !important; }
+
+/* ── CHART PANELS ── */
+.chart-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.chart-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; }
+.chart-panel.span2 { grid-column: 1 / -1; }
+.cp-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.cp-sub { font-size: 11px; color: var(--txt3); margin-bottom: 16px; font-family: var(--mono); }
+.cp-box { position: relative; }
+.cp-box.h220 { height: 220px; }
+.cp-box.h260 { height: 260px; }
+.cp-box.h300 { height: 300px; }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--border); padding: 24px 36px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--txt3); font-family: var(--mono); }
+
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .scorecard-grid { grid-template-columns: 1fr 1fr; }
+  .chart-2col { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .wrap { padding: 16px 16px 48px; }
+  header { padding: 0 16px; }
+  footer { padding: 16px; flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="ld-logo"><div class="ld-logo-bar"></div><div class="ld-logo-text">RHINO USA</div></div>
+  <div class="ld-bar-wrap"><div class="ld-bar"></div></div>
+  <div class="ld-msg" id="ld-msg">Connecting to Google Sheets…</div>
+</div>
+
+<div id="err-screen">
+  <div class="err-code">503</div>
+  <div class="err-title">Data Unavailable</div>
+  <div class="err-msg" id="err-msg">Unable to fetch live data.</div>
+  <button class="btn-primary" onclick="location.reload()">↻ Retry</button>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-accent"></div>
+    <div>
+      <div class="hdr-title">Vendor QBR Dashboard</div>
+      <div class="hdr-sub">RHINO USA · Vendor Performance Intelligence</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-pill">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Loading…</span>
+    </div>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadData()" disabled>↻ Refresh</button>
+  </div>
+</header>
+
+<div class="wrap" id="dashboard" style="display:none;">
+
+  <!-- KPI OVERVIEW -->
+  <div class="sec" style="margin-top:8px;">
+    <div class="sec-eyebrow">Performance Overview</div>
+    <div class="sec-title">Key Performance Indicators</div>
+    <div class="sec-desc">Latest period vs. requirement threshold · Q2 2026</div>
+  </div>
+  <div class="kpi-grid" id="kpi-cards"></div>
+
+  <!-- INSIGHT BANNER -->
+  <div class="sec">
+    <div class="sec-eyebrow">AI Insight</div>
+    <div class="sec-title">Performance Analysis</div>
+  </div>
+  <div id="insight-container"></div>
+
+  <!-- VENDOR SCORE CARD BREAKDOWN -->
+  <div class="sec">
+    <div class="sec-eyebrow">Score Card Composition</div>
+    <div class="sec-title">Vendor Score Card — Element Breakdown</div>
+    <div class="sec-desc">Score card is a weighted composite of 5 performance elements</div>
+  </div>
+  <div class="scorecard-grid">
+    <div class="sc-element">
+      <div class="sc-label">GRD OTD</div>
+      <div class="sc-weight">35%</div>
+      <div class="sc-desc">Supplier On Time Delivery — highest weighted element</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:35%;background:var(--green);"></div></div>
+    </div>
+    <div class="sc-element">
+      <div class="sc-label">Product Quality</div>
+      <div class="sc-weight">30%</div>
+      <div class="sc-desc">Defect rate, inspection pass rate, quality compliance</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:30%;background:var(--blue);"></div></div>
+    </div>
+    <div class="sc-element">
+      <div class="sc-label">Product Cost</div>
+      <div class="sc-weight">15%</div>
+      <div class="sc-desc">Pricing competitiveness and cost reduction initiatives</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:15%;background:var(--amber);"></div></div>
+    </div>
+    <div class="sc-element">
+      <div class="sc-label">Communication</div>
+      <div class="sc-weight">10%</div>
+      <div class="sc-desc">Responsiveness, issue escalation, reporting quality</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:10%;background:var(--cyan);"></div></div>
+    </div>
+    <div class="sc-element">
+      <div class="sc-label">Payment Terms</div>
+      <div class="sc-weight">10%</div>
+      <div class="sc-desc">Actual vs. agreed payment term adherence</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:10%;background:var(--purple);"></div></div>
+    </div>
+  </div>
+
+  <!-- SCORE CARD INSIGHT -->
+  <div id="scorecard-insight"></div>
+
+  <!-- TABLE -->
+  <div class="sec">
+    <div class="sec-eyebrow">Raw Data</div>
+    <div class="sec-title">Vendor KPI Summary Table</div>
+    <div class="sec-desc">2025 · 2026 · Q1'25 · Q2'25 · Q3'25 · Q4'25 · Q1'26 · Q2'26 only</div>
+  </div>
+  <div class="tbl-wrap-outer">
+    <div class="tbl-header">
+      <div class="tbl-header-title">Vendor Parameter Performance</div>
+      <div class="tbl-header-sub" id="tbl-sub">Live · Google Sheets</div>
+    </div>
+    <div class="tbl-scroll" id="tbl-wrap"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="sec">
+    <div class="sec-eyebrow">Trend Analysis</div>
+    <div class="sec-title">Quarterly Performance Charts</div>
+    <div class="sec-desc">Q1 2025 through Q2 2026</div>
+  </div>
+
+  <div class="chart-2col">
+    <div class="chart-panel span2">
+      <div class="cp-title">All KPIs — Grouped Bar Chart</div>
+      <div class="cp-sub">Side-by-side comparison · all periods · requirement lines shown</div>
+      <div class="cp-box h300"><canvas id="chart-bar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-2col" id="trend-grid"></div>
+
+  <div class="sec">
+    <div class="sec-eyebrow">Year over Year</div>
+    <div class="sec-title">Annual Comparison</div>
+  </div>
+  <div class="chart-2col">
+    <div class="chart-panel span2">
+      <div class="cp-title">2025 vs 2026 — Annual Averages</div>
+      <div class="cp-sub">Full year 2025 vs 2026 YTD</div>
+      <div class="cp-box h220"><canvas id="chart-yoy"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>RHINO USA · VENDOR QBR DASHBOARD</span>
+  <span id="footer-ts">—</span>
+</footer>
+
+<script>
+// ── CONFIG ──
+const PERIODS_ALLOWED = ['2025','2026',"Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"];
+const Q_ONLY          = ["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"];
+const KPI_COLORS      = { 0:'#22c55e', 1:'#3b82f6', 2:'#f59e0b', 3:'#a855f7' };
+const KPI_CARD_CLS    = ['kc-green','kc-blue','kc-amber','kc-red'];
+
+Chart.defaults.color       = '#64748b';
+Chart.defaults.borderColor = '#1e2235';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size   = 11;
+
+const G = 'rgba(30,34,53,0.8)';
+let allCharts = [];
+
+function pct(v) { return parseFloat(String(v).replace('%','').trim()); }
+function fmt(v) { return isNaN(v) ? '—' : v + '%'; }
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
+  return { headers: lines[0], rows: lines.slice(1).filter(r => r[0] && r[0].length > 1) };
+}
+
+function destroyCharts() { allCharts.forEach(c => c.destroy()); allCharts = []; }
+
+// ── LOADER / ERROR ──
+function setLoader(show, msg) {
+  const l = document.getElementById('loader');
+  if (show) { l.classList.remove('hidden'); if (msg) document.getElementById('ld-msg').textContent = msg; }
+  else l.classList.add('hidden');
+}
+function showError(msg) {
+  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('err-screen').classList.add('show');
+}
+
+// ── LOAD ──
+async function loadData() {
+  setLoader(true, 'Fetching live data from Google Sheets…');
+  document.getElementById('btn-refresh').disabled = true;
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('status-dot').className = 'status-dot';
+  document.getElementById('status-text').textContent = 'Loading…';
+  destroyCharts();
+
+  try {
+    const res = await fetch('/api/sheet?cb=' + Date.now());
+    if (!res.ok) throw new Error('Server error ' + res.status + '. Check the Netlify function logs.');
+    const text = await res.text();
+    if (!text || text.length < 20) throw new Error('Sheet returned empty data.');
+
+    setLoader(true, 'Building dashboard…');
+    const csv = parseCSV(text);
+    build(csv);
+
+    const ts = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('status-dot').className = 'status-dot live';
+    document.getElementById('status-text').textContent = 'Live · ' + ts;
+    document.getElementById('footer-ts').textContent = 'Last updated: ' + ts;
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('btn-refresh').disabled = false;
+    setLoader(false);
+  } catch(e) {
+    setLoader(false);
+    showError(e.message + '\n\nEnsure the sheet is shared as "Anyone with the link → Viewer" and the Netlify function is deployed.');
+  }
+}
+
+// ── BUILD ──
+function build(csv) {
+  const { headers, rows } = csv;
+  const reqIdx = headers.findIndex(h => /req/i.test(h));
+
+  // Filter to allowed periods only
+  const allowedCols = headers.map((h,i) => ({h: h.trim(), i})).filter(({h,i}) =>
+    i === 0 || i === reqIdx || PERIODS_ALLOWED.includes(h)
+  );
+  const qCols = allowedCols.filter(({h}) => Q_ONLY.includes(h));
+  const yr25  = allowedCols.find(({h}) => h === '2025');
+  const yr26  = allowedCols.find(({h}) => h === '2026');
+
+  const kpis = rows.map((r, ri) => {
+    const req    = reqIdx >= 0 ? pct(r[reqIdx]) : null;
+    const qVals  = qCols.map(({i}) => pct(r[i]));
+    const latest = qVals[qVals.length - 1];
+    const diff   = req !== null ? +(latest - req).toFixed(1) : null;
+    return {
+      name:   r[0],
+      req,
+      y2025:  yr25 ? pct(r[yr25.i]) : null,
+      y2026:  yr26 ? pct(r[yr26.i]) : null,
+      qVals,
+      latest,
+      diff,
+      pass:   diff !== null ? diff >= 0 : true,
+      color:  KPI_COLORS[ri] || '#64748b',
+      cls:    KPI_CARD_CLS[ri] || 'kc-red',
+    };
+  });
+
+  buildCards(kpis, qCols);
+  buildInsights(kpis);
+  buildScorecardInsight(kpis);
+  buildTable(headers, rows, reqIdx, allowedCols, kpis);
+  buildBar(kpis, qCols);
+  buildTrends(kpis, qCols);
+  buildYoY(kpis);
+}
+
+// ── KPI CARDS ──
+function buildCards(kpis, qCols) {
+  const latestLabel = qCols[qCols.length-1]?.h || 'Latest';
+  document.getElementById('kpi-cards').innerHTML = kpis.map(k => {
+    const badgeCls = k.pass ? 'pass' : (k.diff !== null && k.diff > -5 ? 'warn' : 'fail');
+    const badgeTxt = k.pass ? '● ON TARGET' : (k.diff !== null && k.diff > -5 ? '▲ NEAR TARGET' : '● BELOW REQ');
+    const trendCls = k.pass ? 'trend-up' : (k.diff !== null && k.diff > -5 ? 'trend-warn' : 'trend-down');
+    const arrow    = k.pass ? '▲' : '▼';
+    const diffStr  = k.diff !== null ? `${k.diff >= 0 ? '+' : ''}${k.diff}pp vs requirement` : '';
+    return `<div class="kpi-card ${k.cls}">
+      <div class="kpi-badge ${badgeCls}">${badgeTxt}</div>
+      <div class="kpi-label">${k.name}</div>
+      <div class="kpi-val">${fmt(k.latest)}</div>
+      <div class="kpi-meta">${latestLabel} · Req: <b>${k.req}%</b></div>
+      <div class="kpi-trend ${trendCls}">${arrow} ${diffStr}</div>
+      <div class="kpi-glow"></div>
+    </div>`;
+  }).join('');
+}
+
+// ── INSIGHTS ──
+function buildInsights(kpis) {
+  const wrap = document.getElementById('insight-container');
+  const insights = [];
+
+  kpis.forEach(k => {
+    const trend = k.qVals.length >= 2 ? k.qVals[k.qVals.length-1] - k.qVals[k.qVals.length-2] : 0;
+    const trendDir = trend > 0 ? 'improving' : trend < 0 ? 'declining' : 'flat';
+
+    if (k.name.toLowerCase().includes('otd') || k.name.toLowerCase().includes('on time')) {
+      let txt = `<b>GRD OTD</b> is currently at <span class="${k.pass?'tag-pass':'tag-fail'}">${fmt(k.latest)}</span> against a <b>${k.req}%</b> requirement. `;
+      if (!k.pass) txt += `The vendor is <span class="tag-fail">${Math.abs(k.diff)}pp below target</span>, indicating shipment scheduling or logistics delays that directly impact the Vendor Score Card (35% weight). `;
+      else txt += `The vendor is <span class="tag-pass">meeting the delivery target</span>, contributing positively to the Score Card's 35% OTD weighting. `;
+      txt += `Trend is <b>${trendDir}</b> (${trend > 0 ? '+' : ''}${trend.toFixed(1)}pp QoQ).`;
+      insights.push({ icon: '🚚', title: 'On-Time Delivery', text: txt });
+    }
+
+    if (k.name.toLowerCase().includes('quality')) {
+      let txt = `<b>Product Quality Performance</b> is at <span class="${k.pass?'tag-pass':'tag-fail'}">${fmt(k.latest)}</span> vs. <b>${k.req}%</b> requirement. `;
+      if (!k.pass) txt += `Quality gaps are flagging potential <span class="tag-fail">inspection failures or non-conformance issues</span>. With a 30% weighting in the Score Card, underperformance here significantly pulls down the composite score. `;
+      else txt += `Quality remains <span class="tag-pass">above threshold</span>, supporting strong Score Card performance through its 30% composite weighting. `;
+      txt += `Trend: <b>${trendDir}</b> (${trend >= 0 ? '+' : ''}${trend.toFixed(1)}pp QoQ).`;
+      insights.push({ icon: '🔍', title: 'Product Quality', text: txt });
+    }
+
+    if (k.name.toLowerCase().includes('score')) {
+      let txt = `<b>Vendor Score Card</b> composite is <span class="${k.pass?'tag-pass':'tag-fail'}">${fmt(k.latest)}</span> against a <b>${k.req}%</b> target. `;
+      if (!k.pass) {
+        txt += `The score is being suppressed primarily by the two highest-weighted elements — `;
+        const otd   = kpis.find(x => x.name.toLowerCase().includes('otd'));
+        const qual  = kpis.find(x => x.name.toLowerCase().includes('quality'));
+        if (otd  && !otd.pass)  txt += `<span class="tag-fail">GRD OTD at ${fmt(otd.latest)} (35% weight)</span> `;
+        if (qual && !qual.pass) txt += `and <span class="tag-fail">Product Quality at ${fmt(qual.latest)} (30% weight)</span>. `;
+        txt += `The remaining 25% split across Cost, Communication, and Payment Terms is likely performing adequately but cannot compensate for the core shortfalls.`;
+      } else {
+        txt += `Composite score is <span class="tag-pass">on target</span>. Strong OTD and Quality performance are the primary drivers maintaining the score above the ${k.req}% threshold.`;
+      }
+      insights.push({ icon: '📊', title: 'Score Card Analysis', text: txt });
+    }
+  });
+
+  wrap.innerHTML = insights.map(i => `
+    <div class="insight-bar" style="margin-bottom:10px;">
+      <div class="insight-icon">${i.icon}</div>
+      <div class="insight-content">
+        <div class="insight-title">${i.title}</div>
+        <div class="insight-text">${i.text}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SCORE CARD INSIGHT ──
+function buildScorecardInsight(kpis) {
+  const sc = kpis.find(k => k.name.toLowerCase().includes('score'));
+  if (!sc) return;
+  const otd  = kpis.find(k => k.name.toLowerCase().includes('otd'));
+  const qual = kpis.find(k => k.name.toLowerCase().includes('quality'));
+
+  const estimated = (
+    (otd  ? otd.latest  * 0.35 : 0) +
+    (qual ? qual.latest * 0.30 : 0) +
+    (sc.latest * 0.25) // approximate remaining 25%
+  ).toFixed(1);
+
+  document.getElementById('scorecard-insight').innerHTML = `
+    <div class="insight-bar" style="border-left-color:var(--amber);margin-bottom:4px;">
+      <div class="insight-icon">💡</div>
+      <div class="insight-content">
+        <div class="insight-title" style="color:var(--amber);">Score Card Driver Analysis</div>
+        <div class="insight-text">
+          The Vendor Score Card's two most impactful elements — <b>GRD OTD (35%)</b> and <b>Product Quality (30%)</b> — together account for <b>65% of the total score</b>.
+          ${otd ? `GRD OTD is currently contributing approximately <b>${(otd.latest * 0.35).toFixed(1)} points</b> toward the composite.` : ''}
+          ${qual ? `Product Quality contributes approximately <b>${(qual.latest * 0.30).toFixed(1)} points</b>.` : ''}
+          To move the Score Card above <b>${sc.req}%</b>, the most effective lever is improving GRD OTD — every 1pp gain in OTD adds <b>0.35pp</b> to the final score.
+          <span class="${sc.pass ? 'tag-pass' : 'tag-warn'}">Current Score Card: ${fmt(sc.latest)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── TABLE ──
+function buildTable(headers, rows, reqIdx, allowedCols, kpis) {
+  const tipMap = {
+    '2025':"Full year 2025 annual average",'2026':"2026 year-to-date average",
+    "Q1'25":"Q1 2025: January – March 2025","Q2'25":"Q2 2025: April – June 2025",
+    "Q3'25":"Q3 2025: July – September 2025","Q4'25":"Q4 2025: October – December 2025",
+    "Q1'26":"Q1 2026: January – March 2026","Q2'26":"Q2 2026: April – June 2026",
+    'Requirement':'Minimum performance requirement threshold',
+  };
+  const hdrColorMap = {
+    '2025':    'background:#0f2040;color:#38bdf8;',
+    '2026':    'background:#0f2a14;color:#22c55e;',
+    "Q1'25":   'background:#2a1500;color:#f59e0b;',
+    "Q2'25":   'background:#2a1500;color:#f59e0b;',
+    "Q3'25":   'background:#2a1500;color:#f59e0b;',
+    "Q4'25":   'background:#2a1500;color:#f59e0b;',
+    "Q1'26":   'background:#1a0a2e;color:#a855f7;',
+    "Q2'26":   'background:#1a0a2e;color:#a855f7;',
+  };
+
+  const thead = `<thead><tr>
+    ${allowedCols.map(({h,i}) => {
+      const isReq = /req/i.test(h);
+      const style = isReq ? 'background:#0a1f0a;color:#22c55e;text-align:center;' : (hdrColorMap[h] || 'background:#161820;color:#94a3b8;') + (i===0?'text-align:left;':'');
+      const tip   = tipMap[h] || tipMap[Object.keys(tipMap).find(k=>h.toLowerCase().includes(k.toLowerCase()))] || h;
+      return `<th style="${style}" title="${tip}">${h}</th>`;
+    }).join('')}
+  </tr></thead>`;
+
+  const tbody = `<tbody>${rows.map((r,ri) => {
+    const req   = kpis[ri]?.req;
+    const color = kpis[ri]?.color || '#64748b';
+    return `<tr>${allowedCols.map(({h,i}) => {
+      if (i === 0) return `<td style="color:${color};">${r[i]}</td>`;
+      if (/req/i.test(h)) return `<td class="req-cell">${r[i]}</td>`;
+      const v = pct(r[i]);
+      if (!isNaN(v) && req !== null) {
+        const d = v - req;
+        if (d < -5)  return `<td class="cell-fail">${r[i]}</td>`;
+        if (d < 0)   return `<td class="cell-warn">${r[i]}</td>`;
+        return `<td class="cell-pass">${r[i]}</td>`;
+      }
+      return `<td>${r[i]}</td>`;
+    }).join('')}</tr>`;
+  }).join('')}</tbody>`;
+
+  document.getElementById('tbl-wrap').innerHTML = `<table>${thead}${tbody}</table>`;
+  document.getElementById('tbl-sub').textContent = 'Live · Google Sheets · Showing 8 periods';
+}
+
+// ── BAR CHART ──
+function buildBar(kpis, qCols) {
+  const labels = qCols.map(q => q.h);
+  allCharts.push(new Chart(document.getElementById('chart-bar'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: kpis.map(k => ({
+        label: k.name, data: k.qVals,
+        backgroundColor: k.color + '99', borderColor: k.color,
+        borderWidth: 1, borderRadius: 4,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'top', labels:{ usePointStyle:true, padding:16, boxWidth:8 } },
+        tooltip: { callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.y}%` } }
+      },
+      scales: {
+        x: { grid:{ color:G } },
+        y: { min:60, max:110, ticks:{ callback:v=>v+'%' }, grid:{ color:G } }
+      }
+    }
+  }));
+}
+
+// ── TREND CHARTS ──
+function buildTrends(kpis, qCols) {
+  const wrap = document.getElementById('trend-grid');
+  wrap.innerHTML = '';
+  const labels = qCols.map(q => q.h);
+  kpis.forEach((k, i) => {
+    const id = 'tc' + i;
+    wrap.innerHTML += `<div class="chart-panel">
+      <div class="cp-title">${k.name}</div>
+      <div class="cp-sub">Quarterly trend · req: ${k.req}% · red point = below target</div>
+      <div class="cp-box h220"><canvas id="${id}"></canvas></div>
+    </div>`;
+    setTimeout(() => {
+      allCharts.push(new Chart(document.getElementById(id), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: k.name, data: k.qVals,
+              borderColor: k.color, backgroundColor: k.color + '15',
+              pointBackgroundColor: k.qVals.map(v => v >= k.req ? k.color : '#ef4444'),
+              pointBorderColor:     k.qVals.map(v => v >= k.req ? k.color : '#ef4444'),
+              pointRadius: 5, pointHoverRadius: 7, tension: 0.4, fill: true,
+            },
+            {
+              label: `Req ${k.req}%`,
+              data: labels.map(() => k.req),
+              borderColor: 'rgba(255,255,255,0.2)', borderDash: [6,4],
+              borderWidth: 1.5, pointRadius: 0, fill: false,
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position:'top', labels:{ usePointStyle:true, padding:12, boxWidth:7, font:{size:10} } },
+            tooltip: { callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.y}%` } }
+          },
+          scales: {
+            x: { grid:{ color:G }, ticks:{ font:{size:10} } },
+            y: {
+              min: Math.max(0, Math.min(...k.qVals.filter(v=>!isNaN(v))) - 8),
+              max: Math.min(110, Math.max(...k.qVals.filter(v=>!isNaN(v)), k.req) + 6),
+              ticks:{ callback:v=>v+'%', font:{size:10} }, grid:{ color:G }
+            }
+          }
+        }
+      }));
+    }, 0);
+  });
+}
+
+// ── YOY CHART ──
+function buildYoY(kpis) {
+  allCharts.push(new Chart(document.getElementById('chart-yoy'), {
+    type: 'bar',
+    data: {
+      labels: kpis.map(k => k.name),
+      datasets: [
+        { label:'2025', data:kpis.map(k=>k.y2025), backgroundColor:'#3b82f699', borderColor:'#3b82f6', borderWidth:1, borderRadius:4 },
+        { label:'2026 YTD', data:kpis.map(k=>k.y2026), backgroundColor:'#22c55e99', borderColor:'#22c55e', borderWidth:1, borderRadius:4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'top', labels:{ usePointStyle:true, padding:16, boxWidth:8 } },
+        tooltip: { callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.y}%` } }
+      },
+      scales: {
+        x: { grid:{ color:G } },
+        y: { min:60, max:110, ticks:{ callback:v=>v+'%' }, grid:{ color:G } }
+      }
+    }
+  }));
+}
+
+loadData();
+</script>
+</body>
+</html>
