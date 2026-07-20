@@ -285,10 +285,10 @@ const Q_PERIODS       = ["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"];
 
 // CORS proxy chain — tried in order, first success wins
 const PROXIES = [
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://thingproxy.freeboard.io/fetch/${u}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://thingproxy.freeboard.io/fetch/${u}`,
 ];
 
 const KPI_COLORS   = ['#22c55e','#3b82f6','#f59e0b','#a855f7'];
@@ -332,20 +332,36 @@ function hideError() {
 // ─────────────────────────────────────────
 // FETCH via proxy chain
 // ─────────────────────────────────────────
+async function fetchWithTimeout(url, ms=8000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(tid);
+    return res;
+  } catch(e) {
+    clearTimeout(tid);
+    throw e;
+  }
+}
+
 async function fetchSheet() {
   const target = SHEET_CSV_URL + '&cb=' + Date.now();
   let lastErr = '';
-  for (const makeProxy of PROXIES) {
+  for (let i = 0; i < PROXIES.length; i++) {
+    const makeProxy = PROXIES[i];
     try {
-      setLoader(true, `Fetching data…`);
-      const res = await fetch(makeProxy(target), { cache: 'no-store' });
+      setLoader(true, `Trying source ${i+1} of ${PROXIES.length}…`);
+      const res = await fetchWithTimeout(makeProxy(target), 8000);
       if (!res.ok) { lastErr = `HTTP ${res.status}`; continue; }
       const text = await res.text();
       if (text && text.length > 50 && text.includes(',')) return text;
       lastErr = 'Empty or invalid response';
-    } catch(e) { lastErr = e.message; }
+    } catch(e) {
+      lastErr = e.name === 'AbortError' ? `Source ${i+1} timed out` : e.message;
+    }
   }
-  throw new Error(`All data sources failed. Last error: ${lastErr}\n\nPlease ensure the Google Sheet is shared as "Anyone with the link → Viewer".`);
+  throw new Error(`Could not load Google Sheet data.\n\nPossible reasons:\n• Sheet is not set to "Anyone with the link → Viewer"\n• All CORS proxies are currently down\n\nLast error: ${lastErr}`);
 }
 
 // ─────────────────────────────────────────
