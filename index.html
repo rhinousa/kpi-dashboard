@@ -11,7 +11,7 @@
   --bg:#080a0f; --bg2:#0f1117; --bg3:#161820; --bg4:#1c1f2a;
   --border:#1e2235; --border2:#252a3a;
   --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
-  --blue:#3b82f6; --cyan:#06b6d4; --purple:#a855f7;
+  --blue:#3b82f6; --cyan:#06b6d4; --purple:#a855f7; --pink:#ec4899;
   --txt:#f1f5f9; --txt2:#94a3b8; --txt3:#64748b;
   --mono:'Space Mono',monospace; --sans:'Inter',sans-serif;
   --r:10px; --rl:14px;
@@ -37,7 +37,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:10
 .err-code{font-size:48px;font-weight:800;color:var(--red);font-family:var(--mono);opacity:0.25;}
 .err-title{font-size:20px;font-weight:700;}
 .err-msg{font-size:13px;color:var(--txt2);text-align:center;max-width:480px;line-height:1.9;white-space:pre-line;}
-.btn-primary{background:var(--green);border:none;border-radius:var(--r);padding:10px 24px;font-size:12px;font-weight:700;color:#080a0f;cursor:pointer;font-family:var(--mono);letter-spacing:0.05em;transition:opacity 0.2s;}
+.btn-primary{background:var(--green);border:none;border-radius:var(--r);padding:10px 24px;font-size:12px;font-weight:700;color:#080a0f;cursor:pointer;font-family:var(--mono);letter-spacing:0.05em;}
 .btn-primary:hover{opacity:0.85;}
 
 /* HEADER */
@@ -56,44 +56,69 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 36p
 .btn-ref:disabled{opacity:0.4;cursor:not-allowed;}
 
 /* LAYOUT */
-.wrap{max-width:1360px;margin:0 auto;padding:28px 36px 64px;}
+.wrap{max-width:1400px;margin:0 auto;padding:28px 36px 64px;}
 
 /* SECTION */
-.sec{margin:36px 0 16px;}
+.sec{margin:32px 0 14px;}
 .sec-eye{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;}
 .sec-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;}
 .sec-desc{font-size:13px;color:var(--txt2);margin-top:4px;}
 
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+/* ── KPI CARD BASE ── */
 .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:20px;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
 .kpi-card:hover{border-color:var(--border2);transform:translateY(-1px);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--rl) var(--rl) 0 0;}
+/* accent colors */
 .kc-green::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
 .kc-blue::before{background:linear-gradient(90deg,var(--blue),var(--purple));}
 .kc-amber::before{background:linear-gradient(90deg,var(--amber),#f97316);}
 .kc-red::before{background:linear-gradient(90deg,var(--red),var(--purple));}
-.kpi-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);padding:2px 8px;border-radius:4px;margin-bottom:12px;}
+.kc-cyan::before{background:linear-gradient(90deg,var(--cyan),var(--blue));}
+.kc-purple::before{background:linear-gradient(90deg,var(--purple),var(--pink));}
+
+.kpi-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);padding:2px 8px;border-radius:4px;margin-bottom:10px;}
 .badge-pass{background:rgba(34,197,94,0.12);color:var(--green);}
 .badge-warn{background:rgba(245,158,11,0.12);color:var(--amber);}
 .badge-fail{background:rgba(239,68,68,0.12);color:var(--red);}
-.kpi-lbl{font-size:11px;color:var(--txt3);margin-bottom:8px;font-weight:500;}
-.kpi-val{font-size:36px;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:6px;letter-spacing:-1px;}
-.kc-green .kpi-val{color:var(--green);}
-.kc-blue  .kpi-val{color:var(--blue);}
-.kc-amber .kpi-val{color:var(--amber);}
-.kc-red   .kpi-val{color:var(--red);}
-.kpi-meta{font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.5;}
+.kpi-lbl{font-size:11px;color:var(--txt3);margin-bottom:6px;font-weight:500;}
+.kpi-val{font-family:var(--mono);line-height:1;margin-bottom:6px;font-weight:700;letter-spacing:-1px;}
+.kpi-meta{font-size:11px;color:var(--txt2);margin-bottom:8px;line-height:1.5;}
 .kpi-meta b{color:var(--txt);font-weight:600;}
-.kpi-trend{font-size:11px;font-family:var(--mono);}
-.t-up{color:var(--green);}
-.t-dn{color:var(--red);}
-.t-wn{color:var(--amber);}
+.kpi-trend{font-size:10px;font-family:var(--mono);}
+.t-up{color:var(--green);} .t-dn{color:var(--red);} .t-wn{color:var(--amber);}
 .kpi-glow{position:absolute;right:-20px;bottom:-20px;width:90px;height:90px;border-radius:50%;opacity:0.05;}
-.kc-green .kpi-glow{background:var(--green);}
-.kc-blue  .kpi-glow{background:var(--blue);}
-.kc-amber .kpi-glow{background:var(--amber);}
-.kc-red   .kpi-glow{background:var(--red);}
+.kc-green .kpi-glow{background:var(--green);} .kc-green .kpi-val{color:var(--green);}
+.kc-blue  .kpi-glow{background:var(--blue);}  .kc-blue  .kpi-val{color:var(--blue);}
+.kc-amber .kpi-glow{background:var(--amber);} .kc-amber .kpi-val{color:var(--amber);}
+.kc-red   .kpi-glow{background:var(--red);}   .kc-red   .kpi-val{color:var(--red);}
+.kc-cyan  .kpi-glow{background:var(--cyan);}  .kc-cyan  .kpi-val{color:var(--cyan);}
+.kc-purple.kpi-glow{background:var(--purple);}.kc-purple .kpi-val{color:var(--purple);}
+
+/* ── ROW 1: Vendor Score Card — full width single card ── */
+.row-scorecard{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px;}
+.card-scorecard .kpi-val{font-size:48px;}
+.card-scorecard{display:grid;grid-template-columns:auto 1fr;gap:0 32px;align-items:center;}
+.card-scorecard .kpi-left{}
+.card-scorecard .sc-breakdown{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.sc-el{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.sc-el-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;}
+.sc-el-wt{font-size:16px;font-weight:700;font-family:var(--mono);margin-bottom:3px;}
+.sc-el-desc{font-size:10px;color:var(--txt2);line-height:1.4;}
+.sc-bar-wrap{height:2px;background:var(--border2);border-radius:2px;margin-top:8px;overflow:hidden;}
+.sc-bar{height:100%;border-radius:2px;}
+
+/* ── ROW 2: GRD OTD + Product Quality — 2 large cards ── */
+.row-primary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.card-primary .kpi-val{font-size:42px;}
+
+/* ── ROW 3: 4 element score cards — smaller ── */
+.row-elements{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+.card-element .kpi-val{font-size:28px;}
+.card-element .kpi-badge{font-size:9px;padding:1px 6px;margin-bottom:8px;}
+.card-element .kpi-lbl{font-size:10px;}
+.card-element .kpi-meta{font-size:10px;}
+.card-element .kpi-trend{font-size:9px;}
+.card-element{padding:14px 16px;}
 
 /* INSIGHT BARS */
 .insight-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;}
@@ -101,18 +126,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 36p
 .ins-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);margin-bottom:5px;}
 .ins-text{font-size:13px;color:var(--txt2);line-height:1.75;}
 .ins-text b{color:var(--txt);font-weight:600;}
-.tp{color:var(--green);font-weight:600;}
-.tf{color:var(--red);font-weight:600;}
-.tw{color:var(--amber);font-weight:600;}
-
-/* SCORE CARD ELEMENTS */
-.sc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
-.sc-el{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
-.sc-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);margin-bottom:6px;}
-.sc-wt{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--txt);margin-bottom:4px;}
-.sc-desc{font-size:11px;color:var(--txt2);line-height:1.5;}
-.sc-bar-wrap{height:3px;background:var(--border2);border-radius:2px;margin-top:10px;overflow:hidden;}
-.sc-bar{height:100%;border-radius:2px;}
+.tp{color:var(--green);font-weight:600;} .tf{color:var(--red);font-weight:600;} .tw{color:var(--amber);font-weight:600;}
 
 /* TABLE */
 .tbl-outer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
@@ -122,7 +136,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 36p
 .tbl-scroll{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
 thead th{padding:10px 16px;text-align:right;font-size:10px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:help;}
-thead th:first-child{text-align:left;min-width:230px;}
+thead th:first-child{text-align:left;min-width:220px;}
 tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--bg3);}
@@ -142,11 +156,20 @@ tbody td:first-child{text-align:left;font-family:var(--sans);font-size:13px;font
 .cp-box{position:relative;}
 .h220{height:220px;} .h260{height:260px;} .h300{height:300px;}
 
-/* FOOTER */
 footer{border-top:1px solid var(--border);padding:20px 36px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--txt3);font-family:var(--mono);}
 
-@media(max-width:1024px){.kpi-grid{grid-template-columns:1fr 1fr;}.sc-grid{grid-template-columns:1fr 1fr;}.c2col{grid-template-columns:1fr;}}
-@media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.wrap{padding:16px 16px 48px;}header,footer{padding:0 16px;}}
+@media(max-width:1024px){
+  .row-primary{grid-template-columns:1fr;}
+  .row-elements{grid-template-columns:1fr 1fr;}
+  .card-scorecard{grid-template-columns:1fr;}
+  .card-scorecard .sc-breakdown{grid-template-columns:1fr 1fr;}
+  .c2col{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+  .row-elements{grid-template-columns:1fr;}
+  .wrap{padding:16px 16px 48px;}
+  header,footer{padding:0 16px;}
+}
 </style>
 </head>
 <body>
@@ -180,57 +203,63 @@ footer{border-top:1px solid var(--border);padding:20px 36px;display:flex;align-i
 
 <div class="wrap" id="dashboard" style="display:none;">
 
+  <!-- ── SECTION: KPI OVERVIEW ── -->
   <div class="sec" style="margin-top:8px;">
     <div class="sec-eye">Performance Overview</div>
-    <div class="sec-title">Key Performance Indicators</div>
-    <div class="sec-desc">Latest quarter vs. requirement threshold</div>
+    <div class="sec-title">Vendor Score Card</div>
+    <div class="sec-desc">Composite score with element breakdown · Latest period</div>
   </div>
-  <div class="kpi-grid" id="kpi-cards"></div>
 
+  <!-- ROW 1: Vendor Score Card full-width -->
+  <div class="row-scorecard">
+    <div class="kpi-card kc-green" id="card-scorecard" style="padding:22px 26px;">
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:center;">
+        <div>
+          <div class="kpi-badge badge-pass" id="sc-badge">● ON TARGET</div>
+          <div class="kpi-lbl">Vendor Score Card</div>
+          <div class="kpi-val" id="sc-val" style="font-size:52px;">—</div>
+          <div class="kpi-meta" id="sc-meta">—</div>
+          <div class="kpi-trend" id="sc-trend">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3);font-family:var(--mono);margin-bottom:10px;">Score Card Element Weights</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;" id="sc-elements">
+            <!-- injected -->
+          </div>
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: GRD OTD + Product Quality — 2 large primary cards -->
+  <div class="sec">
+    <div class="sec-eye">Primary KPIs</div>
+    <div class="sec-title">GRD OTD & Product Quality</div>
+    <div class="sec-desc">The two highest-weighted Score Card elements (35% + 30% = 65%)</div>
+  </div>
+  <div class="row-primary" id="row-primary"></div>
+
+  <!-- ROW 3: 4 element score contributions — smaller cards -->
+  <div class="sec">
+    <div class="sec-eye">Score Card Elements</div>
+    <div class="sec-title">Individual Element Performance</div>
+    <div class="sec-desc">Actual Payment Terms · Communication · Product Cost · GRD OTD Score contribution</div>
+  </div>
+  <div class="row-elements" id="row-elements"></div>
+
+  <!-- INSIGHTS -->
   <div class="sec">
     <div class="sec-eye">AI Insight</div>
     <div class="sec-title">Performance Analysis</div>
   </div>
   <div id="insights"></div>
 
-  <div class="sec">
-    <div class="sec-eye">Score Card Composition</div>
-    <div class="sec-title">Vendor Score Card — Element Breakdown</div>
-    <div class="sec-desc">Weighted composite of 5 performance elements · Total = 100%</div>
-  </div>
-  <div class="sc-grid">
-    <div class="sc-el">
-      <div class="sc-lbl">GRD OTD</div><div class="sc-wt">35%</div>
-      <div class="sc-desc">Supplier On Time Delivery — highest weighted element</div>
-      <div class="sc-bar-wrap"><div class="sc-bar" style="width:35%;background:var(--green);"></div></div>
-    </div>
-    <div class="sc-el">
-      <div class="sc-lbl">Product Quality</div><div class="sc-wt">30%</div>
-      <div class="sc-desc">Defect rate, inspection pass rate, quality compliance</div>
-      <div class="sc-bar-wrap"><div class="sc-bar" style="width:30%;background:var(--blue);"></div></div>
-    </div>
-    <div class="sc-el">
-      <div class="sc-lbl">Product Cost</div><div class="sc-wt">15%</div>
-      <div class="sc-desc">Pricing competitiveness and cost reduction initiatives</div>
-      <div class="sc-bar-wrap"><div class="sc-bar" style="width:15%;background:var(--amber);"></div></div>
-    </div>
-    <div class="sc-el">
-      <div class="sc-lbl">Communication</div><div class="sc-wt">10%</div>
-      <div class="sc-desc">Responsiveness, escalation handling, reporting quality</div>
-      <div class="sc-bar-wrap"><div class="sc-bar" style="width:10%;background:var(--cyan);"></div></div>
-    </div>
-    <div class="sc-el">
-      <div class="sc-lbl">Payment Terms</div><div class="sc-wt">10%</div>
-      <div class="sc-desc">Actual vs. agreed payment term adherence</div>
-      <div class="sc-bar-wrap"><div class="sc-bar" style="width:10%;background:var(--purple);"></div></div>
-    </div>
-  </div>
-  <div id="sc-insight" style="margin-top:10px;"></div>
-
+  <!-- TABLE -->
   <div class="sec">
     <div class="sec-eye">Raw Data</div>
     <div class="sec-title">Vendor KPI Summary Table</div>
-    <div class="sec-desc">2025 · 2026 · Q1'25 · Q2'25 · Q3'25 · Q4'25 · Q1'26 · Q2'26</div>
+    <div class="sec-desc">GRD OTD · Product Quality · Actual Payment Terms · Communication · Product Cost · Vendor Score Card</div>
   </div>
   <div class="tbl-outer">
     <div class="tbl-head">
@@ -240,6 +269,7 @@ footer{border-top:1px solid var(--border);padding:20px 36px;display:flex;align-i
     <div class="tbl-scroll" id="tbl-wrap"></div>
   </div>
 
+  <!-- CHARTS -->
   <div class="sec">
     <div class="sec-eye">Trend Analysis</div>
     <div class="sec-title">Quarterly Performance Charts</div>
@@ -248,7 +278,7 @@ footer{border-top:1px solid var(--border);padding:20px 36px;display:flex;align-i
   <div class="c2col">
     <div class="cpanel span2">
       <div class="cp-title">All KPIs — Grouped Bar Chart</div>
-      <div class="cp-sub">Side-by-side per quarter · all KPIs</div>
+      <div class="cp-sub">Side-by-side per quarter · GRD OTD, Product Quality, Payment Terms, Communication, Product Cost, Score Card</div>
       <div class="cp-box h300"><canvas id="chart-bar"></canvas></div>
     </div>
   </div>
@@ -277,13 +307,12 @@ footer{border-top:1px solid var(--border);padding:20px 36px;display:flex;align-i
 // ─────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────
-const SHEET_ID       = '1hVvpa1UyN-Edfi-Q_O7NGbBXPDaoKmRX9UOel6R678c';
-const GID            = '0';
-const SHEET_CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+const SHEET_ID        = '1hVvpa1UyN-Edfi-Q_O7NGbBXPDaoKmRX9UOel6R678c';
+const GID             = '0';
+const SHEET_CSV_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
 const ALLOWED_PERIODS = ['2025','2026',"Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"];
 const Q_PERIODS       = ["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"];
 
-// CORS proxy chain — tried in order, first success wins
 const PROXIES = [
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -291,10 +320,35 @@ const PROXIES = [
   u => `https://thingproxy.freeboard.io/fetch/${u}`,
 ];
 
-const KPI_COLORS   = ['#22c55e','#3b82f6','#f59e0b','#a855f7'];
-const KPI_CLS      = ['kc-green','kc-blue','kc-amber','kc-red'];
-const G            = 'rgba(30,34,53,0.8)';
-let   allCharts    = [];
+// KPI name matchers → card config
+const KPI_CFG = [
+  { match: /grd.?otd|on.?time.?delivery/i,   cls:'kc-green',  color:'#22c55e', role:'primary',  label:'GRD OTD (Supplier On Time Delivery)' },
+  { match: /product.?quality/i,               cls:'kc-blue',   color:'#3b82f6', role:'primary',  label:'Product Quality Performance' },
+  { match: /payment.?terms/i,                 cls:'kc-amber',  color:'#f59e0b', role:'element',  label:'Actual Payment Terms' },
+  { match: /communication/i,                  cls:'kc-cyan',   color:'#06b6d4', role:'element',  label:'Communication' },
+  { match: /product.?cost/i,                  cls:'kc-purple', color:'#a855f7', role:'element',  label:'Product Cost' },
+  { match: /vendor.?score/i,                  cls:'kc-green',  color:'#22c55e', role:'scorecard',label:'Vendor Score Card' },
+];
+
+const SC_ELEMENTS = [
+  { label:'GRD OTD',       weight:35, color:'#22c55e', desc:'On Time Delivery' },
+  { label:'Product Quality',weight:30, color:'#3b82f6', desc:'Quality Compliance' },
+  { label:'Product Cost',  weight:15, color:'#a855f7', desc:'Cost Competitiveness' },
+  { label:'Communication', weight:10, color:'#06b6d4', desc:'Responsiveness' },
+  { label:'Payment Terms', weight:10, color:'#f59e0b', desc:'Term Adherence' },
+];
+
+const TARGET_ROWS = [
+  /grd.?otd|on.?time.?delivery/i,
+  /product.?quality/i,
+  /payment.?terms/i,
+  /communication/i,
+  /product.?cost/i,
+  /vendor.?score/i,
+];
+
+const G = 'rgba(30,34,53,0.8)';
+let allCharts = [];
 
 Chart.defaults.color       = '#64748b';
 Chart.defaults.borderColor = '#1e2235';
@@ -305,259 +359,238 @@ Chart.defaults.font.size   = 11;
 // UTILS
 // ─────────────────────────────────────────
 const pct = v => parseFloat(String(v).replace('%','').trim());
-const fmt = v => isNaN(v) ? '—' : v + '%';
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v + '%';
 const destroyCharts = () => { allCharts.forEach(c=>c.destroy()); allCharts=[]; };
 
 function parseCSV(text) {
-  const lines = text.trim().split('\n').map(l =>
-    l.split(',').map(c => c.trim().replace(/^"|"$/g,''))
-  );
+  const lines = text.trim().split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
   return { headers: lines[0], rows: lines.slice(1).filter(r => r[0]?.length > 1) };
 }
-
 function setLoader(show, msg) {
   const el = document.getElementById('loader');
-  if (show) { el.classList.remove('hidden'); if (msg) document.getElementById('ld-msg').textContent = msg; }
+  if (show) { el.classList.remove('hidden'); if(msg) document.getElementById('ld-msg').textContent = msg; }
   else el.classList.add('hidden');
 }
+function showError(msg) { document.getElementById('err-msg').textContent = msg; document.getElementById('err-screen').classList.add('show'); }
+function hideError()    { document.getElementById('err-screen').classList.remove('show'); }
 
-function showError(msg) {
-  document.getElementById('err-msg').textContent = msg;
-  document.getElementById('err-screen').classList.add('show');
-}
-function hideError() {
-  document.getElementById('err-screen').classList.remove('show');
-}
-
-// ─────────────────────────────────────────
-// FETCH via proxy chain
-// ─────────────────────────────────────────
 async function fetchWithTimeout(url, ms=8000) {
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
-    clearTimeout(tid);
-    return res;
-  } catch(e) {
-    clearTimeout(tid);
-    throw e;
-  }
+  const tid = setTimeout(()=>ctrl.abort(), ms);
+  try { const r = await fetch(url,{cache:'no-store',signal:ctrl.signal}); clearTimeout(tid); return r; }
+  catch(e) { clearTimeout(tid); throw e; }
 }
 
 async function fetchSheet() {
   const target = SHEET_CSV_URL + '&cb=' + Date.now();
   let lastErr = '';
-  for (let i = 0; i < PROXIES.length; i++) {
-    const makeProxy = PROXIES[i];
+  for (let i=0; i<PROXIES.length; i++) {
     try {
       setLoader(true, `Trying source ${i+1} of ${PROXIES.length}…`);
-      const res = await fetchWithTimeout(makeProxy(target), 8000);
-      if (!res.ok) { lastErr = `HTTP ${res.status}`; continue; }
+      const res = await fetchWithTimeout(PROXIES[i](target), 8000);
+      if (!res.ok) { lastErr=`HTTP ${res.status}`; continue; }
       const text = await res.text();
-      if (text && text.length > 50 && text.includes(',')) return text;
-      lastErr = 'Empty or invalid response';
-    } catch(e) {
-      lastErr = e.name === 'AbortError' ? `Source ${i+1} timed out` : e.message;
-    }
+      if (text && text.length>50 && text.includes(',')) return text;
+      lastErr='Empty response';
+    } catch(e) { lastErr = e.name==='AbortError' ? `Source ${i+1} timed out` : e.message; }
   }
-  throw new Error(`Could not load Google Sheet data.\n\nPossible reasons:\n• Sheet is not set to "Anyone with the link → Viewer"\n• All CORS proxies are currently down\n\nLast error: ${lastErr}`);
+  throw new Error(`Could not load sheet data.\n\nLast error: ${lastErr}\n\nEnsure the sheet is set to "Anyone with the link → Viewer".`);
 }
 
 // ─────────────────────────────────────────
-// LOAD DATA
+// LOAD
 // ─────────────────────────────────────────
 async function loadData() {
   hideError();
-  setLoader(true, 'Connecting to Google Sheets…');
+  setLoader(true,'Connecting to Google Sheets…');
   document.getElementById('btn-ref').disabled = true;
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('sdot').className = 'sdot';
   document.getElementById('stxt').textContent = 'Loading…';
   destroyCharts();
-
   try {
     const text = await fetchSheet();
-    setLoader(true, 'Building dashboard…');
-    const csv = parseCSV(text);
-    build(csv);
-
+    setLoader(true,'Building dashboard…');
+    build(parseCSV(text));
     const ts = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    document.getElementById('sdot').className = 'sdot live';
-    document.getElementById('stxt').textContent = 'Live · ' + ts;
-    document.getElementById('footer-ts').textContent = 'Last updated: ' + ts;
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('btn-ref').disabled = false;
+    document.getElementById('sdot').className='sdot live';
+    document.getElementById('stxt').textContent='Live · '+ts;
+    document.getElementById('footer-ts').textContent='Last updated: '+ts;
+    document.getElementById('dashboard').style.display='block';
+    document.getElementById('btn-ref').disabled=false;
     setLoader(false);
-  } catch(e) {
-    setLoader(false);
-    showError(e.message);
-  }
+  } catch(e) { setLoader(false); showError(e.message); }
 }
 
 // ─────────────────────────────────────────
-// BUILD DASHBOARD
+// BUILD
 // ─────────────────────────────────────────
 function build(csv) {
   const { headers, rows } = csv;
   const reqIdx = headers.findIndex(h => /req/i.test(h));
 
-  // Only keep allowed period columns + name + req
-  const cols = headers.map((h,i) => ({ h: h.trim(), i })).filter(({h,i}) =>
-    i === 0 || i === reqIdx || ALLOWED_PERIODS.includes(h.trim())
-  );
-  const qCols  = cols.filter(({h}) => Q_PERIODS.includes(h));
-  const yr25   = cols.find(({h}) => h === '2025');
-  const yr26   = cols.find(({h}) => h === '2026');
+  // Filter to allowed columns only
+  const cols  = headers.map((h,i)=>({h:h.trim(),i})).filter(({h,i})=> i===0||i===reqIdx||ALLOWED_PERIODS.includes(h.trim()));
+  const qCols = cols.filter(({h})=>Q_PERIODS.includes(h));
+  const yr25  = cols.find(({h})=>h==='2025');
+  const yr26  = cols.find(({h})=>h==='2026');
 
-  const kpis = rows.map((r, ri) => {
-    const req    = reqIdx >= 0 ? pct(r[reqIdx]) : null;
-    const qVals  = qCols.map(({i}) => pct(r[i]));
-    const latest = qVals.filter(v => !isNaN(v)).slice(-1)[0];
-    const prev   = qVals.filter(v => !isNaN(v)).slice(-2,-1)[0];
-    const diff   = req !== null ? +(latest - req).toFixed(1) : null;
-    const qoq    = (latest !== undefined && prev !== undefined) ? +(latest - prev).toFixed(1) : null;
-    return {
-      name:   r[0],
-      req, qVals, latest, diff, qoq,
-      y2025:  yr25 ? pct(r[yr25.i]) : null,
-      y2026:  yr26 ? pct(r[yr26.i]) : null,
-      pass:   diff !== null ? diff >= 0 : true,
-      color:  KPI_COLORS[ri % KPI_COLORS.length],
-      cls:    KPI_CLS[ri % KPI_CLS.length],
-    };
+  // Match rows to TARGET_ROWS order, filtering out non-target rows
+  const kpiRows = TARGET_ROWS.map(rx => rows.find(r => rx.test(r[0]))).filter(Boolean);
+
+  const kpis = kpiRows.map(r => {
+    const cfg    = KPI_CFG.find(c => c.match.test(r[0])) || { cls:'kc-amber', color:'#f59e0b', role:'element', label:r[0] };
+    const req    = reqIdx>=0 ? pct(r[reqIdx]) : null;
+    const qVals  = qCols.map(({i})=>pct(r[i]));
+    const latest = qVals.filter(v=>!isNaN(v)).slice(-1)[0];
+    const prev   = qVals.filter(v=>!isNaN(v)).slice(-2,-1)[0];
+    const diff   = req!==null ? +(latest-req).toFixed(1) : null;
+    const qoq    = (latest!==undefined&&prev!==undefined) ? +(latest-prev).toFixed(1) : null;
+    return { name:r[0], req, qVals, latest, diff, qoq,
+             y2025: yr25?pct(r[yr25.i]):null, y2026: yr26?pct(r[yr26.i]):null,
+             pass: diff!==null?diff>=0:true, ...cfg, rawRow:r };
   });
 
-  buildCards(kpis, qCols);
+  const latestLbl = qCols[qCols.length-1]?.h || 'Q2\'26';
+
+  buildScorecardRow(kpis, latestLbl);
+  buildPrimaryRow(kpis, latestLbl);
+  buildElementsRow(kpis, latestLbl);
   buildInsights(kpis);
-  buildScInsight(kpis);
-  buildTable(headers, rows, reqIdx, cols, kpis);
+  buildTable(headers, reqIdx, cols, kpiRows, kpis);
   buildBar(kpis, qCols);
   buildTrends(kpis, qCols);
   buildYoY(kpis);
 }
 
 // ─────────────────────────────────────────
-// KPI CARDS
+// CARD HELPER
 // ─────────────────────────────────────────
-function buildCards(kpis, qCols) {
-  const latestLbl = qCols[qCols.length-1]?.h || 'Latest';
-  document.getElementById('kpi-cards').innerHTML = kpis.map(k => {
-    const bc = k.pass ? 'badge-pass' : (k.diff > -5 ? 'badge-warn' : 'badge-fail');
-    const bt = k.pass ? '● ON TARGET' : (k.diff > -5 ? '▲ NEAR TARGET' : '● BELOW REQ');
-    const tc = k.pass ? 't-up' : (k.diff > -5 ? 't-wn' : 't-dn');
-    const ar = k.pass ? '▲' : '▼';
-    const ds = k.diff !== null ? `${k.diff >= 0?'+':''}${k.diff}pp vs req` : '';
-    const qoqTxt = k.qoq !== null ? ` · QoQ: ${k.qoq >= 0?'+':''}${k.qoq}pp` : '';
-    return `<div class="kpi-card ${k.cls}">
-      <div class="kpi-badge ${bc}">${bt}</div>
-      <div class="kpi-lbl">${k.name}</div>
-      <div class="kpi-val">${fmt(k.latest)}</div>
-      <div class="kpi-meta">${latestLbl} · Req: <b>${k.req}%</b></div>
-      <div class="kpi-trend ${tc}">${ar} ${ds}${qoqTxt}</div>
-      <div class="kpi-glow"></div>
-    </div>`;
-  }).join('');
+function cardHTML(k, latestLbl, extraCls='') {
+  const bc = k.pass?'badge-pass':(k.diff>-5?'badge-warn':'badge-fail');
+  const bt = k.pass?'● ON TARGET':(k.diff>-5?'▲ NEAR TARGET':'● BELOW REQ');
+  const tc = k.pass?'t-up':(k.diff>-5?'t-wn':'t-dn');
+  const ar = k.pass?'▲':'▼';
+  const ds = k.diff!==null?`${k.diff>=0?'+':''}${k.diff}pp vs req`:'';
+  const qs = k.qoq!==null?` · QoQ: ${k.qoq>=0?'+':''}${k.qoq}pp`:'';
+  return `<div class="kpi-card ${k.cls} ${extraCls}">
+    <div class="kpi-badge ${bc}">${bt}</div>
+    <div class="kpi-lbl">${k.name}</div>
+    <div class="kpi-val">${fmt(k.latest)}</div>
+    <div class="kpi-meta">${latestLbl} · Req: <b>${k.req}%</b></div>
+    <div class="kpi-trend ${tc}">${ar} ${ds}${qs}</div>
+    <div class="kpi-glow"></div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────
+// ROW 1: SCORE CARD
+// ─────────────────────────────────────────
+function buildScorecardRow(kpis, latestLbl) {
+  const k = kpis.find(x=>x.role==='scorecard');
+  if (!k) return;
+  const bc = k.pass?'badge-pass':(k.diff>-5?'badge-warn':'badge-fail');
+  const bt = k.pass?'● ON TARGET':(k.diff>-5?'▲ NEAR TARGET':'● BELOW REQ');
+  const tc = k.pass?'t-up':(k.diff>-5?'t-wn':'t-dn');
+  const ar = k.pass?'▲':'▼';
+  const ds = k.diff!==null?`${k.diff>=0?'+':''}${k.diff}pp vs req`:'';
+  const qs = k.qoq!==null?` · QoQ: ${k.qoq>=0?'+':''}${k.qoq}pp`:'';
+
+  const sc = document.getElementById('card-scorecard');
+  sc.className = `kpi-card ${k.cls}`;
+  document.getElementById('sc-badge').className  = `kpi-badge ${bc}`;
+  document.getElementById('sc-badge').textContent = bt;
+  document.getElementById('sc-val').textContent   = fmt(k.latest);
+  document.getElementById('sc-meta').innerHTML    = `${latestLbl} · Req: <b>${k.req}%</b>`;
+  document.getElementById('sc-trend').className   = `kpi-trend ${tc}`;
+  document.getElementById('sc-trend').textContent = `${ar} ${ds}${qs}`;
+
+  document.getElementById('sc-elements').innerHTML = SC_ELEMENTS.map(el =>
+    `<div class="sc-el">
+      <div class="sc-el-lbl">${el.label}</div>
+      <div class="sc-el-wt" style="color:${el.color};">${el.weight}%</div>
+      <div class="sc-el-desc">${el.desc}</div>
+      <div class="sc-bar-wrap"><div class="sc-bar" style="width:${el.weight}%;background:${el.color};"></div></div>
+    </div>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────
+// ROW 2: PRIMARY — GRD OTD + PRODUCT QUALITY
+// ─────────────────────────────────────────
+function buildPrimaryRow(kpis, latestLbl) {
+  const primaries = kpis.filter(k=>k.role==='primary');
+  document.getElementById('row-primary').innerHTML =
+    primaries.map(k => cardHTML(k, latestLbl, 'card-primary')).join('');
+}
+
+// ─────────────────────────────────────────
+// ROW 3: ELEMENTS — 4 smaller cards
+// ─────────────────────────────────────────
+function buildElementsRow(kpis, latestLbl) {
+  const elements = kpis.filter(k=>k.role==='element');
+  document.getElementById('row-elements').innerHTML =
+    elements.map(k => cardHTML(k, latestLbl, 'card-element')).join('');
 }
 
 // ─────────────────────────────────────────
 // INSIGHTS
 // ─────────────────────────────────────────
 function buildInsights(kpis) {
-  const out = [];
-  const otd  = kpis.find(k => /otd|on.?time/i.test(k.name));
-  const qual = kpis.find(k => /quality/i.test(k.name));
-  const sc   = kpis.find(k => /score/i.test(k.name));
-  const csr  = kpis.find(k => /counter|sourcing/i.test(k.name));
+  const sc   = kpis.find(k=>/score/i.test(k.name));
+  const otd  = kpis.find(k=>/grd.?otd|on.?time/i.test(k.name));
+  const qual = kpis.find(k=>/quality/i.test(k.name));
+  const out  = [];
+
+  if (sc) {
+    let t = `<b>Vendor Score Card</b> composite is <span class="${sc.pass?'tp':'tf'}">${fmt(sc.latest)}</span> against a <b>${sc.req}%</b> target. `;
+    if (!sc.pass) {
+      t += `The score is being pulled down primarily by: `;
+      const drivers = kpis.filter(k=>k.role!=='scorecard'&&!k.pass);
+      if (drivers.length) t += drivers.map(d=>`<span class="tf">${d.name} at ${fmt(d.latest)}</span>`).join(', ') + `. `;
+      t += `To raise the composite above <b>${sc.req}%</b>, the highest-leverage action is improving GRD OTD — every <b>+1pp in OTD adds +0.35pp</b> to the final score.`;
+    } else {
+      t += `All key drivers are contributing positively. <span class="tp">GRD OTD and Product Quality together account for 65%</span> of the composite and are both on target.`;
+    }
+    out.push({icon:'📊',color:'var(--amber)',title:'Score Card Analysis',text:t});
+  }
 
   if (otd) {
-    let t = `<b>GRD OTD</b> is at <span class="${otd.pass?'tp':'tf'}">${fmt(otd.latest)}</span> against a <b>${otd.req}%</b> requirement. `;
+    let t = `<b>GRD OTD</b> is at <span class="${otd.pass?'tp':'tf'}">${fmt(otd.latest)}</span> vs. <b>${otd.req}%</b> requirement. `;
     t += otd.pass
-      ? `Delivery is <span class="tp">meeting target</span>, contributing positively to the Score Card's 35% OTD weighting. `
-      : `The vendor is <span class="tf">${Math.abs(otd.diff)}pp below the delivery target</span>. Shipment scheduling or logistics delays are directly suppressing the Score Card composite (35% weight). `;
-    if (otd.qoq !== null) t += `Quarter-over-quarter movement: <b>${otd.qoq >= 0?'+':''}${otd.qoq}pp</b> — ${otd.qoq >= 0 ? '<span class="tp">improving trend</span>' : '<span class="tf">declining trend</span>'}.`;
-    out.push({ icon:'🚚', color:'var(--cyan)', title:'On-Time Delivery Analysis', text: t });
+      ? `Delivery is <span class="tp">meeting target</span>, contributing <b>${(otd.latest*0.35).toFixed(1)} pts</b> (${fmt(otd.latest)} × 35%) to the Score Card composite.`
+      : `The vendor is <span class="tf">${Math.abs(otd.diff)}pp below the delivery target</span>, contributing only <b>${(otd.latest*0.35).toFixed(1)} pts</b> instead of the expected <b>${(otd.req*0.35).toFixed(1)} pts</b> toward the Score Card.`;
+    if (otd.qoq!==null) t += ` QoQ trend: <b>${otd.qoq>=0?'+':''}${otd.qoq}pp</b>.`;
+    out.push({icon:'🚚',color:'var(--green)',title:'On-Time Delivery Analysis',text:t});
   }
 
   if (qual) {
     let t = `<b>Product Quality</b> is at <span class="${qual.pass?'tp':'tf'}">${fmt(qual.latest)}</span> vs. <b>${qual.req}%</b> requirement. `;
     t += qual.pass
-      ? `Quality is <span class="tp">above threshold</span>, supporting strong Score Card performance through its 30% composite weighting. `
-      : `Quality gaps indicate <span class="tf">potential inspection failures or non-conformances</span>. With a 30% weighting, this significantly impacts the composite score. `;
-    if (qual.qoq !== null) t += `Quarter-over-quarter movement: <b>${qual.qoq >= 0?'+':''}${qual.qoq}pp</b>.`;
-    out.push({ icon:'🔍', color:'var(--blue)', title:'Product Quality Analysis', text: t });
+      ? `Quality is <span class="tp">above threshold</span>, contributing <b>${(qual.latest*0.30).toFixed(1)} pts</b> (${fmt(qual.latest)} × 30%) to the composite.`
+      : `Below target — contributing only <b>${(qual.latest*0.30).toFixed(1)} pts</b> instead of <b>${(qual.req*0.30).toFixed(1)} pts</b>. Review inspection processes and non-conformance handling.`;
+    if (qual.qoq!==null) t += ` QoQ trend: <b>${qual.qoq>=0?'+':''}${qual.qoq}pp</b>.`;
+    out.push({icon:'🔍',color:'var(--blue)',title:'Product Quality Analysis',text:t});
   }
 
-  if (sc) {
-    let t = `<b>Vendor Score Card</b> composite is <span class="${sc.pass?'tp':'tf'}">${fmt(sc.latest)}</span> against a <b>${sc.req}%</b> target. `;
-    if (!sc.pass) {
-      t += `The score is being suppressed by: `;
-      if (otd  && !otd.pass)  t += `<span class="tf">GRD OTD at ${fmt(otd.latest)} (35% weight)</span>`;
-      if (qual && !qual.pass) t += `${otd && !otd.pass ? ' and ' : ''}<span class="tf">Product Quality at ${fmt(qual.latest)} (30% weight)</span>`;
-      t += `. Together these account for 65% of the total score. The remaining elements (Cost 15%, Communication 10%, Payment Terms 10%) cannot compensate for shortfalls in the two core drivers.`;
-    } else {
-      t += `Composite score is <span class="tp">on target</span>. Strong OTD and Quality results are the primary drivers maintaining performance above the ${sc.req}% threshold.`;
-    }
-    out.push({ icon:'📊', color:'var(--amber)', title:'Score Card Analysis', text: t });
-  }
-
-  if (csr) {
-    let t = `<b>Counter Sourcing</b> is at <span class="${csr.pass?'tp':'tf'}">${fmt(csr.latest)}</span> against a <b>${csr.req}%</b> requirement. `;
-    t += csr.pass
-      ? `Counter sourcing compliance is <span class="tp">fully met</span>.`
-      : `Performance is <span class="tf">${Math.abs(csr.diff)}pp below the ${csr.req}% target</span>. Review sourcing alternatives and backup supplier engagement.`;
-    out.push({ icon:'🔄', color:'var(--purple)', title:'Counter Sourcing Analysis', text: t });
-  }
-
-  document.getElementById('insights').innerHTML = out.map(i =>
+  document.getElementById('insights').innerHTML = out.map(i=>
     `<div class="insight-bar" style="border-left:3px solid ${i.color};">
       <div class="ins-icon">${i.icon}</div>
-      <div>
-        <div class="ins-title" style="color:${i.color};">${i.title}</div>
-        <div class="ins-text">${i.text}</div>
-      </div>
+      <div><div class="ins-title" style="color:${i.color};">${i.title}</div>
+      <div class="ins-text">${i.text}</div></div>
     </div>`
   ).join('');
 }
 
 // ─────────────────────────────────────────
-// SCORE CARD DRIVER INSIGHT
+// TABLE — only target rows
 // ─────────────────────────────────────────
-function buildScInsight(kpis) {
-  const sc   = kpis.find(k => /score/i.test(k.name));
-  const otd  = kpis.find(k => /otd|on.?time/i.test(k.name));
-  const qual = kpis.find(k => /quality/i.test(k.name));
-  if (!sc) return;
-
-  const otdPts  = otd  ? (otd.latest  * 0.35).toFixed(1) : '—';
-  const qualPts = qual ? (qual.latest * 0.30).toFixed(1) : '—';
-
-  document.getElementById('sc-insight').innerHTML =
-    `<div class="insight-bar" style="border-left:3px solid var(--amber);">
-      <div class="ins-icon">💡</div>
-      <div>
-        <div class="ins-title" style="color:var(--amber);">Score Card Driver Calculation</div>
-        <div class="ins-text">
-          The two highest-impact elements account for <b>65%</b> of the Score Card composite.
-          GRD OTD is contributing approximately <b>${otdPts} pts</b> (${fmt(otd?.latest)} × 35%).
-          Product Quality is contributing approximately <b>${qualPts} pts</b> (${fmt(qual?.latest)} × 30%).
-          To raise the Score Card above <b>${sc.req}%</b>, the highest-leverage action is improving GRD OTD —
-          every <b>+1pp in OTD adds +0.35pp</b> to the final composite score.
-          Current Score Card: <span class="${sc.pass?'tp':'tw'}">${fmt(sc.latest)}</span>
-        </div>
-      </div>
-    </div>`;
-}
-
-// ─────────────────────────────────────────
-// TABLE
-// ─────────────────────────────────────────
-function buildTable(headers, rows, reqIdx, cols, kpis) {
+function buildTable(headers, reqIdx, cols, kpiRows, kpis) {
   const tips = {
-    '2025':"Full year 2025 annual average",'2026':"2026 year-to-date average",
-    "Q1'25":"Q1 2025: January–March 2025","Q2'25":"Q2 2025: April–June 2025",
-    "Q3'25":"Q3 2025: July–September 2025","Q4'25":"Q4 2025: October–December 2025",
-    "Q1'26":"Q1 2026: January–March 2026","Q2'26":"Q2 2026: April–June 2026",
+    '2025':'Full year 2025 annual average','2026':'2026 year-to-date average',
+    "Q1'25":"Q1 2025: Jan–Mar","Q2'25":"Q2 2025: Apr–Jun",
+    "Q3'25":"Q3 2025: Jul–Sep","Q4'25":"Q4 2025: Oct–Dec",
+    "Q1'26":"Q1 2026: Jan–Mar","Q2'26":"Q2 2026: Apr–Jun",
   };
   const hdrStyle = {
     '2025':'background:#0f2040;color:#38bdf8;',
@@ -567,59 +600,62 @@ function buildTable(headers, rows, reqIdx, cols, kpis) {
     "Q1'26":'background:#1a0a2e;color:#a855f7;',"Q2'26":'background:#1a0a2e;color:#a855f7;',
   };
 
-  const thead = `<thead><tr>${cols.map(({h,i}) => {
-    const isReq = /req/i.test(h);
-    const s = isReq ? 'background:#0a1f0a;color:#22c55e;text-align:center;'
-                    : (hdrStyle[h] || 'background:#161820;color:#94a3b8;') + (i===0?'text-align:left;':'');
-    return `<th style="${s}" title="${isReq?'Minimum performance requirement':tips[h]||h}">${h}</th>`;
+  const thead = `<thead><tr>${cols.map(({h,i})=>{
+    const isReq=/req/i.test(h);
+    const s = isReq?'background:#0a1f0a;color:#22c55e;text-align:center;':(hdrStyle[h]||'background:#161820;color:#94a3b8;')+(i===0?'text-align:left;':'');
+    return `<th style="${s}" title="${isReq?'Minimum requirement':tips[h]||h}">${h}</th>`;
   }).join('')}</tr></thead>`;
 
-  const tbody = `<tbody>${rows.map((r,ri) => {
-    const req = kpis[ri]?.req;
-    const col = kpis[ri]?.color || '#64748b';
-    return `<tr>${cols.map(({h,i}) => {
+  const tbody = `<tbody>${kpiRows.map((r,ri)=>{
+    const k   = kpis[ri];
+    const req = k?.req;
+    const col = k?.color||'#64748b';
+    return `<tr>${cols.map(({h,i})=>{
       if (i===0) return `<td style="color:${col};">${r[i]}</td>`;
       if (/req/i.test(h)) return `<td class="req-td">${r[i]}</td>`;
-      const v = pct(r[i]); const d = v - req;
-      if (!isNaN(v) && req!==null) {
-        if (d < -5)  return `<td class="c-fail">${r[i]}</td>`;
-        if (d < 0)   return `<td class="c-warn">${r[i]}</td>`;
+      const v=pct(r[i]); const d=v-req;
+      if (!isNaN(v)&&req!==null) {
+        if (d<-5)  return `<td class="c-fail">${r[i]}</td>`;
+        if (d<0)   return `<td class="c-warn">${r[i]}</td>`;
         return `<td class="c-pass">${r[i]}</td>`;
       }
       return `<td>${r[i]}</td>`;
     }).join('')}</tr>`;
   }).join('')}</tbody>`;
 
-  document.getElementById('tbl-wrap').innerHTML = `<table>${thead}${tbody}</table>`;
-  document.getElementById('tbl-sub').textContent = 'Live · Google Sheets · 8 periods';
+  document.getElementById('tbl-wrap').innerHTML=`<table>${thead}${tbody}</table>`;
+  document.getElementById('tbl-sub').textContent='Live · Google Sheets · 6 KPIs · 8 periods';
 }
 
 // ─────────────────────────────────────────
 // CHARTS
 // ─────────────────────────────────────────
 function buildBar(kpis, qCols) {
-  allCharts.push(new Chart(document.getElementById('chart-bar'), {
+  const chartKpis = kpis.filter(k=>k.role!=='scorecard'); // exclude score card from bar
+  allCharts.push(new Chart(document.getElementById('chart-bar'),{
     type:'bar',
-    data:{ labels: qCols.map(q=>q.h), datasets: kpis.map(k=>({
-      label:k.name, data:k.qVals, backgroundColor:k.color+'99', borderColor:k.color, borderWidth:1, borderRadius:4,
+    data:{ labels:qCols.map(q=>q.h), datasets:chartKpis.map(k=>({
+      label:k.name.replace('(Supplier On Time Delivery)','').replace('Performance','').trim(),
+      data:k.qVals, backgroundColor:k.color+'99', borderColor:k.color, borderWidth:1, borderRadius:4,
     }))},
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:'top',labels:{usePointStyle:true,padding:16,boxWidth:8}},
+      plugins:{ legend:{position:'top',labels:{usePointStyle:true,padding:14,boxWidth:8}},
                 tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}%`}} },
-      scales:{ x:{grid:{color:G}}, y:{min:60,max:110,ticks:{callback:v=>v+'%'},grid:{color:G}} }
+      scales:{ x:{grid:{color:G}}, y:{min:0,max:110,ticks:{callback:v=>v+'%'},grid:{color:G}} }
     }
   }));
 }
 
 function buildTrends(kpis, qCols) {
   const wrap = document.getElementById('trend-grid');
-  wrap.innerHTML = '';
-  const labels = qCols.map(q=>q.h);
-  kpis.forEach((k,i) => {
-    const id = 'tc'+i;
-    wrap.innerHTML += `<div class="cpanel">
+  wrap.innerHTML='';
+  const labels=qCols.map(q=>q.h);
+  // Show trends for primary + scorecard (most important 3)
+  kpis.filter(k=>k.role==='primary'||k.role==='scorecard').forEach((k,i)=>{
+    const id='tc'+i;
+    wrap.innerHTML+=`<div class="cpanel">
       <div class="cp-title">${k.name}</div>
-      <div class="cp-sub">Quarterly trend · req: ${k.req}% · red point = below target</div>
+      <div class="cp-sub">Quarterly trend · req: ${k.req}% · red = below target</div>
       <div class="cp-box h220"><canvas id="${id}"></canvas></div>
     </div>`;
     setTimeout(()=>{
@@ -629,9 +665,9 @@ function buildTrends(kpis, qCols) {
           { label:k.name, data:k.qVals, borderColor:k.color, backgroundColor:k.color+'15',
             pointBackgroundColor:k.qVals.map(v=>v>=k.req?k.color:'#ef4444'),
             pointBorderColor:k.qVals.map(v=>v>=k.req?k.color:'#ef4444'),
-            pointRadius:5, pointHoverRadius:7, tension:0.4, fill:true },
+            pointRadius:5,pointHoverRadius:7,tension:0.4,fill:true },
           { label:`Req ${k.req}%`, data:labels.map(()=>k.req),
-            borderColor:'rgba(255,255,255,0.2)', borderDash:[6,4], borderWidth:1.5, pointRadius:0, fill:false }
+            borderColor:'rgba(255,255,255,0.2)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false }
         ]},
         options:{ responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{position:'top',labels:{usePointStyle:true,padding:12,boxWidth:7,font:{size:10}}},
@@ -639,7 +675,7 @@ function buildTrends(kpis, qCols) {
           scales:{ x:{grid:{color:G},ticks:{font:{size:10}}},
             y:{ min:Math.max(0,Math.min(...k.qVals.filter(v=>!isNaN(v)))-8),
                 max:Math.min(110,Math.max(...k.qVals.filter(v=>!isNaN(v)),k.req)+6),
-                ticks:{callback:v=>v+'%',font:{size:10}}, grid:{color:G} } }
+                ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:G} } }
         }
       }));
     },0);
@@ -649,21 +685,19 @@ function buildTrends(kpis, qCols) {
 function buildYoY(kpis) {
   allCharts.push(new Chart(document.getElementById('chart-yoy'),{
     type:'bar',
-    data:{ labels:kpis.map(k=>k.name), datasets:[
-      { label:'2025', data:kpis.map(k=>k.y2025), backgroundColor:'#3b82f699', borderColor:'#3b82f6', borderWidth:1, borderRadius:4 },
-      { label:'2026 YTD', data:kpis.map(k=>k.y2026), backgroundColor:'#22c55e99', borderColor:'#22c55e', borderWidth:1, borderRadius:4 },
-    ]},
+    data:{ labels:kpis.map(k=>k.name.replace('(Supplier On Time Delivery)','').replace('Performance','').trim()),
+      datasets:[
+        { label:'2025', data:kpis.map(k=>k.y2025), backgroundColor:'#3b82f699', borderColor:'#3b82f6', borderWidth:1, borderRadius:4 },
+        { label:'2026 YTD', data:kpis.map(k=>k.y2026), backgroundColor:'#22c55e99', borderColor:'#22c55e', borderWidth:1, borderRadius:4 },
+      ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{position:'top',labels:{usePointStyle:true,padding:16,boxWidth:8}},
                 tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}%`}} },
-      scales:{ x:{grid:{color:G}}, y:{min:60,max:110,ticks:{callback:v=>v+'%'},grid:{color:G}} }
+      scales:{ x:{grid:{color:G}}, y:{min:0,max:110,ticks:{callback:v=>v+'%'},grid:{color:G}} }
     }
   }));
 }
 
-// ─────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────
 loadData();
 </script>
 </body>
