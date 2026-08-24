@@ -80,13 +80,26 @@
             }
             body.printing-report #pdf-preview-content { background:#fff!important; padding:0!important; }
             body.printing-report .report-preview-wrap { background:#fff!important; padding:0!important; }
-            body.printing-report .report-page { margin-bottom:0!important; page-break-after:always; break-after:page; }
+            body.printing-report .report-page {
+                margin-bottom:0!important; page-break-after:always; break-after:page;
+                /* Anchor to the top-left instead of centering — once the sheet below is
+                   scaled up to fill the A3 page, centering it against its original
+                   (pre-scale) 816px width would throw off its horizontal position. */
+                align-items:flex-start!important;
+            }
             body.printing-report .page-label { display:none!important; }
             /* overflow:visible (not hidden) here is deliberate: if a page's real content is
                ever taller than the 1056px design height, we want it to flow onto an extra
-               physical page rather than get silently clipped away and lost. */
+               physical page rather than get silently clipped away and lost.
+               transform:scale(...) fills the A3 page with the report content instead of
+               printing it at its native 816x1056 (Letter) size in the corner of a much
+               bigger sheet. A3 (297x420mm ≈ 1122x1587px @96dpi) has a taller/narrower aspect
+               ratio than Letter, so scaling by the WIDTH ratio (1122.5/816 ≈ 1.376) fills the
+               page edge-to-edge horizontally; a small gap is left at the bottom of each page
+               rather than stretching non-uniformly and distorting photos/text. */
             body.printing-report .report-page > div[style*="background:#fff"] {
                 box-shadow:none!important; border-radius:0!important; overflow:visible!important;
+                transform:scale(1.376); transform-origin:top left;
             }
             /* Keep each photo/table row intact rather than splitting a row across two
                physical pages when a page's content runs long (the outer per-page table is
