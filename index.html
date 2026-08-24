@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RHINO USA Specification Suite</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --pantone-802c: #44D62C; }
@@ -881,6 +880,21 @@ async function uploadPDFToDrive(item, idx) {
     }
 }
 
+// Tailwind v4 (which the rest of this app's UI uses) paints its default palette using the
+// modern oklch() color function. The original html2canvas library can't parse oklch/lab/lch
+// colors at all and throws ("Attempting to parse an unsupported color function"), so we load
+// html2canvas-pro instead — a drop-in fork with the exact same API that adds support for
+// those modern color functions. Loaded lazily (only when exporting) via dynamic import so the
+// rest of the app doesn't need a bundler/build step for this one dependency.
+let _html2canvasProPromise = null;
+function loadHtml2CanvasPro() {
+    if (!_html2canvasProPromise) {
+        _html2canvasProPromise = import('https://cdn.jsdelivr.net/npm/html2canvas-pro@2.3.9/+esm')
+            .then(mod => mod.default || mod.html2canvas || mod);
+    }
+    return _html2canvasProPromise;
+}
+
 async function exportToPDF(item) {
     const ok = await requirePassword('exportme', { title: 'Confirm Export', sub: 'Enter the password to export this item to PDF.' });
     if (!ok) return;
@@ -908,7 +922,8 @@ async function exportToPDF(item) {
     }
 
     try {
-        if (typeof html2canvas === 'undefined' || !window.jspdf) {
+        const html2canvas = await loadHtml2CanvasPro();
+        if (typeof html2canvas !== 'function' || !window.jspdf) {
             throw new Error('PDF engine failed to load (check your internet connection) — please try again.');
         }
         const sheets = Array.from(document.querySelectorAll('#pdf-preview-content .report-page > div[style*="background:#fff"]'));
