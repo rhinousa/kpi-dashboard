@@ -90,8 +90,15 @@
                Legal-size paper (8.5 x 14in) matches our content's 816px design width exactly,
                so no transform:scale() is needed here — the extra 3in of page length (vs.
                Letter) goes straight to usable vertical room instead. */
+            /* The on-screen preview intentionally keeps a Letter-shaped 816x1056 sheet so
+               pagination previews consistently, but the real printed page is taller (Legal =
+               816px wide x 1344px-equivalent tall). Bump min-height to that true Legal height
+               for print only, so the table's flex-grow fills the *actual* extra room and the
+               footer banner lands at the real bottom of the page instead of floating above
+               blank paper on pages with little content. */
             body.printing-report .report-page > div[style*="background:#fff"] {
                 box-shadow:none!important; border-radius:0!important; overflow:visible!important;
+                min-height:1344px!important; height:1344px!important;
             }
             /* Keep each photo/table row intact rather than splitting a row across two
                physical pages when a page's content runs long (the outer per-page table is
