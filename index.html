@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RHINO USA Specification Suite</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
     <style>
         :root { --pantone-802c: #44D62C; }
         .text-pantone { color: var(--pantone-802c); }
@@ -156,6 +157,7 @@
             <span id="pdf-popup-title" class="text-xs text-gray-400 ml-3"></span>
         </div>
         <div class="flex gap-3">
+            <button id="export-docx-btn" onclick="exportToWord(currentPdfIdx !== null ? currentData.main_items[currentPdfIdx] : editorItem)" class="bg-blue-600 text-white text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90">📝 Export to Word</button>
             <button id="export-pdf-btn" onclick="exportToPDF(currentPdfIdx !== null ? currentData.main_items[currentPdfIdx] : editorItem)" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90">📄 Export to PDF</button>
             <button onclick="closePdfPopup()" class="bg-gray-800 text-gray-300 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700">✕ Close</button>
         </div>
@@ -888,6 +890,358 @@ async function uploadPDFToDrive(item, idx) {
         console.error('PDF upload error:', err);
         setStatus('❌ PDF upload failed: ' + err.message, 'text-red-400');
         showToast('❌', 'PDF upload failed — check Drive connection');
+    }
+}
+
+// ============================================================
+// EXPORT TO WORD (.docx)
+// ============================================================
+// Generates a real Word document (Word-native tables, images, page breaks, and a
+// repeating header/footer) straight from the item's data — not from the HTML preview at
+// all. Word's own page-layout engine is far more predictable for a fixed-page report than
+// a browser's print pipeline, so once this .docx is in hand, Word's own File > Save As >
+// PDF gives a reliable result without fighting CSS/canvas rendering quirks.
+
+function docxBytesFromDataUri(dataUri) {
+    if (!dataUri || typeof dataUri !== 'string' || !dataUri.startsWith('data:')) return null;
+    const comma = dataUri.indexOf(',');
+    if (comma === -1) return null;
+    const base64 = dataUri.slice(comma + 1);
+    try {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+    } catch (e) { return null; }
+}
+
+function docxImageNaturalSize(dataUri) {
+    return new Promise((resolve) => {
+        if (!dataUri) { resolve(null); return; }
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+        img.onerror = () => resolve(null);
+        img.src = dataUri;
+    });
+}
+
+function docxFitBox(natW, natH, maxW, maxH) {
+    if (!natW || !natH) return { width: maxW, height: maxH };
+    const ratio = Math.min(maxW / natW, maxH / natH);
+    return { width: Math.max(1, Math.round(natW * ratio)), height: Math.max(1, Math.round(natH * ratio)) };
+}
+
+// A Paragraph containing the image (fit within maxW x maxH, aspect preserved) or a plain
+// "—" placeholder when there's no photo for that field.
+async function docxPhotoParagraph(dataUri, maxW, maxH) {
+    const bytes = docxBytesFromDataUri(dataUri);
+    if (!bytes) {
+        return new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: '—', color: '9CA3AF', italics: true })] });
+    }
+    const natural = await docxImageNaturalSize(dataUri);
+    const dims = docxFitBox(natural ? natural.w : maxW, natural ? natural.h : maxH, maxW, maxH);
+    return new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.ImageRun({ data: bytes, transformation: dims })] });
+}
+
+function docxLabelCell(text) {
+    return new docx.TableCell({
+        width: { size: 30, type: docx.WidthType.PERCENTAGE },
+        shading: { fill: 'F3F4F6' },
+        margins: { top: 80, bottom: 80, left: 100, right: 100 },
+        children: [new docx.Paragraph({ children: [new docx.TextRun({ text: text, bold: true, size: 18 })] })]
+    });
+}
+
+function docxValueCell(value, opts) {
+    opts = opts || {};
+    const text = (value === undefined || value === null || value === '') ? '—' : String(value);
+    return new docx.TableCell({
+        width: { size: 70, type: docx.WidthType.PERCENTAGE },
+        margins: { top: 80, bottom: 80, left: 100, right: 100 },
+        children: [new docx.Paragraph({ children: [new docx.TextRun({ text: text, italics: !!opts.italic, size: 18 })] })]
+    });
+}
+
+function docxRow(label, value, opts) {
+    return new docx.TableRow({ children: [docxLabelCell(label), docxValueCell(value, opts)] });
+}
+
+function docxTable(rows) {
+    return new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows });
+}
+
+function docxSectionTitle(text, bgHex, textHex) {
+    return new docx.Paragraph({
+        shading: { fill: bgHex || '111827' },
+        spacing: { before: 240, after: 140 },
+        children: [new docx.TextRun({ text: text, bold: true, color: textHex || 'FFFFFF', size: 22 })]
+    });
+}
+
+async function docxPhotoGridRow(keysAndLabels, item, maxW, maxH) {
+    const cells = [];
+    for (const kl of keysAndLabels) {
+        const photoPara = await docxPhotoParagraph(item[kl.key], maxW, maxH);
+        cells.push(new docx.TableCell({
+            width: { size: Math.floor(100 / keysAndLabels.length), type: docx.WidthType.PERCENTAGE },
+            margins: { top: 80, bottom: 80, left: 60, right: 60 },
+            children: [
+                new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: kl.label, bold: true, size: 14, color: '374151' })] }),
+                photoPara
+            ]
+        }));
+    }
+    return new docx.TableRow({ children: cells });
+}
+
+async function buildReportDocxBlob(item) {
+    const D = docx;
+    const PAGE_W = 12240, PAGE_H = 15840; // US Letter, twips
+    const MARGIN = 720; // ~0.5in
+
+    const headerBytes = docxBytesFromDataUri(REPORT_LETTERHEAD_HEADER);
+    const footerBytes = docxBytesFromDataUri(REPORT_LETTERHEAD_FOOTER);
+    const headerImg = headerBytes ? new D.ImageRun({ data: headerBytes, transformation: { width: 680, height: Math.round(680 * (570 / 2550)) } }) : null;
+    const footerImg = footerBytes ? new D.ImageRun({ data: footerBytes, transformation: { width: 680, height: Math.round(680 * (270 / 2550)) } }) : null;
+
+    const header = new D.Header({ children: [new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: headerImg ? [headerImg] : [] })] });
+    const footer = new D.Footer({ children: [new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: footerImg ? [footerImg] : [] })] });
+
+    const children = [];
+    const pageBreakPara = () => new D.Paragraph({ children: [new D.PageBreak()] });
+
+    // ---- PAGE 1: Identity + Photos ----
+    children.push(new D.Paragraph({
+        shading: { fill: '111827' }, alignment: D.AlignmentType.CENTER, spacing: { after: 160 },
+        children: [new D.TextRun({ text: `TECHNICAL SPECIFICATION DIRECTIVE — PRODUCT BOM: ID-${item.id || ''}`, bold: true, color: 'FFFFFF', size: 24 })]
+    }));
+    children.push(docxTable([
+        docxRow('Item Description', item.description),
+        docxRow('SKU No', item.sku_no),
+        docxRow('UPC', item.upc),
+        docxRow('ASIN', item.asin),
+        docxRow('GTIN', item.gtin),
+        docxRow('Priority SKU', item.priority_sku),
+        docxRow('Date', item.date)
+    ]));
+    children.push(new D.Paragraph({ spacing: { before: 200, after: 80 }, children: [new D.TextRun({ text: 'MARKETING IMAGE & PACKAGE CONTENT IMAGE', bold: true, size: 18 })] }));
+    children.push(docxTable([await docxPhotoGridRow([{ key: 'product_photo', label: 'Marketing Image' }, { key: 'pkg_content_photo', label: 'Package Content' }], item, 260, 260)]));
+    children.push(new D.Paragraph({ spacing: { before: 200, after: 80 }, children: [new D.TextRun({ text: 'MULTI-ANGLE ELEVATION ARCHIVE', bold: true, size: 18 })] }));
+    children.push(docxTable([
+        await docxPhotoGridRow([{ key: 'front_photo', label: 'Front View' }, { key: 'rear_photo', label: 'Rear View' }, { key: 'left_photo', label: 'Left View' }], item, 170, 170),
+        await docxPhotoGridRow([{ key: 'right_photo', label: 'Right View' }, { key: 'top_photo', label: 'Top View' }, { key: 'bottom_photo', label: 'Bottom View' }], item, 170, 170)
+    ]));
+    children.push(new D.Paragraph({ spacing: { before: 160 }, children: [new D.TextRun({ text: 'Photo Remarks: ', bold: true, size: 18 }), new D.TextRun({ text: item.photo_remarks || '—', italics: true, size: 18 })] }));
+    children.push(pageBreakPara());
+
+    // ---- PAGE 2: Master Carton + Gift Box ----
+    children.push(docxSectionTitle('OUTER MASTER CARTON PACKAGING SPECIFICATIONS', 'FEF9C3', '713F12'));
+    const mcDim = `L: ${item.mc_l || '—'} cm ${item.mc_l ? '(' + (parseFloat(item.mc_l) / 2.54).toFixed(2) + ' in)' : ''}  |  W: ${item.mc_w || '—'} cm ${item.mc_w ? '(' + (parseFloat(item.mc_w) / 2.54).toFixed(2) + ' in)' : ''}  |  H: ${item.mc_h || '—'} cm ${item.mc_h ? '(' + (parseFloat(item.mc_h) / 2.54).toFixed(2) + ' in)' : ''}`;
+    children.push(docxTable([
+        docxRow('Carton Dim', mcDim),
+        docxRow('Gross Weight', `${item.mc_weight || '—'} kg ${item.mc_weight ? '(' + (parseFloat(item.mc_weight) * 2.205).toFixed(2) + ' lbs)' : ''}`),
+        docxRow('Qty per Carton', item.mc_qty ? `${item.mc_qty} units` : '—'),
+        docxRow('Carton Remarks', item.mc_remarks, { italic: true })
+    ]));
+    children.push(docxTable([await docxPhotoGridRow(masterCartonPhotoKeys, item, 150, 150)]));
+
+    children.push(docxSectionTitle('PRODUCT PACKAGING (GIFT BOX) SPECIFICATIONS', 'DBEAFE', '1E3A8A'));
+    const gbDim = `L: ${item.gb_l || '—'} cm ${item.gb_l ? '(' + (parseFloat(item.gb_l) / 2.54).toFixed(2) + ' in)' : ''}  |  W: ${item.gb_w || '—'} cm ${item.gb_w ? '(' + (parseFloat(item.gb_w) / 2.54).toFixed(2) + ' in)' : ''}  |  H: ${item.gb_h || '—'} cm ${item.gb_h ? '(' + (parseFloat(item.gb_h) / 2.54).toFixed(2) + ' in)' : ''}`;
+    children.push(docxTable([
+        docxRow('Box Dim', gbDim),
+        docxRow('Gross Weight', `${item.gb_weight || '—'} kg ${item.gb_weight ? '(' + (parseFloat(item.gb_weight) * 2.205).toFixed(2) + ' lbs)' : ''}`),
+        docxRow('Qty / Carton', item.gb_qty),
+        docxRow('Artwork Link', item.gb_artwork),
+        docxRow('Box Remarks', item.gb_remarks, { italic: true })
+    ]));
+    children.push(docxTable([
+        await docxPhotoGridRow(giftBoxPhotoKeys.slice(0, 3), item, 150, 150),
+        await docxPhotoGridRow(giftBoxPhotoKeys.slice(3, 6), item, 150, 150)
+    ]));
+    children.push(new D.Paragraph({ alignment: D.AlignmentType.RIGHT, spacing: { before: 120 }, children: [new D.TextRun({ text: `Generated by RHINO USA Spec Suite — ${new Date().toLocaleString()}`, size: 14, color: '9CA3AF' })] }));
+    children.push(pageBreakPara());
+
+    // ---- BOM PAGES (chunked, matching the on-screen preview's COMPONENTS_PER_PAGE) ----
+    const components = item.components || [];
+    const bomChunks = [];
+    if (components.length > 0) {
+        for (let i = 0; i < components.length; i += COMPONENTS_PER_PAGE) bomChunks.push(components.slice(i, i + COMPONENTS_PER_PAGE));
+    } else {
+        bomChunks.push([]);
+    }
+    for (let c = 0; c < bomChunks.length; c++) {
+        children.push(docxSectionTitle('BILL OF MATERIALS — COMPONENT MATRIX & DIMENSIONS'));
+        const chunk = bomChunks[c];
+        if (chunk.length === 0) {
+            children.push(new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: [new D.TextRun({ text: 'No components entered yet.', italics: true, color: '9CA3AF' })] }));
+        } else {
+            for (const sub of chunk) {
+                children.push(new D.Paragraph({ spacing: { before: 160, after: 60 }, children: [new D.TextRun({ text: `PART ${sub.id}: ${sub.description || '—'}`, bold: true, size: 20 })] }));
+                children.push(docxTable([
+                    docxRow('Material', sub.material),
+                    docxRow('Color / Pantone', sub.color),
+                    docxRow('Testing Standard', sub.reliability_test),
+                    docxRow('Weight', sub.weight_kg ? `${sub.weight_kg} kg (${(parseFloat(sub.weight_kg) * 2.205).toFixed(2)} lbs)` : '—'),
+                    docxRow('Dimensions (L x W x H, cm)', [sub.dim_l_cm, sub.dim_w_cm, sub.dim_h_cm].map(v => v || '—').join(' x ')),
+                    docxRow('Volume', sub.volume_oz_l)
+                ]));
+                children.push(await docxPhotoParagraph(sub.component_photo, 200, 200));
+                if (sub.sub_remarks) {
+                    children.push(new D.Paragraph({ spacing: { before: 60, after: 160 }, children: [new D.TextRun({ text: 'Remarks: ', bold: true, size: 16 }), new D.TextRun({ text: sub.sub_remarks, size: 16 })] }));
+                }
+            }
+        }
+        children.push(pageBreakPara());
+    }
+
+    // ---- OTHER COMPONENTS PAGE ----
+    if (item.show_other_components) {
+        children.push(docxSectionTitle('MATERIAL COMPONENT', 'FFF7ED', '92400E'));
+        if (item.other_components_photo) {
+            children.push(await docxPhotoParagraph(item.other_components_photo, 400, 300));
+        }
+        const ocHeaderCells = ['ITEM', 'COMPONENT DESCRIPTION', 'MATERIAL'].map(h =>
+            new D.TableCell({ shading: { fill: 'F3F4F6' }, children: [new D.Paragraph({ children: [new D.TextRun({ text: h, bold: true, size: 16 })] })] })
+        );
+        const ocRows = [new D.TableRow({ children: ocHeaderCells })];
+        for (const oc of (item.other_components || [])) {
+            ocRows.push(new D.TableRow({ children: [oc.item, oc.component_desc, oc.material].map(v =>
+                new D.TableCell({ children: [new D.Paragraph({ children: [new D.TextRun({ text: (v === undefined || v === null || v === '') ? '—' : String(v), size: 16 })] })] })
+            ) }));
+        }
+        children.push(docxTable(ocRows));
+        children.push(pageBreakPara());
+    }
+
+    // ---- COMPLIANCE ----
+    if (item.show_compliance) {
+        children.push(docxSectionTitle(`COMPLIANCE & TESTING PROFILE MATRIX — ${item.sku_no || item.description || ''}`));
+        const compliance = item.compliance || [];
+        if (!compliance.length) {
+            children.push(new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: [new D.TextRun({ text: 'No compliance data entered yet.', italics: true, color: '9CA3AF' })] }));
+        } else {
+            const headerCells = ['REF', 'COMPONENT / FEATURE TESTING', 'STANDARD REFERENCE', 'ACCEPTANCE CRITERIA', 'REQUIREMENTS'].map(h =>
+                new D.TableCell({ shading: { fill: 'F3F4F6' }, children: [new D.Paragraph({ children: [new D.TextRun({ text: h, bold: true, size: 14 })] })] })
+            );
+            const rows = [new D.TableRow({ children: headerCells })];
+            for (const cp of compliance) {
+                rows.push(new D.TableRow({ children: [cp.id, cp.test, cp.standard, cp.criteria, cp.requirements].map(v =>
+                    new D.TableCell({ children: [new D.Paragraph({ children: [new D.TextRun({ text: (v === undefined || v === null || v === '') ? '—' : String(v), size: 16 })] })] })
+                ) }));
+            }
+            children.push(docxTable(rows));
+        }
+        children.push(pageBreakPara());
+    }
+
+    // ---- CTQ ----
+    if (item.show_ctq) {
+        children.push(docxSectionTitle(`CRITICAL TO QUALITY (CTQ) GATE LEDGER — ${item.sku_no || item.description || ''}`));
+        const ctq = item.ctq || [];
+        if (!ctq.length) {
+            children.push(new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: [new D.TextRun({ text: 'No CTQ data entered yet.', italics: true, color: '9CA3AF' })] }));
+        } else {
+            for (let qIdx = 0; qIdx < ctq.length; qIdx++) {
+                const cq = ctq[qIdx];
+                children.push(new D.Paragraph({ spacing: { before: 140, after: 60 }, children: [new D.TextRun({ text: `REF ${cq.id || qIdx + 1}: ${cq.factor || '—'}`, bold: true, size: 18 })] }));
+                children.push(docxTable([
+                    docxRow('Description', cq.description),
+                    docxRow('Performance Criteria', cq.criteria)
+                ]));
+                children.push(await docxPhotoParagraph(item['ctq_photo_' + qIdx], 220, 180));
+            }
+        }
+        children.push(pageBreakPara());
+    }
+
+    // ---- MARKETING (features / benefits / instructions) ----
+    if (item.show_marketing) {
+        children.push(docxSectionTitle(`PRODUCT MARKETING ATTRIBUTES & DOCUMENTATION — ${item.sku_no || item.description || ''}`));
+        children.push(new D.Paragraph({ spacing: { before: 120, after: 60 }, children: [new D.TextRun({ text: 'CORE PRODUCT FEATURES', bold: true, size: 18 })] }));
+        const features = item.features || [];
+        for (let i = 0; i < features.length; i++) {
+            children.push(new D.Paragraph({ children: [new D.TextRun({ text: features[i].text || '—', bold: true, size: 16 })] }));
+            children.push(await docxPhotoParagraph(item['features_photo_' + i], 220, 180));
+        }
+        children.push(new D.Paragraph({ spacing: { before: 160, after: 60 }, children: [new D.TextRun({ text: 'CONSUMER BENEFITS', bold: true, size: 18 })] }));
+        const benefits = item.benefits || [];
+        for (let i = 0; i < benefits.length; i++) {
+            children.push(new D.Paragraph({ children: [new D.TextRun({ text: benefits[i].text || '—', bold: true, size: 16 })] }));
+            children.push(await docxPhotoParagraph(item['benefits_photo_' + i], 220, 180));
+        }
+        if (item.instructions_photo) {
+            children.push(new D.Paragraph({ spacing: { before: 160, after: 60 }, children: [new D.TextRun({ text: 'USER MANUAL INFOGRAPHIC', bold: true, size: 18 })] }));
+            children.push(await docxPhotoParagraph(item.instructions_photo, 500, 500));
+        }
+        children.push(pageBreakPara());
+    }
+
+    // ---- DRAWING ----
+    if (item.show_drawing) {
+        children.push(docxSectionTitle(`PRODUCT DRAWING — ENGINEERING BLUEPRINT — ${item.sku_no || item.description || ''}`));
+        if (item.drawing_photo) {
+            children.push(await docxPhotoParagraph(item.drawing_photo, 600, 700));
+        } else {
+            children.push(new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: [new D.TextRun({ text: 'No engineering drawing uploaded yet.', italics: true, color: '9CA3AF' })] }));
+        }
+        children.push(pageBreakPara());
+    }
+
+    // ---- AUTHORIZATION ----
+    if (item.show_authorization) {
+        children.push(docxSectionTitle('SUPPLIER AUTHORIZATION'));
+        children.push(docxTable([
+            docxRow('Supplier Name', ''),
+            docxRow('Authorize Representative', ''),
+            docxRow('Title', ''),
+            docxRow('Signature', ''),
+            docxRow('Date', ''),
+            docxRow('Company Stamp / Seal', '')
+        ]));
+    }
+
+    const reportDoc = new D.Document({
+        sections: [{
+            properties: {
+                page: { size: { width: PAGE_W, height: PAGE_H }, margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN } }
+            },
+            headers: { default: header },
+            footers: { default: footer },
+            children
+        }]
+    });
+
+    return await D.Packer.toBlob(reportDoc);
+}
+
+async function exportToWord(item) {
+    const ok = await requirePassword('exportme', { title: 'Confirm Export', sub: 'Enter the password to export this item to Word.' });
+    if (!ok) return;
+
+    const btn = document.getElementById('export-docx-btn');
+    const originalLabel = btn ? btn.innerHTML : null;
+    if (btn) { btn.innerHTML = '⏳ Generating Word…'; btn.disabled = true; btn.style.opacity = '0.6'; btn.style.cursor = 'wait'; btn.style.pointerEvents = 'none'; }
+
+    try {
+        if (typeof docx === 'undefined') {
+            throw new Error('Word export engine failed to load (check your internet connection) — please try again.');
+        }
+        const blob = await buildReportDocxBlob(item);
+        const safeSku = (item.sku_no || 'Spec_Report').replace(/[^a-z0-9_-]+/gi, '_');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeSku}_Report.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        showToast('✅', 'Word document downloaded — open it and use File → Save As → PDF for a reliable export.');
+    } catch (err) {
+        console.error('Word export failed:', err);
+        showToast('⚠️', 'Word export failed: ' + (err && err.message ? err.message : 'unknown error'));
+    } finally {
+        if (btn) { btn.innerHTML = originalLabel; btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; btn.style.pointerEvents = ''; }
     }
 }
 
