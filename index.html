@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RHINO USA Specification Suite</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --pantone-802c: #44D62C; }
         .text-pantone { color: var(--pantone-802c); }
@@ -81,10 +80,21 @@
             }
             body.printing-report #pdf-preview-content { background:#fff!important; padding:0!important; }
             body.printing-report .report-preview-wrap { background:#fff!important; padding:0!important; }
-            body.printing-report .report-page { margin-bottom:0!important; page-break-after:always; }
+            body.printing-report .report-page { margin-bottom:0!important; page-break-after:always; break-after:page; }
             body.printing-report .page-label { display:none!important; }
+            /* overflow:visible (not hidden) here is deliberate: if a page's real content is
+               ever taller than the 1056px design height, we want it to flow onto an extra
+               physical page rather than get silently clipped away and lost. */
             body.printing-report .report-page > div[style*="background:#fff"] {
-                box-shadow:none!important; border-radius:0!important;
+                box-shadow:none!important; border-radius:0!important; overflow:visible!important;
+            }
+            /* Keep each photo/table row intact rather than splitting a row across two
+               physical pages when a page's content runs long (the outer per-page table is
+               intentionally excluded — forcing THAT whole thing to avoid breaking would push
+               entire oversized pages onto the next sheet instead of just breaking cleanly
+               between rows). */
+            body.printing-report tr {
+                page-break-inside:avoid!important; break-inside:avoid!important;
             }
         }
         @page { size: letter; margin: 0; }
@@ -880,88 +890,33 @@ async function uploadPDFToDrive(item, idx) {
     }
 }
 
-// Tailwind v4 (which the rest of this app's UI uses) paints its default palette using the
-// modern oklch() color function. The original html2canvas library can't parse oklch/lab/lch
-// colors at all and throws ("Attempting to parse an unsupported color function"), so we load
-// html2canvas-pro instead — a drop-in fork with the exact same API that adds support for
-// those modern color functions. Loaded lazily (only when exporting) via dynamic import so the
-// rest of the app doesn't need a bundler/build step for this one dependency.
-let _html2canvasProPromise = null;
-function loadHtml2CanvasPro() {
-    if (!_html2canvasProPromise) {
-        _html2canvasProPromise = import('https://cdn.jsdelivr.net/npm/html2canvas-pro@2.3.9/+esm')
-            .then(mod => mod.default || mod.html2canvas || mod);
-    }
-    return _html2canvasProPromise;
-}
-
+// Canvas-screenshot approaches (html2canvas and its forks) all work by re-implementing the
+// browser's CSS engine in JavaScript well enough to paint onto a <canvas> — which means they
+// have to re-parse and support every color function, layout mode, and page-break rule the app
+// uses. Tailwind v4's oklch() colors broke that outright, and even with a workaround, complex
+// flex/print layouts routinely render slightly differently in a re-implemented engine than in
+// the real one. The reliable fix is to stop re-implementing the rendering pipeline and instead
+// let the browser's OWN native print engine do it: print CSS below hides the rest of the app
+// and isolates the report, so window.print() renders the exact same layout engine (and colors,
+// oklch included) that already draws the on-screen preview — no separate JS renderer involved.
 async function exportToPDF(item) {
     const ok = await requirePassword('exportme', { title: 'Confirm Export', sub: 'Enter the password to export this item to PDF.' });
     if (!ok) return;
-
-    // Render each sheet that's ALREADY on screen (via html2canvas) straight into a PDF
-    // (via jsPDF) and download it directly — no browser print dialog in between. Because
-    // the PDF is a literal screenshot of the same DOM the preview shows, it is guaranteed
-    // to look identical to what's on screen; there's no separate render path that can drift.
-    const btn = document.getElementById('export-pdf-btn');
-    const originalLabel = btn ? btn.innerHTML : null;
-    if (btn) { btn.innerHTML = '⏳ Generating PDF…'; btn.disabled = true; btn.style.opacity = '0.6'; btn.style.cursor = 'wait'; btn.style.pointerEvents = 'none'; }
-
-    // html2canvas gets confused by nested scrollable containers (it can capture the wrong
-    // slice of content, or a slice offset relative to the current scroll position) — the
-    // popup's inner wrapper scrolls independently of the page. Temporarily remove that
-    // clipping/scrolling so every sheet is captured exactly as laid out, regardless of
-    // where the popup happened to be scrolled to when Export was clicked.
-    const scroller = document.getElementById('pdf-popup-inner');
-    const prevScrollerStyle = scroller ? { overflow: scroller.style.overflow, height: scroller.style.height, maxHeight: scroller.style.maxHeight } : null;
-    if (scroller) {
-        scroller.scrollTop = 0;
-        scroller.style.overflow = 'visible';
-        scroller.style.height = 'auto';
-        scroller.style.maxHeight = 'none';
-    }
-
-    try {
-        const html2canvas = await loadHtml2CanvasPro();
-        if (typeof html2canvas !== 'function' || !window.jspdf) {
-            throw new Error('PDF engine failed to load (check your internet connection) — please try again.');
-        }
-        const sheets = Array.from(document.querySelectorAll('#pdf-preview-content .report-page > div[style*="background:#fff"]'));
-        if (!sheets.length) {
-            showToast('⚠️', 'Nothing to export — open the preview first.');
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'px', format: [816, 1056], orientation: 'portrait', compress: true });
-
-        for (let i = 0; i < sheets.length; i++) {
-            const canvas = await html2canvas(sheets[i], {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                scrollX: 0,
-                scrollY: -window.scrollY
-            });
-            const imgData = canvas.toDataURL('image/jpeg', 0.92);
-            if (i > 0) doc.addPage([816, 1056], 'portrait');
-            doc.addImage(imgData, 'JPEG', 0, 0, 816, 1056);
-        }
-
-        const safeSku = (item.sku_no || 'Spec_Report').replace(/[^a-z0-9_-]+/gi, '_');
-        doc.save(`${safeSku}_Report.pdf`);
-        showToast('✅', 'PDF downloaded — matches the preview exactly.');
-    } catch (err) {
-        console.error('PDF export failed:', err);
-        showToast('⚠️', 'PDF export failed: ' + (err && err.message ? err.message : 'unknown error'));
-    } finally {
-        if (btn) { btn.innerHTML = originalLabel; btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; btn.style.pointerEvents = ''; }
-        if (scroller && prevScrollerStyle) {
-            scroller.style.overflow = prevScrollerStyle.overflow;
-            scroller.style.height = prevScrollerStyle.height;
-            scroller.style.maxHeight = prevScrollerStyle.maxHeight;
-        }
-    }
+    document.body.classList.add('printing-report');
+    let cleaned = false;
+    const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        document.body.classList.remove('printing-report');
+        window.removeEventListener('afterprint', cleanup);
+    };
+    // window.print() doesn't reliably block until the print/save dialog is actually closed,
+    // so a fixed setTimeout risks reverting the print styling while the browser is still
+    // rendering/saving — wait for the real 'afterprint' event instead, with a generous
+    // fallback timeout as a safety net in case that event doesn't fire for some reason.
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+    setTimeout(cleanup, 20000);
 }
 
 function previewAndExportPDF() {
@@ -1855,11 +1810,11 @@ function closePdfPopup() {
 }
 
 // Some people reach for Ctrl/Cmd+P out of habit instead of clicking the green
-// "Export to PDF" button. The browser's own print dialog does NOT match the on-screen
-// preview (it repaginates the layout itself and can split a page's content in the
-// middle), so while the report popup is open we intercept that shortcut and run the
-// same one-click export the button uses — that's the only path that's guaranteed to
-// look exactly like the preview.
+// "Export to PDF" button. Export IS the browser's native print now, but it still needs
+// the 'printing-report' class in place (added by exportToPDF) so the print CSS above
+// correctly isolates the report from the rest of the app — a raw, un-intercepted Ctrl+P
+// would skip that step and print the whole page, sidebar and all. So we redirect the
+// shortcut through the same function the button uses.
 document.addEventListener('keydown', function(e) {
     const isPrintShortcut = (e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P');
     if (!isPrintShortcut) return;
@@ -1868,10 +1823,14 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     exportToPDF(currentPdfIdx !== null ? currentData.main_items[currentPdfIdx] : editorItem);
 });
+// Only warn if printing was triggered WITHOUT going through exportToPDF (e.g. the
+// browser's right-click/menu "Print…", which we have no way to intercept) — otherwise
+// this would fire on every legitimate export too, since that also calls window.print().
 window.addEventListener('beforeprint', function() {
     const popup = document.getElementById('pdf-popup');
-    if (popup && popup.classList.contains('show')) {
-        showToast('⚠️', 'Use the green "Export to PDF" button — the browser\'s own Print won\'t match the preview.');
+    const isManaged = document.body.classList.contains('printing-report');
+    if (popup && popup.classList.contains('show') && !isManaged) {
+        showToast('⚠️', 'Use the green "Export to PDF" button instead of the browser\'s menu — it won\'t isolate the report correctly.');
     }
 });
 
