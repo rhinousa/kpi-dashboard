@@ -903,10 +903,30 @@ async function uploadPDFToDrive(item, idx) {
     }
 }
 
+// Recursively collects every folder ID nested under the given root folder IDs, at any
+// depth, so a search across them still reaches files saved into subfolders someone
+// creates later (e.g. "TD/2026" or "TD/Ratchet Straps") — not just the roots themselves.
+// Walks level-by-level, batching all of one level's parent-IDs into a single query, so the
+// number of API calls is the tree's depth, not its total folder count.
+async function collectFolderIdsRecursive(rootIds) {
+    const all = new Set(rootIds);
+    let frontier = [...rootIds];
+    while (frontier.length) {
+        const parentClause = frontier.map(id => `'${id}' in parents`).join(' or ');
+        const q = encodeURIComponent(`(${parentClause}) and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const result = await gdriveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true`);
+        const children = ((result && result.files) || []).map(f => f.id).filter(id => !all.has(id));
+        children.forEach(id => all.add(id));
+        frontier = children;
+    }
+    return [...all];
+}
+
 // For teams who'd rather export the real PDF locally (native print), manually drop it in
 // the shared Drive folder themselves, then have the app find it and auto-fill the Drive
-// Link field — instead of copy-pasting the link by hand. Searches both the root PDF
-// folder and the item's SKU-category subfolder for a filename containing the SKU.
+// Link field — instead of copy-pasting the link by hand. Searches the root PDF folder,
+// every category subfolder, and any nested subfolders inside those, for a filename
+// containing the SKU.
 async function findDriveLinkBySku(idx) {
     const item = currentData.main_items[idx];
     if (!item) return;
@@ -920,13 +940,16 @@ async function findDriveLinkBySku(idx) {
         return;
     }
 
-    const category = getCategoryFromSKU(sku);
-    const folderIds = category ? [PDF_FOLDER_ID, CATEGORY_FOLDER_IDS[category]] : [PDF_FOLDER_ID];
-    const parentClause = folderIds.map(id => `'${id}' in parents`).join(' or ');
-    const nameNeedle = sku.replace(/'/g, "\\'");
-
     showToast('🔍', 'Searching Drive for a matching PDF…');
     try {
+        // Scan the root folder, every category subfolder (AC, BO, CA, MERCH, RG, TD, TO),
+        // and anything nested inside them — not just the one matching the SKU prefix —
+        // since a PDF may have been saved anywhere in that tree.
+        const rootFolderIds = [PDF_FOLDER_ID, ...Object.values(CATEGORY_FOLDER_IDS)];
+        const folderIds = await collectFolderIdsRecursive(rootFolderIds);
+        const parentClause = folderIds.map(id => `'${id}' in parents`).join(' or ');
+        const nameNeedle = sku.replace(/'/g, "\\'");
+
         const q = encodeURIComponent(`name contains '${nameNeedle}' and (${parentClause}) and trashed=false and mimeType='application/pdf'`);
         const result = await gdriveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&supportsAllDrives=true&includeItemsFromAllDrives=true`);
         const files = (result && result.files) || [];
