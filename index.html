@@ -922,12 +922,19 @@ async function exportToPDF(item) {
     const safeName = (item.sku_no || item.description || 'RHINO-USA-Spec')
         .toString().trim().replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ');
     document.title = safeName;
+    // Photo links (see wrapPhotoLink) are stored as data-href, not href, so clicking a
+    // photo in the live preview doesn't hijack the Amazon-zoom click handler. Promote
+    // them to real hrefs only for the print pass, so Chrome captures them as clickable
+    // link annotations in the resulting PDF, then demote them back afterward.
+    const photoLinkEls = document.querySelectorAll('#pdf-preview-content a.photo-drivelink[data-href]');
+    photoLinkEls.forEach(a => a.setAttribute('href', a.getAttribute('data-href')));
     let cleaned = false;
     const cleanup = () => {
         if (cleaned) return;
         cleaned = true;
         document.body.classList.remove('printing-report');
         document.title = originalTitle;
+        photoLinkEls.forEach(a => a.removeAttribute('href'));
         window.removeEventListener('afterprint', cleanup);
     };
     // window.print() doesn't reliably block until the print/save dialog is actually closed,
@@ -1875,9 +1882,14 @@ function driveViewLink(url) {
     const m = url.match(/drive\.google\.com\/thumbnail\?id=([^&]+)/);
     return m ? `https://drive.google.com/file/d/${m[1]}/view` : null;
 }
+// Note: this uses data-href instead of a real href. A real href would hijack clicks in
+// the on-screen preview (navigating to Drive instead of triggering the Amazon-style
+// zoom), so the href is only promoted onto the element right before window.print() (see
+// exportToPDF) and removed again right after — the exported/printed PDF ends up with a
+// real clickable link, while the live preview's zoom-on-click keeps working normally.
 function wrapPhotoLink(url, innerHtml) {
     const link = driveViewLink(url);
-    return link ? `<a href="${link}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;cursor:pointer">${innerHtml}</a>` : innerHtml;
+    return link ? `<a class="photo-drivelink" data-href="${link}" style="text-decoration:none;color:inherit">${innerHtml}</a>` : innerHtml;
 }
 
 function buildReportHTML(item) {
