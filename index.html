@@ -1905,7 +1905,7 @@ function buildReportHTML(item) {
     // How many physical pages this report will have depends on which optional
     // sections are toggled on for this item — numbering below reflects that.
     const numComponentPages = Math.max(Math.ceil((item.components||[]).length / COMPONENTS_PER_PAGE), 1);
-    const totalReportPages = 2 + numComponentPages + (item.show_other_components ? 1 : 0) + (item.show_compliance ? 1 : 0) + (item.show_ctq ? 1 : 0) + (item.show_marketing ? 1 : 0) + (item.show_drawing ? 1 : 0) + (item.show_authorization ? 1 : 0);
+    const totalReportPages = 2 + numComponentPages + (item.show_other_components ? 1 : 0) + (item.show_compliance ? 1 : 0) + (item.show_ctq ? 1 : 0) + (item.show_marketing ? 1 : 0) + (item.instructions_photo ? 1 : 0) + (item.show_drawing ? 1 : 0) + (item.show_authorization ? 1 : 0);
     let reportPageNum = 1;
     const pageLabel = () => `PAGE ${reportPageNum++} OF ${totalReportPages}`;
 
@@ -2199,10 +2199,22 @@ function buildReportHTML(item) {
                     ${(item.benefits||[]).map((bn,i)=>`<div style="border-bottom:1px solid #e5e7eb;padding-bottom:12px;margin-bottom:12px;display:table;width:100%"><div style="display:table-row"><div style="display:table-cell;vertical-align:top;padding-right:10px;width:55%"><div style="font-weight:700;font-size:11px;margin-bottom:4px">${bn.text||'—'}</div></div><div style="display:table-cell;vertical-align:top;width:45%">${item['benefits_photo_'+i]?wrapPhotoLink(item['benefits_photo_'+i], `<img src="${item['benefits_photo_'+i]}" style="max-width:100%;max-height:200px;object-fit:contain;border-radius:4px">`):''}</div></div></div>`).join('')}
                 </td>
             </tr>
-            ${item.instructions_photo?`<tr><td colspan="6" style="padding:14px;border:1px solid #9ca3af">
-                <div style="font-size:9px;font-weight:700;color:#374151;text-transform:uppercase;margin-bottom:6px">USER MANUAL INFOGRAPHIC</div>
-                ${wrapPhotoLink(item.instructions_photo, `<img src="${item.instructions_photo}" style="max-width:100%;object-fit:contain">`)}
-            </td></tr>`:''}
+        </table>
+        <div style="flex:1 0 auto"></div>
+        <img src="${REPORT_LETTERHEAD_FOOTER}" style="width:calc(100% + 60px);max-width:none;display:block;margin:14px -30px -20px -30px">
+        </div>
+    </div>` : ''}
+
+    ${item.instructions_photo ? `
+    <div class="report-page">
+        <div class="page-label">${pageLabel()}</div>
+        <div style="background:#fff;padding:20px">
+        <img src="${REPORT_LETTERHEAD_HEADER}" style="width:calc(100% + 60px);max-width:none;display:block;margin:-20px -30px 14px -30px">
+        <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+            <tr style="background:#111827"><td colspan="6" style="padding:8px;border:1px solid #374151;text-align:center;font-weight:900;font-size:11px;color:#fff;letter-spacing:0.05em">USER MANUAL INFOGRAPHIC — ${item.sku_no||item.description}</td></tr>
+            <tr><td colspan="6" style="padding:16px;border:1px solid #9ca3af;text-align:center">
+                ${wrapPhotoLink(item.instructions_photo, `<img src="${item.instructions_photo}" style="max-width:100%;max-height:900px;object-fit:contain">`)}
+            </td></tr>
         </table>
         <div style="flex:1 0 auto"></div>
         <img src="${REPORT_LETTERHEAD_FOOTER}" style="width:calc(100% + 60px);max-width:none;display:block;margin:14px -30px -20px -30px">
