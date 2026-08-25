@@ -903,6 +903,61 @@ async function uploadPDFToDrive(item, idx) {
     }
 }
 
+// For teams who'd rather export the real PDF locally (native print), manually drop it in
+// the shared Drive folder themselves, then have the app find it and auto-fill the Drive
+// Link field — instead of copy-pasting the link by hand. Searches both the root PDF
+// folder and the item's SKU-category subfolder for a filename containing the SKU.
+async function findDriveLinkBySku(idx) {
+    const item = currentData.main_items[idx];
+    if (!item) return;
+    if (!gdriveEnabled || !gdriveToken) {
+        showToast('⚠️', 'Connect Google Drive first.');
+        return;
+    }
+    const sku = (item.sku_no || '').trim();
+    if (!sku) {
+        showToast('⚠️', 'This item needs a SKU No. before it can be matched to a Drive file.');
+        return;
+    }
+
+    const category = getCategoryFromSKU(sku);
+    const folderIds = category ? [PDF_FOLDER_ID, CATEGORY_FOLDER_IDS[category]] : [PDF_FOLDER_ID];
+    const parentClause = folderIds.map(id => `'${id}' in parents`).join(' or ');
+    const nameNeedle = sku.replace(/'/g, "\\'");
+
+    showToast('🔍', 'Searching Drive for a matching PDF…');
+    try {
+        const q = encodeURIComponent(`name contains '${nameNeedle}' and (${parentClause}) and trashed=false and mimeType='application/pdf'`);
+        const result = await gdriveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&supportsAllDrives=true&includeItemsFromAllDrives=true`);
+        const files = (result && result.files) || [];
+
+        if (!files.length) {
+            showToast('❌', `No PDF found on Drive matching "${sku}". Save it in the folder first.`);
+            return;
+        }
+
+        const file = files[0]; // most recently modified match
+        // Make sure it's actually shareable — a file dragged in manually may not be public yet.
+        try {
+            await gdriveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions?supportsAllDrives=true`, 'POST', {
+                role: 'reader', type: 'anyone'
+            });
+        } catch(e) { console.warn('Could not set permissions (may already be shared):', e.message); }
+
+        const driveLink = `https://drive.google.com/file/d/${file.id}/view`;
+        currentData.main_items[idx].drive_pdf_url = driveLink;
+        triggerAutoSave();
+        buildConsolidatedView();
+
+        showToast('✅', files.length > 1
+            ? `Found ${files.length} matches — linked the most recent ("${file.name}").`
+            : `Linked "${file.name}" from Drive!`);
+    } catch(err) {
+        console.error('Drive search error:', err);
+        showToast('❌', 'Drive search failed: ' + err.message);
+    }
+}
+
 // Canvas-screenshot approaches (html2canvas and its forks) all work by re-implementing the
 // browser's CSS engine in JavaScript well enough to paint onto a <canvas> — which means they
 // have to re-parse and support every color function, layout mode, and page-break rule the app
@@ -1727,6 +1782,7 @@ function buildConsolidatedCard(item, idx) {
                     onkeydown="if(event.key==='Enter') saveDriveLink(${idx})"
                     onclick="event.stopPropagation()">
                 <button onclick="saveDriveLink(${idx})" class="bg-blue-900/40 hover:bg-blue-800 border border-blue-700/50 text-blue-300 text-[9px] font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap shrink-0">Save</button>
+                <button onclick="findDriveLinkBySku(${idx})" title="Find a PDF already saved on Drive matching this SKU" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[9px] font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap shrink-0">🔍 Find</button>
                 `}
             </div>
         </td>
@@ -2265,6 +2321,28 @@ function buildItemFormHTML(item, mIdx, isEditor) {
 
     return `
     <div class="space-y-6">
+        <!-- Optional Sections -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-3 gap-2 flex flex-wrap text-xs">
+            <button onclick="editorToggleSection('show_marketing')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-teal-400 cursor-pointer">
+                ${item.show_marketing ? '[−] Hide Marketing Block' : '[+] Marketing & Documentation'}
+            </button>
+            <button onclick="editorToggleSection('show_compliance')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-purple-400 cursor-pointer">
+                ${item.show_compliance ? '[−] Hide Compliance' : '[+] Compliance & Testing'}
+            </button>
+            <button onclick="editorToggleSection('show_ctq')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-red-400 cursor-pointer">
+                ${item.show_ctq ? '[−] Hide CTQ Gates' : '[+] CTQ Safety Gates'}
+            </button>
+            <button onclick="editorToggleSection('show_drawing')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-cyan-400 cursor-pointer">
+                ${item.show_drawing ? '[−] Hide Drawing' : '[+] Engineering Blueprint'}
+            </button>
+            <button onclick="editorToggleSection('show_other_components')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-orange-400 cursor-pointer">
+                ${item.show_other_components ? '[−] Hide Other Components' : '[+] Material Component'}
+            </button>
+            <button onclick="editorToggleSection('show_authorization')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-yellow-400 cursor-pointer">
+                ${item.show_authorization ? '[−] Hide Authorization' : '[+] Authorization & Sign-Off'}
+            </button>
+        </div>
+
         <!-- Identity -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <div class="flex items-center justify-between mb-4">
@@ -2423,28 +2501,6 @@ function buildItemFormHTML(item, mIdx, isEditor) {
                 </div>
             </div>`).join('')}
             <button onclick="editorAddSub()" class="text-xs text-pantone font-bold flex items-center gap-1 cursor-pointer hover:underline">➕ Add Component Part</button>
-        </div>
-
-        <!-- Optional Sections -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-3 gap-2 flex flex-wrap text-xs">
-            <button onclick="editorToggleSection('show_marketing')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-teal-400 cursor-pointer">
-                ${item.show_marketing ? '[−] Hide Marketing Block' : '[+] Marketing & Documentation'}
-            </button>
-            <button onclick="editorToggleSection('show_compliance')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-purple-400 cursor-pointer">
-                ${item.show_compliance ? '[−] Hide Compliance' : '[+] Compliance & Testing'}
-            </button>
-            <button onclick="editorToggleSection('show_ctq')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-red-400 cursor-pointer">
-                ${item.show_ctq ? '[−] Hide CTQ Gates' : '[+] CTQ Safety Gates'}
-            </button>
-            <button onclick="editorToggleSection('show_drawing')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-cyan-400 cursor-pointer">
-                ${item.show_drawing ? '[−] Hide Drawing' : '[+] Engineering Blueprint'}
-            </button>
-            <button onclick="editorToggleSection('show_other_components')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-orange-400 cursor-pointer">
-                ${item.show_other_components ? '[−] Hide Other Components' : '[+] Material Component'}
-            </button>
-            <button onclick="editorToggleSection('show_authorization')" class="px-3 py-1.5 rounded bg-gray-950 hover:bg-gray-800 border border-gray-800 font-bold text-yellow-400 cursor-pointer">
-                ${item.show_authorization ? '[−] Hide Authorization' : '[+] Authorization & Sign-Off'}
-            </button>
         </div>
 
         ${item.show_marketing ? `
