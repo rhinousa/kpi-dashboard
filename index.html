@@ -69,6 +69,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa;pointer-events:none}
 #searchBox{width:100%;padding:6px 10px 6px 30px;border:1.5px solid #dde0e7;border-radius:7px;font-size:12px;background:#fafbfc;color:#333;outline:none;height:34px}
 #searchBox:focus{border-color:#0073ea}
+/* clear (x) button for search bars -- shown only while the box has text (placeholder-shown is false) */
+.sc-clear{display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;padding:0;border:none;border-radius:50%;background:#dfe3ea;color:#555;font-size:11px;line-height:18px;text-align:center;cursor:pointer;z-index:2}
+.sc-clear:hover{background:#c5ccd8;color:#111}
+input:not(:placeholder-shown) ~ .sc-clear{display:block}
+#searchBox,#pmm-search-input,#pca-search-input,input[id$="-search-box"],#pca-addpo-search{padding-right:30px !important}
 
 /* ── App shell / sidebar ─────────────────────────────────────────────── */
 #app-shell{display:flex;min-height:100vh}
@@ -197,6 +202,7 @@ textarea.pmm-input{resize:vertical;min-height:52px;font-family:inherit}
       <div id="search-wrap" style="position:relative">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="searchBox" placeholder="Search products &amp; tests…" autocomplete="off" spellcheck="false" oninput="onSearch(this.value)" onfocus="if(searchQ)mainOpenSearchSuggest()" onblur="mainCloseSearchSuggest()"/>
+        <button type="button" class="sc-clear" title="Clear search" aria-label="Clear search" onmousedown="event.preventDefault()" onclick="scClear('searchBox')">✕</button>
         <div id="main-search-suggest" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #dde0e7;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:60;max-height:280px;overflow-y:auto"></div>
       </div>
       <div style="position:relative;flex-shrink:0">
@@ -343,7 +349,7 @@ textarea.pmm-input{resize:vertical;min-height:52px;font-family:inherit}
   Storage.prototype.removeItem=function(k){return r.call(this,P+k)};
   document.addEventListener("DOMContentLoaded",function(){
     var b=document.createElement("div");
-    b.textContent="TEST COPY \u00b7 DRAFT SHEET (not live data)";
+    b.textContent="TEST COPY \u00b7 DRAFT 2 SHEET (not live data)";
     b.style.cssText="position:fixed;left:12px;bottom:12px;z-index:99999;background:#c0392b;color:#fff;font:700 11px -apple-system,Segoe UI,sans-serif;padding:6px 12px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none;letter-spacing:.3px";
     document.body.appendChild(b);
   });
@@ -353,7 +359,7 @@ textarea.pmm-input{resize:vertical;min-height:52px;font-family:inherit}
 // ── CONFIG ─────────────────────────────────────────────────────────────────
 // ▼▼▼ REQUIRED: fill these in before deploying ▼▼▼
 const GOOGLE_CLIENT_ID = "494765023704-ts4f0c3845oskpr0vpg1iu682adrbjva.apps.googleusercontent.com"; // Google Cloud Console → Credentials → OAuth client ID (type: Web application)
-const SPREADSHEET_ID   = "1EGj-hCWpaunN9e8yMVo1E4QJSiE0VcM2mFNZlWRq0bs"; /* TEST COPY: DRAFT workbook, not the live sheet */           // From the sheet's URL: /d/{SPREADSHEET_ID}/edit
+const SPREADSHEET_ID   = "1GSr5w_8wMZPTEzcRuMefa7NV1bN5FZ3tMBSzlvoWSRA"; /* TEST COPY: DRAFT 2 workbook, not the live sheet */           // From the sheet's URL: /d/{SPREADSHEET_ID}/edit
 const PMM_DRIVE_FOLDER_ID = "1F7VLrzZ6Kfj9xrqJWCcTy2YAuwzisor1"; // Google Drive folder photos get uploaded into
 // ▲▲▲ ──────────────────────────────────────────── ▲▲▲
 const ITEMS_SHEET      = "Items";      // tab name for the parent-product rows
@@ -1143,7 +1149,7 @@ function matchF(item){
       item.meetsClaim,
       // Also search each word segment of the name (e.g. "HDKIT" matches "HDKIT-4PK-GRN")
       ...item.name.split(/[-_\s]/),
-      ...item.subs.map(s=>s.name+" "+s.std+" "+s.criteria)
+      ...item.subs.map(s=>s.name+" "+s.criteria)
     ].join(" ").toLowerCase();
     if(!haystack.includes(q)) return false;
   }
@@ -1417,9 +1423,9 @@ function renderTable(){
 
   // grid — Priority and Annual Test narrower, Compliance Summary wider
   const mg="minmax(0,2fr) 54px 100px minmax(0,280px) 72px minmax(0,130px) 70px";
-  const sg="minmax(0,1.5fr) minmax(0,120px) 70px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)";
+  const sg="minmax(0,2fr) 70px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)";
   const mHdrs=["Product / SKU","Pri","Annual Test","Compliance Summary","Country","Channel","Colors"];
-  const sHdrs=["Test Type","Standard","Result","2024","2025","2026"];
+  const sHdrs=["Test Type","Result","2024","2025","2026"];
 
   let html="";
   grouped.forEach(grp=>{
@@ -1556,7 +1562,7 @@ function renderTable(){
           // If the item was matched by its own name/SKU, show ALL subtests unfiltered
           const itemMatchedDirectly = !searchQ || [item.name, item.description, item.parentSku, item.prioritySku, item.country, item.channel, ...item.name.split(/[-_\s]/)].some(v=>(v||"").toLowerCase().includes(searchQ.toLowerCase()));
           const fsubs = searchQ && !itemMatchedDirectly
-            ? item.subs.filter(s=>(s.name+s.std).toLowerCase().includes(searchQ.toLowerCase()))
+            ? item.subs.filter(s=>(s.name||"").toLowerCase().includes(searchQ.toLowerCase()))
             : item.subs;
           html+=`<div style="background:#f6f7fb;border-bottom:0.5px solid #e0e0e0">
             <div style="display:grid;grid-template-columns:${sg};background:#eeeff5;border-bottom:0.5px solid #dde0e9">
@@ -1571,7 +1577,6 @@ function renderTable(){
                   <div style="font-size:11px;font-weight:500;color:#222">${esc(sub.name)}</div>
                 </div>
               </div>
-              <div style="padding:7px 10px;border-right:0.5px solid #e8eaed;font-size:9px;color:#555">${esc(sub.std)}</div>
               <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${rb(br)}</div>
               <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${ycell(sub.p24)}</div>
               <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${ycell(sub.p25)}</div>
@@ -2237,16 +2242,13 @@ function renderModals(){
 
   if(modal.type==="detail"){
     const sub=modal.data;
-    // Test requirements now live on each supplier's block (criteria / target /
-    // equipment / accreditation are written into the supplier cell itself). Older
-    // sheets still hold them as item-level columns, so fall back to those whenever
-    // a block doesn't carry its own.
-    const legacyReq={criteria:sub.criteria||"",target:sub.target||"",equipment:sub.equipment||"",accreditation:sub.accreditation||""};
-    const reqOf=b=>({method:b.method||"",criteria:b.criteria||legacyReq.criteria,target:b.target||legacyReq.target,equipment:b.equipment||legacyReq.equipment,accreditation:b.accreditation||legacyReq.accreditation});
-    const reqHtml=r=>{
-      const rows=[["Standard / Test Method",r.method],["Evaluation Criteria",r.criteria],["Target Performance",r.target],["Required Lab Equipment",r.equipment],["Required Lab Accreditation",r.accreditation]].filter(([,v])=>v);
+    // Test requirements are item-level (the same for every supplier), so they are
+    // shown ONCE at the top of the popup rather than repeated under each supplier.
+    const itemReq={criteria:sub.criteria||"",target:sub.target||"",equipment:sub.equipment||"",accreditation:sub.accreditation||""};
+    const reqHtml=()=>{
+      const rows=[["Evaluation Criteria",itemReq.criteria],["Target Performance",itemReq.target],["Required Lab Equipment",itemReq.equipment],["Required Lab Accreditation",itemReq.accreditation]].filter(([,v])=>v);
       if(!rows.length) return "";
-      return `<div style="border:1px solid #e6eaf2;border-radius:8px;overflow:hidden;margin-bottom:10px">
+      return `<div style="border:1px solid #e6eaf2;border-radius:8px;overflow:hidden;margin-bottom:14px">
         <div style="padding:6px 11px;background:#f3f7ff;border-bottom:1px solid #e6eaf2;font-size:9.5px;font-weight:800;color:#0055bb;text-transform:uppercase;letter-spacing:.6px">Test Requirements</div>
         ${rows.map(([l,v],i)=>`<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;padding:7px 11px;${i?"border-top:1px solid #f0f2f7;":""}"><div style="font-size:9.5px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.3px;line-height:1.55">${l}</div><div style="font-size:11px;color:#2b2f38;line-height:1.55">${esc(v)}</div></div>`).join("")}
       </div>`;
@@ -2284,8 +2286,7 @@ function renderModals(){
             ${b.result?`<span style="margin-left:auto;font-size:10.5px;font-weight:800;color:${bc};${pill};padding:3px 11px;border-radius:12px;max-width:55%;text-align:right">${esc(b.result)}</span>`:""}
           </div>
           <div style="padding:11px 13px;font-size:11px;color:#333;line-height:1.65">`;
-        inner+=reqHtml(reqOf(b));
-        const stats=[["Rhino Test WWL",b.wwl],["Break Strength Claim",b.claim],["Completed",b.date],["Test Lab",b.lab]].filter(([,v])=>v);
+        const stats=[["Test Method",b.method],["Rhino Test WWL",b.wwl],["Break Strength Claim",b.claim],["Completed",b.date],["Test Lab",b.lab]].filter(([,v])=>v);
         if(stats.length) inner+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">${stats.map(([l,v])=>`<div style="background:#f7f8fa;border-radius:6px;padding:7px 10px"><div style="font-size:9px;font-weight:700;color:#8a93a6;text-transform:uppercase;letter-spacing:.4px">${l}</div><div style="font-size:11px;color:#222;font-weight:600;margin-top:2px">${esc(v)}</div></div>`).join("")}</div>`;
         const rptList=b.reports&&b.reports.length?b.reports:(b.report?[{label:"Report",url:b.report}]:[]);
         if(rptList.length){
@@ -2313,7 +2314,7 @@ function renderModals(){
     }).join("");
     // Nothing tested yet: show the requirements once if an older sheet still carries
     // them at item level; otherwise say so instead of leaving the popup blank.
-    const untestedHtml=yrs.length?"":(reqHtml(reqOf({}))||`<div style="padding:14px;text-align:center;color:#9aa3b5;font-size:11px;background:#f7f8fa;border-radius:8px">No test results recorded yet.</div>`);
+    const untestedHtml=yrs.length?"":`<div style="padding:14px;text-align:center;color:#9aa3b5;font-size:11px;background:#f7f8fa;border-radius:8px">No test results recorded yet.</div>`;
 
     root.innerHTML=`<div class="modal-wrap" onclick="if(event.target===this)closeModal()">
       <div class="modal-box" style="max-width:680px">
@@ -2323,7 +2324,7 @@ function renderModals(){
         </div>
         <div style="padding:16px 18px">
           ${monSection}
-          ${yrsHtml}${untestedHtml}
+          ${reqHtml()}${yrsHtml}${untestedHtml}
         </div>
       </div>
     </div>`;
@@ -2585,7 +2586,7 @@ function renderModals(){
         </div>
         <div style="padding:14px 20px 0 20px;flex-shrink:0">
           <div style="font-size:11px;color:#666;margin-bottom:10px">Find any PO or SS still sitting in Tracking that should have been included in this ticket's batch, and add it here without creating a new ticket.</div>
-          <input class="pmm-input" placeholder="Search PO Number, Shipment Number, Supplier SKU, or Description…" value="${esc(modal.search||"")}" oninput="modal.search=this.value;renderModals()" style="margin-bottom:10px"/>
+          <div style="position:relative;margin-bottom:10px"><input id="pca-addpo-search" class="pmm-input" placeholder="Search PO Number, Shipment Number, Supplier SKU, or Description…" value="${esc(modal.search||"")}" oninput="modal.search=this.value;renderModals();scRefocus('pca-addpo-search')"/><button type="button" class="sc-clear" title="Clear search" aria-label="Clear search" onmousedown="event.preventDefault()" onclick="scClear('pca-addpo-search')">✕</button></div>
         </div>
         <div style="padding:0 20px;overflow-y:auto;flex:1">
           ${rows.length?`<table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -3043,6 +3044,7 @@ function cdSearchBarHtml(id, query, placeholder){
   return `<div style="position:relative;flex:1;min-width:200px;max-width:320px">
     <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="${id}" value="${esc(query)}" oninput="cdOnSearchInput('${id}', this)" onfocus="cdShowSuggestFor('${id}')" onblur="cdHideSuggestFor('${id}')" placeholder="${esc(placeholder||"Search products & tests…")}" autocomplete="off" style="width:100%;padding:6px 10px 6px 28px;border:1.5px solid #dde0e7;border-radius:7px;font-size:12px;background:#fafbfc;color:#333;outline:none;height:32px"/>
+    <button type="button" class="sc-clear" title="Clear search" aria-label="Clear search" onmousedown="event.preventDefault()" onclick="scClear('${id}')">✕</button>
     <div id="${id}-suggest" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #dde0e7;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:60;max-height:280px;overflow-y:auto"></div>
   </div>`;
 }
@@ -3075,6 +3077,19 @@ function cdInitSearchBars(){
   set("trk-search-wrap","trk-search-box",cdTrackingSearchQ,"Search products & tests…");
   set("cmp-search-wrap","cmp-search-box",cdCompletedSearchQ,"Search products & tests…");
   set("def-search-wrap","def-search-box",cdDeferredSearchQ,"Search products & tests…");
+}
+
+// Clears a search box and re-runs whatever that box's own oninput handler does.
+function scClear(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.value="";
+  el.dispatchEvent(new Event("input",{bubbles:true}));
+  el.focus();
+}
+// For search boxes that live inside a modal that re-renders on every keystroke.
+function scRefocus(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.focus(); const n=el.value.length; try{ el.setSelectionRange(n,n); }catch(e){}
 }
 
 function tDD(n){
@@ -3396,17 +3411,13 @@ function cdTestTypeBlockHtml(tt, ti){
       <div style="font-size:11.5px;font-weight:700;color:#0073ea">Test Type ${ti+1}</div>
       ${cdTestTypes.length>1?`<button onclick="cdRemoveTestType(${ti})" style="font-size:10.5px;color:#e2445c;background:none;border:1px solid #ffd5d5;border-radius:5px;padding:3px 9px;cursor:pointer">Remove</button>`:""}
     </div>
-    <div class="pmm-grid2">
-      <div class="pmm-field"><label class="pmm-label">Test Type (Name)</label><input class="pmm-input" value="${esc(tt.name)}" oninput="cdTestTypes[${ti}].name=this.value"/></div>
-      <div class="pmm-field"><label class="pmm-label">Standard</label><input class="pmm-input" value="${esc(tt.std)}" oninput="cdTestTypes[${ti}].std=this.value"/></div>
-    </div>
+    <div class="pmm-field"><label class="pmm-label">Test Type (Name)</label><input class="pmm-input" value="${esc(tt.name)}" oninput="cdTestTypes[${ti}].name=this.value"/></div>
     <div class="pmm-field"><label class="pmm-label">Specific Evaluation Criteria</label><input class="pmm-input" value="${esc(tt.criteria)}" oninput="cdTestTypes[${ti}].criteria=this.value"/></div>
     <div class="pmm-field"><label class="pmm-label">Expected Target Performance</label><input class="pmm-input" value="${esc(tt.target)}" oninput="cdTestTypes[${ti}].target=this.value"/></div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Required Lab Equipment <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.equipment)}" oninput="cdTestTypes[${ti}].equipment=this.value"/></div>
       <div class="pmm-field"><label class="pmm-label">Lab Accreditation <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.accreditation)}" oninput="cdTestTypes[${ti}].accreditation=this.value"/></div>
     </div>
-    <div class="pmm-field"><label class="pmm-label">Recommended Labs <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.labs)}" oninput="cdTestTypes[${ti}].labs=this.value"/></div>
     <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #dde0e7">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:#555">Test Execution</div>
@@ -3575,11 +3586,10 @@ function cdRecommendedTestTypesHtml(){
   const subs=cdLookupRecommendedSourceItem.subs;
   return `<div class="pmm-card" style="border-color:#0073ea;background:#f5faff">
     <div style="font-size:13px;font-weight:700;color:#0055bb;margin-bottom:4px">📋 Recommended Test Types</div>
-    <div style="font-size:11px;color:#555;margin-bottom:12px">"${esc(cdLookupRecommendedSourceItem.name)}" already has ${subs.length} test type${subs.length!==1?"s":""} on file. Pick any that apply — just the test type details carry over (name, standard, criteria, etc.), not the prior execution/results, since this is a new item.</div>
+    <div style="font-size:11px;color:#555;margin-bottom:12px">"${esc(cdLookupRecommendedSourceItem.name)}" already has ${subs.length} test type${subs.length!==1?"s":""} on file. Pick any that apply — just the test type details carry over (name, criteria, etc.), not the prior execution/results, since this is a new item.</div>
     ${subs.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #dde0e7;border-radius:6px;margin-bottom:6px;cursor:pointer;background:#fff">
       <input type="checkbox" onchange="cdToggleRecommendedSub('${s.rowId}', this.checked)"/>
       <span style="font-size:12px;color:#333">${esc(s.name)}</span>
-      ${s.std?`<span style="font-size:10.5px;color:#999">— ${esc(s.std)}</span>`:""}
     </label>`).join("")}
     <button onclick="cdApplyRecommendedTestTypes()" style="margin-top:6px;font-size:11.5px;font-weight:700;color:#fff;background:#0073ea;border:none;border-radius:6px;padding:7px 16px;cursor:pointer">+ Add Selected Test Types</button>
   </div>`;
@@ -3874,17 +3884,13 @@ function cdEditTestTypeBlockHtml(tt, ti){
       <div style="font-size:11.5px;font-weight:700;color:#0073ea">${esc(tt.name)||`Test Type ${ti+1}`}</div>
       ${modal.draft.testTypes.length>1?`<button onclick="cdEditRemoveTestType(${ti})" style="font-size:10.5px;color:#e2445c;background:none;border:1px solid #ffd5d5;border-radius:5px;padding:3px 9px;cursor:pointer">Remove</button>`:""}
     </div>
-    <div class="pmm-grid2">
-      <div class="pmm-field"><label class="pmm-label">Test Type (Name)</label><input class="pmm-input" value="${esc(tt.name)}" oninput="modal.draft.testTypes[${ti}].name=this.value"/></div>
-      <div class="pmm-field"><label class="pmm-label">Standard</label><input class="pmm-input" value="${esc(tt.std)}" oninput="modal.draft.testTypes[${ti}].std=this.value"/></div>
-    </div>
+    <div class="pmm-field"><label class="pmm-label">Test Type (Name)</label><input class="pmm-input" value="${esc(tt.name)}" oninput="modal.draft.testTypes[${ti}].name=this.value"/></div>
     <div class="pmm-field"><label class="pmm-label">Specific Evaluation Criteria</label><input class="pmm-input" value="${esc(tt.criteria)}" oninput="modal.draft.testTypes[${ti}].criteria=this.value"/></div>
     <div class="pmm-field"><label class="pmm-label">Expected Target Performance</label><input class="pmm-input" value="${esc(tt.target)}" oninput="modal.draft.testTypes[${ti}].target=this.value"/></div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Required Lab Equipment <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.equipment)}" oninput="modal.draft.testTypes[${ti}].equipment=this.value"/></div>
       <div class="pmm-field"><label class="pmm-label">Lab Accreditation <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.accreditation)}" oninput="modal.draft.testTypes[${ti}].accreditation=this.value"/></div>
     </div>
-    <div class="pmm-field"><label class="pmm-label">Recommended Labs <span style="color:#aaa;font-weight:400">(optional)</span></label><input class="pmm-input" value="${esc(tt.labs)}" oninput="modal.draft.testTypes[${ti}].labs=this.value"/></div>
     <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #dde0e7">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:#555">Test Execution</div>
@@ -5684,6 +5690,7 @@ function pmmInitSearchBar(){
   const wrap=document.getElementById("pmm-search-wrap"); if(!wrap) return;
   wrap.innerHTML=`<div style="position:relative;max-width:320px">
     <input id="pmm-search-input" value="${esc(pmmSearchSku)}" oninput="pmmOnSearchInput(this)" onfocus="pmmOnSearchFocus()" onblur="pmmCloseSearchSuggest()" placeholder="Search SKU or Supplier…" class="pmm-input"/>
+    <button type="button" class="sc-clear" title="Clear search" aria-label="Clear search" onmousedown="event.preventDefault()" onclick="scClear('pmm-search-input')">✕</button>
     <div id="pmm-search-suggest" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #dde0e7;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:50;max-height:280px;overflow-y:auto"></div>`;
 }
 function pmmUpdateSuggestDisplay(){
@@ -7241,6 +7248,7 @@ function pcaInitSearchBar(){
   const wrap=document.getElementById("pca-search-wrap"); if(!wrap) return;
   wrap.innerHTML=`<div style="position:relative;max-width:340px">
     <input id="pca-search-input" value="${esc(pcaSearchQuery)}" oninput="pcaOnSearchInput(this)" onfocus="if(pcaSearchQuery){pcaSearchSuggestOpen=true;pcaUpdateSuggestDisplay()}" onblur="pcaCloseSearchSuggest()" placeholder="Search PO / SS / SKU…" class="pmm-input"/>
+    <button type="button" class="sc-clear" title="Clear search" aria-label="Clear search" onmousedown="event.preventDefault()" onclick="scClear('pca-search-input')">✕</button>
     <div id="pca-search-suggest" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #dde0e7;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:50;max-height:280px;overflow-y:auto"></div>`;
 }
 function pcaUpdateSuggestDisplay(){
