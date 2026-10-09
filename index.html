@@ -74,6 +74,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sc-clear:hover{background:#c5ccd8;color:#111}
 input:not(:placeholder-shown) ~ .sc-clear{display:block}
 #searchBox,#pmm-search-input,#pca-search-input,input[id$="-search-box"],#pca-addpo-search{padding-right:30px !important}
+/* expand / collapse button on each product row -- a real, visible button instead of a tiny arrow */
+.exp-btn{width:30px;height:30px;padding:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#e8f2ff;color:#0055bb;border:1.5px solid #b8d4ff;border-radius:8px;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+.exp-btn svg{transition:transform .18s}
+.exp-btn:not(.open) svg{transform:rotate(-90deg)}
+.exp-btn:hover{background:#0073ea;color:#fff;border-color:#0073ea;box-shadow:0 2px 6px rgba(0,115,234,.3)}
+.exp-btn.open{background:#0073ea;color:#fff;border-color:#0073ea}
+.exp-btn.open:hover{background:#005bb8;border-color:#005bb8}
+/* the two views under each product */
+.it-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px 10px 44px;background:#f6f7fb;border-bottom:0.5px solid #dde0e9}
+.it-tab{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;font-size:11.5px;font-weight:700;color:#555;background:#fff;border:1.5px solid #dde0e7;border-radius:8px;cursor:pointer}
+.it-tab:hover{border-color:#0073ea;color:#0055bb}
+.it-tab.on{background:#0073ea;border-color:#0073ea;color:#fff;box-shadow:0 1px 4px rgba(0,115,234,.35)}
+.it-cnt{font-size:10px;font-weight:800;padding:1px 7px;border-radius:9px;background:#eef1f6;color:#555}
+.it-tab.on .it-cnt{background:rgba(255,255,255,.25);color:#fff}
 
 /* ── App shell / sidebar ─────────────────────────────────────────────── */
 #app-shell{display:flex;min-height:100vh}
@@ -752,9 +766,22 @@ function rowsToObjects(rows){
 }
 
 // ── BUILD DATA MODEL ─────────────────────────────────────────────────────────
+// "Supplier Test Data" column on the Subitems sheet. One entry per blank-line-separated chunk:
+//   Test type Description: ...
+//   Test Report Link: ...
+//   Tested Date: ...
+//   Supplier: ...
+function parseSupplierTestData(raw){
+  const t=String(raw||"").trim(); if(!t) return [];
+  return t.split(/\n\s*\n/).map(chunk=>{
+    const lines=chunk.split("\n").map(l=>l.trim()).filter(Boolean);
+    const get=re=>{ const l=lines.find(x=>re.test(x)); return l?l.replace(/^[^:]+:\s*/,"").trim():""; };
+    return { description:get(/^test\s*type\s*description\s*:/i), link:get(/^test\s*report\s*link\s*:/i), date:get(/^tested\s*date\s*:/i), supplier:get(/^supplier\s*:/i) };
+  }).filter(e=>e.description||e.link||e.date||e.supplier);
+}
 function buildGroups(itemRows, subRows){
   // index subitems by parent item id
-  const subMap={};
+  const subMap={}, supMap={};
   subRows.forEach((row,idx)=>{
     const pid=(row.parent_item_id||"").trim(); if(!pid) return;
     if(!subMap[pid]) subMap[pid]=[];
@@ -772,6 +799,12 @@ function buildGroups(itemRows, subRows){
       if(!m) return;
       yearBlocks[m[1]]=parsePBlocks((row[k]||"").trim());
     });
+    // Supplier-provided test data lives in its own column and its own tab in the main table.
+    // A row that holds ONLY supplier data is not a Rhino test type, so it must not count as
+    // one (it would otherwise show up as an untested test in the KPIs / Rhino table).
+    const supEntries=parseSupplierTestData(row["Supplier Test Data"]);
+    if(supEntries.length){ if(!supMap[pid]) supMap[pid]=[]; supEntries.forEach(e=>supMap[pid].push({...e,subRowId:sid})); }
+    if(supEntries.length && !Object.values(yearBlocks).some(b=>b&&b.length)) return;
     subMap[pid].push({
       id:"s"+sid, rowId:sid, name,
       std:row.std||"", criteria:row.criteria||"",
@@ -808,6 +841,7 @@ function buildGroups(itemRows, subRows){
       channel:row.channel||"",
       status:row["Status Remarks"]||row.Status||"",
       subs:subMap[rid]||[],
+      supplierTests:supMap[rid]||[],
     });
   });
 
@@ -871,6 +905,18 @@ function applyReplication(groups){
 // ── PRIORITY BLOCK PARSER ────────────────────────────────────────────────────
 // "--" is the placeholder the reorganised Subitems sheet uses for "not provided"
 function pbClean(v){ v=String(v||"").trim(); return /^[-\u2013\u2014]+$/.test(v)?"":v; }
+// "Evidence: <text>" and "Evidence link: <url>" are two separate lines in a failed test's block.
+// (Older data may carry the URL inside the Evidence text itself -- the popup still handles that.)
+function pbEvidence(lines){
+  const idx=lines.findIndex(x=>/^evidence\s*:/i.test(x));
+  let ev="";
+  if(idx!==-1){
+    ev=lines[idx].replace(/^[^:]+:\s*/,"").trim();
+    for(let i=idx+1;i<lines.length;i++){ if(/^[A-Za-z][^:]{0,50}:/.test(lines[i])) break; ev+=" "+lines[i]; }
+  }
+  const li=lines.find(x=>/^evidence\s*link\s*:/i.test(x));
+  return {evidence:ev.trim(), evidenceLink:li?li.replace(/^[^:]+:\s*/,"").trim().replace(/&amp;/g,"&"):""};
+}
 function parsePBlocks(raw){
   if(!raw||/^no\s*test$/i.test(raw.trim())||!raw.trim()) return [];
   const parts=raw.split(/(?=(?:Priority Supplier|Supplier Priority)\s*\d+\s*:)/i);
@@ -897,11 +943,12 @@ function parsePBlocks(raw){
       if(m) reports.push({label:m[1].trim(), url:m[2].trim().replace(/&amp;/g,"&")});
     });
     // Fallback: if no labeled report lines found, grab first non-evidence URL
-    const evidenceVal=getM("Evidence");
-    const evidenceUrl=(evidenceVal.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"").replace(/&amp;/g,"&");
+    const evX=pbEvidence(lines);
+    const evidenceVal=evX.evidence;
+    const evidenceUrl=(evX.evidenceLink||evidenceVal.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"").replace(/&amp;/g,"&");
     if(!reports.length){
       const allUrls=[...part.matchAll(/https?:\/\/[^\s\n"')]+/g)].map(m=>m[0].replace(/&amp;/g,"&"));
-      const fallbackUrl=allUrls.find(u=>u!==evidenceUrl)||null;
+      const fallbackUrl=allUrls.find(u=>u!==evidenceUrl&&u!==evX.evidenceLink)||null;
       if(fallbackUrl) reports.push({label:"Report",url:fallbackUrl});
     }
 
@@ -923,6 +970,7 @@ function parsePBlocks(raw){
       report:reports[0]?.url||null,
       cap:getM("Supplier CAP")||getM("CAP"),
       evidence:evidenceVal,
+      evidenceLink:evX.evidenceLink,
       remarks:getM("Remarks"),
     });
   });
@@ -932,8 +980,9 @@ function parsePBlocks(raw){
     const get=k=>{const l=lines.find(x=>x.toLowerCase().startsWith(k.toLowerCase()));return l?l.replace(/^[^:]+:\s*/,"").trim():"";};
     const getM=k=>{const idx=lines.findIndex(x=>x.toLowerCase().startsWith(k.toLowerCase()));if(idx===-1)return "";let val=lines[idx].replace(/^[^:]+:\s*/,"").trim();for(let i=idx+1;i<lines.length;i++){if(/^[A-Za-z][^:]{0,50}:/.test(lines[i]))break;val+=" "+lines[i];}return val.trim();};
     const rl=lines.find(x=>/^test result/i.test(x));
-    const evidenceVal=getM("Evidence");
-    const evidenceUrl=evidenceVal.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"";
+    const evX=pbEvidence(lines);
+    const evidenceVal=evX.evidence;
+    const evidenceUrl=evX.evidenceLink||evidenceVal.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"";
     const reports=[];
     lines.forEach(line=>{
       const m=line.match(/^([^:]{0,60}report[^:]{0,30})\s*:\s*(https?:\/\/\S+)/i);
@@ -943,7 +992,7 @@ function parsePBlocks(raw){
       const rm=raw.match(/https?:\/\/[^\s\n"')]+/);
       if(rm&&rm[0]!==evidenceUrl) reports.push({label:"Report",url:rm[0].replace(/&amp;/g,"&")});
     }
-    blocks.push({priority:1,supplier:get("Supplier"),method:pbClean(get("Tensile Standard/ Test Method")||get("Standard/ Test Method")||get("Test Method")||get("Tensile Test Method")),criteria:pbClean(get("Specific Evaluation Criteria")),target:pbClean(get("Expected Target Performance")),equipment:pbClean(get("Required Lab Equipment")),accreditation:pbClean(get("Required Lab Accreditation")),wwl:get("Rhino Test WWL"),claim:get("Rhino Break Strength Test Claim"),result:rl?rl.replace(/^[^:]+:\s*/,"").trim():get("Result"),date:get("Test Completion Date")||get("Test Completion")||get("Date"),lab:get("Test Lab"),cost:get("Cost"),reports,report:reports[0]?.url||null,cap:getM("Supplier CAP")||getM("CAP"),evidence:evidenceVal,remarks:getM("Remarks")});
+    blocks.push({priority:1,supplier:get("Supplier"),method:pbClean(get("Tensile Standard/ Test Method")||get("Standard/ Test Method")||get("Test Method")||get("Tensile Test Method")),criteria:pbClean(get("Specific Evaluation Criteria")),target:pbClean(get("Expected Target Performance")),equipment:pbClean(get("Required Lab Equipment")),accreditation:pbClean(get("Required Lab Accreditation")),wwl:get("Rhino Test WWL"),claim:get("Rhino Break Strength Test Claim"),result:rl?rl.replace(/^[^:]+:\s*/,"").trim():get("Result"),date:get("Test Completion Date")||get("Test Completion")||get("Date"),lab:get("Test Lab"),cost:get("Cost"),reports,report:reports[0]?.url||null,cap:getM("Supplier CAP")||getM("CAP"),evidence:evidenceVal,evidenceLink:evX.evidenceLink,remarks:getM("Remarks")});
   }
   return blocks;
 }
@@ -1522,7 +1571,7 @@ function renderTable(){
         html+=`<div class="ir" style="display:grid;grid-template-columns:${mg};border-bottom:0.5px solid #e8eaed;background:#fff;align-items:start">
           <!-- Product name -->
           <div style="padding:9px 10px;display:flex;align-items:flex-start;gap:6px;border-right:0.5px solid #e8eaed;overflow:hidden;min-width:0">
-            <button onclick="event.stopPropagation();toggleItem('${item.id}')" style="background:none;border:none;cursor:pointer;padding:2px;font-size:11px;color:#aaa;transform:rotate(${iOpen?0:-90}deg);transition:transform .15s;flex-shrink:0;margin-top:2px">▾</button>
+            <button class="exp-btn${iOpen?" open":""}" onclick="event.stopPropagation();toggleItem('${item.id}')" title="${iOpen?"Hide":"Show"} test details" aria-label="${iOpen?"Collapse":"Expand"} test details" aria-expanded="${iOpen}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div style="width:4px;min-height:18px;border-radius:2px;background:${grp.color};flex-shrink:0;margin-top:2px"></div>
             <div style="overflow:hidden;flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(item.name)}</div>
@@ -1564,8 +1613,11 @@ function renderTable(){
           const fsubs = searchQ && !itemMatchedDirectly
             ? item.subs.filter(s=>(s.name||"").toLowerCase().includes(searchQ.toLowerCase()))
             : item.subs;
-          html+=`<div style="background:#f6f7fb;border-bottom:0.5px solid #e0e0e0">
-            <div style="display:grid;grid-template-columns:${sg};background:#eeeff5;border-bottom:0.5px solid #dde0e9">
+          const tabSel=iTab[item.id]||"rhino";
+          html+=`<div style="background:#f6f7fb;border-bottom:0.5px solid #e0e0e0">${itemTabsHtml(item,tabSel)}`;
+          if(tabSel==="supplier"){ html+=supplierTableHtml(item, (searchQ&&!itemMatchedDirectly)?searchQ:""); }
+          else{
+          html+=`<div style="display:grid;grid-template-columns:${sg};background:#eeeff5;border-bottom:0.5px solid #dde0e9">
               ${sHdrs.map((h,i)=>`<div style="padding:5px 10px 5px ${i===0?"44px":"10px"};font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-right:0.5px solid #dde0e9">${h}</div>`).join("")}
             </div>`;
           fsubs.forEach(sub=>{
@@ -1584,6 +1636,7 @@ function renderTable(){
             </div>`;
           });
           if(!fsubs.length) html+=`<div style="padding:8px 44px;font-size:11px;color:#aaa;font-style:italic">No subtests match search</div>`;
+          }
           html+=`</div>`;
         }
       });
@@ -2298,9 +2351,9 @@ function renderModals(){
           inner+=`</div>`;
         }
         if(b.cap) inner+=`<div style="margin-top:10px;padding:8px 11px;background:#fff8e0;border-left:3px solid #fdab3d;border-radius:0 6px 6px 0"><div style="font-size:10px;font-weight:700;color:#b07000;margin-bottom:3px">Corrective Action Plan</div><div>${esc(b.cap)}</div></div>`;
-        if(b.evidence){
-          const evUrl=b.evidence.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"";
-          const evText=b.evidence.replace(/https?:\/\/[^\s\n"')]+/g,"").trim();
+        if(b.evidence||b.evidenceLink){
+          const evUrl=b.evidenceLink||(b.evidence||"").match(/https?:\/\/[^\s\n"')]+/)?.[0]||"";
+          const evText=(b.evidence||"").replace(/https?:\/\/[^\s\n"')]+/g,"").trim();
           inner+=`<div style="margin-top:8px;padding:8px 11px;background:#f0f9ff;border-left:3px solid #0073ea;border-radius:0 6px 6px 0">
             <div style="font-size:10px;font-weight:700;color:#0055bb;margin-bottom:3px">Evidence</div>
             ${evText?`<div style="font-size:11px;color:#444;margin-bottom:4px">${esc(evText)}</div>`:""}
@@ -2569,6 +2622,40 @@ function renderModals(){
         <div style="padding:14px 20px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0">
           <button onclick="closeModal()" style="padding:9px 18px;font-size:12px;font-weight:700;color:#555;background:#f0f1f3;border:none;border-radius:8px;cursor:pointer">Cancel</button>
           <button id="pca-email-send-btn" onclick="pcaSendRejectEmail('${t.id}')" style="padding:9px 18px;font-size:12px;font-weight:700;color:#fff;background:#5b21b6;border:none;border-radius:8px;cursor:pointer">Send Email</button>
+        </div>
+      </div>
+    </div>`;
+  } else if(modal.type==="cdFailEdit"){
+    const f=cdFindItemSub(modal.itemId,modal.subId);
+    const blk=f&&((f.sub.yearBlocks||{})[modal.year]||[])[modal.blockIdx];
+    if(!f||!blk){ root.innerHTML=""; return; }
+    const d=modal.draft, capMode=d.mode==="cap";
+    const seg=(key,label)=>`<button onclick="modal.draft.mode='${key}';renderModals()" style="flex:1;padding:8px 10px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid ${d.mode===key?"#0073ea":"#dde0e7"};background:${d.mode===key?"#e8f2ff":"#fff"};color:${d.mode===key?"#0055bb":"#666"};border-radius:7px">${label}</button>`;
+    root.innerHTML=`<div class="modal-wrap" onclick="if(event.target===this&&!modal.saving)closeModal()">
+      <div class="modal-box" style="max-width:560px">
+        <div style="background:#c0392b;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="color:#fff;font-weight:800;font-size:14px">Failed Test — Follow-up</div>
+          <button onclick="closeModal()" style="background:rgba(255,255,255,.2);border:none;border-radius:6px;color:#fff;width:28px;height:28px;cursor:pointer;font-size:15px">✕</button>
+        </div>
+        <div style="padding:16px 20px 18px">
+          <div style="padding:10px 12px;background:#fff8f8;border:1px solid #f5c2c2;border-radius:8px;margin-bottom:14px">
+            <div style="font-size:12px;font-weight:700;color:#222">${esc(f.sub.name)}</div>
+            <div style="font-size:10.5px;color:#777;margin-top:3px">${esc(f.item.name)} · ${esc(modal.year)} · P${blk.priority||modal.blockIdx+1} ${esc(blk.supplier||"")}</div>
+            <div style="font-size:11px;color:#c0392b;font-weight:700;margin-top:4px">${esc(blk.result||"")}</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">${seg("cap","Corrective Action Plan (CAP)")}${seg("remarks","Remarks only")}</div>
+          ${capMode?`
+            <div class="pmm-field"><label class="pmm-label">Supplier CAP</label><textarea class="pmm-input" rows="2" oninput="modal.draft.cap=this.value" placeholder="e.g. Perform 3 samples testing internally.">${esc(d.cap)}</textarea></div>
+            <div class="pmm-field"><label class="pmm-label">Evidence</label><textarea class="pmm-input" rows="2" oninput="modal.draft.evidence=this.value" placeholder="e.g. Completed. Passed three samples.">${esc(d.evidence)}</textarea></div>
+            <div class="pmm-field"><label class="pmm-label">Evidence link</label><input class="pmm-input" value="${esc(d.evidenceLink)}" oninput="modal.draft.evidenceLink=this.value" placeholder="https://drive.google.com/…"/></div>`
+          :`
+            <div class="pmm-field"><label class="pmm-label">Remarks</label><textarea class="pmm-input" rows="3" oninput="modal.draft.remarks=this.value" placeholder="e.g. Supplier informed us not to perform a retest because of the packaging warnings.">${esc(d.remarks)}</textarea></div>`}
+          <div style="font-size:10px;color:#999;margin:2px 0 12px">Saved straight to this test's cell in the Google Sheet and the main table. Switching type replaces the other type's text; leaving everything empty removes it.</div>
+          ${modal.error?`<div style="background:#fdecec;border:1px solid #f5c2c2;color:#b42318;font-size:11px;border-radius:7px;padding:8px 10px;margin-bottom:10px">${esc(modal.error)}</div>`:""}
+          <div style="display:flex;justify-content:flex-end;gap:10px">
+            <button onclick="closeModal()" ${modal.saving?"disabled":""} style="padding:9px 18px;font-size:12px;font-weight:700;color:#555;background:#f0f1f3;border:none;border-radius:8px;cursor:pointer">Cancel</button>
+            <button onclick="cdSaveFailEdit()" ${modal.saving?"disabled":""} style="padding:9px 20px;font-size:12px;font-weight:700;color:#fff;background:${modal.saving?"#7fb5f0":"#0073ea"};border:none;border-radius:8px;cursor:${modal.saving?"default":"pointer"}">${modal.saving?"Saving…":"Save"}</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -2908,6 +2995,33 @@ function renderModals(){
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
+let iTab={}; // itemId -> "rhino" (default) | "supplier"
+function setItemTab(id,tab){ iTab[id]=tab; renderTable(); }
+function itemTabsHtml(item,tabSel){
+  const nR=(item.subs||[]).length, nS=(item.supplierTests||[]).length;
+  const btn=(key,label,n)=>`<button class="it-tab${tabSel===key?" on":""}" onclick="event.stopPropagation();setItemTab('${item.id}','${key}')">${label}<span class="it-cnt">${n}</span></button>`;
+  return `<div class="it-tabs">${btn("rhino","Rhino-USA 3rd Party Testing",nR)}${btn("supplier","Supplier Test Data",nS)}</div>`;
+}
+function supplierTableHtml(item,q){
+  const grid="minmax(0,2.4fr) minmax(0,1.2fr) 110px 140px";
+  const needle=(q||"").toLowerCase();
+  const list=(item.supplierTests||[]).filter(e=>!needle||((e.description||"")+" "+(e.supplier||"")).toLowerCase().includes(needle));
+  const th=(h,i)=>`<div style="padding:5px 10px 5px ${i===0?"44px":"10px"};font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-right:0.5px solid #dde0e9">${h}</div>`;
+  let html=`<div style="display:grid;grid-template-columns:${grid};background:#eeeff5;border-bottom:0.5px solid #dde0e9">${["Test Type Description","Supplier","Tested Date","Test Report"].map(th).join("")}</div>`;
+  if(!list.length){
+    return html+`<div style="padding:14px 44px;font-size:11px;color:#9aa3b5;font-style:italic">${(item.supplierTests||[]).length?"No supplier tests match your search.":"No supplier test data yet — add it from New Entry → Supplier Test Data."}</div>`;
+  }
+  list.forEach(e=>{
+    const okLink=/^https?:\/\//i.test(e.link||"");
+    html+=`<div style="display:grid;grid-template-columns:${grid};border-bottom:0.5px solid #e8eaed;align-items:start">
+      <div style="padding:8px 10px 8px 44px;border-right:0.5px solid #e8eaed;font-size:11px;font-weight:500;color:#222;line-height:1.5;white-space:pre-wrap;word-break:break-word">${esc(e.description||"—")}</div>
+      <div style="padding:8px 10px;border-right:0.5px solid #e8eaed;font-size:11px;color:#333;word-break:break-word">${esc(e.supplier||"—")}</div>
+      <div style="padding:8px 10px;border-right:0.5px solid #e8eaed;font-size:11px;color:#555">${esc(e.date||"—")}</div>
+      <div style="padding:7px 10px">${okLink?`<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;background:#0073ea;color:#fff;font-size:10.5px;font-weight:700;padding:4px 11px;border-radius:6px;text-decoration:none">📄 View Report ↗</a>`:`<span style="color:#bbb;font-size:11px">${e.link?esc(e.link):"—"}</span>`}</div>
+    </div>`;
+  });
+  return html;
+}
 function toggleGroup(id){ gExp[id]=gExp[id]===false; renderTable(); }
 function toggleItem(id){ iExp[id]=iExp[id]===false; renderTable(); }
 
@@ -3337,6 +3451,52 @@ function cdFmtCost(cost){
 function cdNormalizeReportLabel(label){
   return /tensile\s*test\s*report/i.test(label||"") ? "Test Report" : (label||"Report");
 }
+// ── Failed-test follow-up (CAP / Evidence / Evidence link, or Remarks) ───────
+// Edits ONE supplier block inside a Subitems year cell, touching only the CAP /
+// Evidence / Evidence link / Remarks lines. Everything else in the cell -- other
+// suppliers, the block's own result lines, its original wording -- is left exactly as is.
+// Format (CAP): ... Test Lab / Supplier CAP / Evidence / Evidence link / Cost
+// Format (Remarks only): ... Test Lab / Remarks / Cost
+function cdOneLine(v){ return String(v==null?"":v).replace(/\s*\n\s*/g," ").trim(); }
+function cdApplyFailureDetails(cellText, blockIdx, d){
+  const HDR=/^\s*(?:Priority Supplier|Supplier Priority)\s*\d+\s*:/i;
+  const L=String(cellText||"").split("\n");
+  const hdr=[]; L.forEach((l,i)=>{ if(HDR.test(l)) hdr.push(i); });
+  let start,end;
+  if(!hdr.length){ start=0; end=L.length; }
+  else{
+    // parsePBlocks treats any text before the first header as an extra leading block
+    const lead=L.slice(0,hdr[0]).some(l=>l.trim())?1:0;
+    const h=blockIdx-lead;
+    if(h<0||h>=hdr.length) throw new Error("Could not find that supplier's block in the sheet cell.");
+    start=hdr[h]; end=h+1<hdr.length?hdr[h+1]:L.length;
+  }
+  const before=L.slice(0,start), after=L.slice(end);
+  const blk=L.slice(start,end);
+  const trail=[]; while(blk.length && blk[blk.length-1].trim()==="") trail.unshift(blk.pop());
+  const FIELD=/^\s*(Supplier\s*CAP|CAP|Evidence(\s*link)?|Remarks)\s*:/i;
+  const LABEL=/^\s*[A-Za-z][^:]{0,50}:/;
+  const kept=[]; let skipping=false;
+  blk.forEach(l=>{
+    if(FIELD.test(l)){ skipping=true; return; }
+    if(skipping){
+      if(/^\s*https?:/i.test(l)) return;                     // a wrapped URL belonging to the removed field
+      if(l.trim()===""||LABEL.test(l)) skipping=false; else return; // wrapped continuation text
+    }
+    kept.push(l);
+  });
+  const add=[];
+  if(d.mode==="cap"){
+    if(cdOneLine(d.cap)||cdOneLine(d.evidence)||cdOneLine(d.evidenceLink))
+      add.push("Supplier CAP: "+cdOneLine(d.cap),"Evidence: "+cdOneLine(d.evidence),"Evidence link: "+cdOneLine(d.evidenceLink));
+  } else if(d.mode==="remarks"){
+    if(cdOneLine(d.remarks)) add.push("Remarks: "+cdOneLine(d.remarks));
+  }
+  let ci=kept.findIndex(l=>/^\s*Cost\s*:/i.test(l)); if(ci===-1) ci=kept.length;
+  kept.splice(ci,0,...add);
+  return [...before,...kept,...trail,...after].join("\n");
+}
+
 function cdFormatExecBlock(ex, n){
   const lines=[`Priority Supplier ${n}: ${ex.supplier||""}`];
   lines.push(`Tensile Test Method: ${ex.method||"Not Specified/Lab Proprietary"}`);
@@ -3349,8 +3509,95 @@ function cdFormatExecBlock(ex, n){
   if(ex.report) lines.push(`Test Report: ${ex.report}`);
   if(ex.date) lines.push(`Test Completion Date: ${cdFmtDateUS(ex.date)}`);
   if(ex.lab) lines.push(`Test Lab: ${ex.lab}`);
+  // Failure follow-up (edited from the Completed Test tab). Kept on a round trip so editing
+  // the test elsewhere never silently drops it. Either CAP + evidence, or Remarks only.
+  if(ex.cap||ex.evidence||ex.evidenceLink){
+    lines.push(`Supplier CAP: ${cdOneLine(ex.cap)}`,`Evidence: ${cdOneLine(ex.evidence)}`,`Evidence link: ${cdOneLine(ex.evidenceLink)}`);
+  } else if(ex.remarks){
+    lines.push(`Remarks: ${cdOneLine(ex.remarks)}`);
+  }
   if(ex.cost) lines.push(`Cost: ${cdFmtCost(ex.cost)}`);
   return lines.join("\n");
+}
+
+// ── Completed Test tab: follow-up on failed tests (CAP / Evidence / Remarks) ──
+function cdFailedBlocksOf(item){
+  const out=[];
+  (item.subs||[]).forEach(sub=>{
+    Object.keys(sub.yearBlocks||{}).sort().forEach(y=>{
+      (sub.yearBlocks[y]||[]).forEach((b,bi)=>{ if(/\bFAIL\b/i.test(b.result||"")) out.push({sub,year:y,blockIdx:bi,block:b}); });
+    });
+  });
+  return out;
+}
+function cdFailCellHtml(item){
+  const fails=cdFailedBlocksOf(item);
+  if(!fails.length) return `<span style="color:#bbb;font-size:10px">No failed tests</span>`;
+  return fails.map(f=>{
+    const b=f.block;
+    const hasCap=!!(b.cap||b.evidence||b.evidenceLink), hasRem=!!b.remarks;
+    const done=hasCap||hasRem;
+    const chip=hasCap?`<span style="background:#e3f6ec;color:#0a7a46;border:1px solid #b8e6cf;border-radius:9px;font-size:9px;font-weight:700;padding:1px 7px">CAP on file</span>`
+      :hasRem?`<span style="background:#f3e8ff;color:#6d28d9;border:1px solid #ddc8fb;border-radius:9px;font-size:9px;font-weight:700;padding:1px 7px">Remarks on file</span>`
+      :`<span style="background:#fff4e0;color:#b36b00;border:1px solid #fde0b0;border-radius:9px;font-size:9px;font-weight:700;padding:1px 7px">Needs follow-up</span>`;
+    return `<div style="margin-bottom:7px;padding:7px 9px;border-radius:7px;background:#fff8f8;border:1px solid #f5c2c2">
+      <div style="font-size:10px;font-weight:700;color:#333;line-height:1.35">${esc(f.sub.name)}</div>
+      <div style="font-size:9.5px;color:#777;margin:2px 0 5px">${esc(f.year)} · P${b.priority||f.blockIdx+1} ${esc(b.supplier||"")}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${chip}
+        <button onclick="event.stopPropagation();cdOpenFailEdit('${item.id}','${f.sub.id}','${f.year}',${f.blockIdx})" style="font-size:10px;font-weight:700;color:#0055bb;background:#e8f2ff;border:1px solid #c0d8f8;border-radius:5px;padding:2px 9px;cursor:pointer">✏ ${done?"Edit":"Add"} CAP / Remarks</button>
+      </div></div>`;
+  }).join("");
+}
+function cdFindItemSub(itemId, subId){
+  for(const g of GROUPS) for(const item of g.items){ if(item.id!==itemId) continue; const sub=(item.subs||[]).find(x=>x.id===subId); if(sub) return {item,sub}; }
+  return null;
+}
+function cdOpenFailEdit(itemId, subId, year, blockIdx){
+  const f=cdFindItemSub(itemId,subId); if(!f) return;
+  const b=((f.sub.yearBlocks||{})[year]||[])[blockIdx]; if(!b) return;
+  const remarksOnly=!!b.remarks && !b.cap && !b.evidence && !b.evidenceLink;
+  openModal({type:"cdFailEdit", itemId, subId, year, blockIdx, saving:false, error:"",
+    draft:{mode:remarksOnly?"remarks":"cap", cap:b.cap||"", evidence:b.evidence||"", evidenceLink:b.evidenceLink||"", remarks:b.remarks||""}});
+}
+async function cdSaveFailEdit(){
+  const m=modal; if(!m||m.type!=="cdFailEdit"||m.saving) return;
+  if(!accessToken){ m.error='Please "Connect & Sync" with Google first.'; renderModals(); return; }
+  const f=cdFindItemSub(m.itemId,m.subId); if(!f){ m.error="Could not find this test any more — re-sync and try again."; renderModals(); return; }
+  const {item,sub}=f; const blk=((sub.yearBlocks||{})[m.year]||[])[m.blockIdx];
+  m.saving=true; m.error=""; renderModals();
+  try{
+    const map=await cdGetHeaderMap(SUBITEMS_SHEET);
+    const col=map["y"+m.year]; if(col===undefined||map.s===undefined) throw new Error(`The Subitems sheet has no "y${m.year}" column.`);
+    // Always edit the cell as it is in the sheet RIGHT NOW (not our cached copy), so a
+    // teammate's edit made since the last sync is never overwritten.
+    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(SUBITEMS_SHEET)}?valueRenderOption=FORMATTED_VALUE`,{headers:{Authorization:"Bearer "+accessToken}});
+    cdCheckAuthError(res); if(!res.ok) throw new Error(`Could not read the Subitems sheet (${res.status}).`);
+    const rows=(await res.json()).values||[];
+    let rowIndex=-1;
+    for(let r=1;r<rows.length;r++){
+      if((rows[r][map.s]||"").trim()!==String(sub.rowId)) continue;
+      if(map.parent_item_id!==undefined && (rows[r][map.parent_item_id]||"").trim()!==String(item.rowId)) continue;
+      rowIndex=r+1; break;
+    }
+    if(rowIndex===-1) throw new Error("Could not find this test's row in the Subitems sheet.");
+    const cur=rows[rowIndex-1][col]||"";
+    const live=parsePBlocks(cur.trim())[m.blockIdx];
+    if(!live || (blk && (live.result||"")!==(blk.result||""))) throw new Error("This test was changed in the sheet since you last synced. Click Re-sync, then try again.");
+    const newText=cdApplyFailureDetails(cur,m.blockIdx,m.draft);
+    const gid=await pmmGetSheetGidFor(SUBITEMS_SHEET);
+    const bres=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},
+      body:JSON.stringify({requests:[{updateCells:{range:{sheetId:gid,startRowIndex:rowIndex-1,endRowIndex:rowIndex,startColumnIndex:col,endColumnIndex:col+1},rows:[{values:[{userEnteredValue:{stringValue:newText}}]}],fields:"userEnteredValue"}}]})});
+    cdCheckAuthError(bres); if(!bres.ok){ const t=await bres.text(); throw new Error(`Could not save (${bres.status}): ${t.slice(0,150)}`); }
+    // Sheet is updated -- now bring the main table / this tab in line with it.
+    const blocks=parsePBlocks(newText.trim());
+    sub.yearBlocks[m.year]=blocks;
+    if(/^20(24|25|26)$/.test(String(m.year))) sub["p"+String(m.year).slice(2)]=blocks;
+    try{ localStorage.setItem(LS_CACHE,JSON.stringify(GROUPS)); }catch(e){}
+    closeModal();
+    if(activeTab==="completedtest") cdRenderCompletedTest(); else renderAll();
+  }catch(e){
+    if(modal&&modal.type==="cdFailEdit"){ modal.saving=false; modal.error=String(e.message||e); renderModals(); }
+  }
 }
 
 function cdAddTestType(){ cdTestTypes.push(cdNewTestType()); cdRenderNewEntry(); }
@@ -3427,11 +3674,111 @@ function cdTestTypeBlockHtml(tt, ti){
     </div>
   </div>`;
 }
+// ── New Entry: second button for supplier-provided test data ─────────────────
+// "Rhino-USA 3rd Party Test" is the existing form. "Supplier Test Data" records tests the
+// SUPPLIER did, against a product that already exists. Each one is saved as its own row in the
+// Subitems sheet, in the "Supplier Test Data" column, in this simple format:
+//   Test type Description: ...  /  Test Report Link: ...  /  Tested Date: ...  /  Supplier: ...
+let cdNewMode="rhino";
+function cdSupNewEntry(){ return {description:"",link:"",date:"",supplier:""}; }
+let cdSupDraft={sku:"",entries:[cdSupNewEntry()]};
+let cdSupSubmitting=false;
+function cdSetNewMode(m){ cdNewMode=m; cdRenderNewEntry(); }
+function cdNewModeBarHtml(){
+  const b=(k,label,sub)=>`<button onclick="cdSetNewMode('${k}')" style="flex:1;min-width:230px;text-align:left;padding:11px 15px;cursor:pointer;border-radius:10px;border:1.5px solid ${cdNewMode===k?"#0073ea":"#dde0e7"};background:${cdNewMode===k?"#e8f2ff":"#fff"};box-shadow:${cdNewMode===k?"0 1px 5px rgba(0,115,234,.25)":"none"}"><div style="font-size:12.5px;font-weight:800;color:${cdNewMode===k?"#0055bb":"#444"}">${label}</div><div style="font-size:10.5px;color:#888;margin-top:2px;font-weight:400">${sub}</div></button>`;
+  return `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">${b("rhino","Rhino-USA 3rd Party Test","New product, test types and results")}${b("supplier","Supplier Test Data","Tests done by the supplier, for an existing product")}</div>`;
+}
+function cdFormatSupplierTest(e){
+  return [`Test type Description: ${cdOneLine(e.description)}`,`Test Report Link: ${cdOneLine(e.link)}`,`Tested Date: ${e.date?cdFmtDateUS(e.date):""}`,`Supplier: ${cdOneLine(e.supplier)}`].join("\n");
+}
+function cdSupAddEntry(){ cdSupDraft.entries.push(cdSupNewEntry()); cdRenderNewEntry(); }
+function cdSupRemoveEntry(i){ cdSupDraft.entries.splice(i,1); if(!cdSupDraft.entries.length) cdSupDraft.entries.push(cdSupNewEntry()); cdRenderNewEntry(); }
+// Updates only the status line (never re-renders the form) so typing/clicking is never interrupted.
+function cdSupUpdateStatus(){
+  const el=document.getElementById("cd-sup-status"); if(!el) return;
+  const sku=(cdSupDraft.sku||"").trim();
+  if(!sku){ el.innerHTML=""; return; }
+  const item=cdFindExistingItemBySku(sku);
+  el.innerHTML=item
+    ? `<span style="color:#0a7a46;font-weight:700">✓ ${esc(item.name)}</span>${item.description?` <span style="color:#666">— ${esc(item.description)}</span>`:""}`
+    : `<span style="color:#c0392b">No product with this SKU yet. Add the product first under “Rhino-USA 3rd Party Test”.</span>`;
+}
+function cdRenderSupplierEntry(wrap){
+  const d=cdSupDraft;
+  const fld=(i,key,label,type,ph)=>`<div class="pmm-field"><label class="pmm-label">${label}</label>${type==="area"
+    ?`<textarea class="pmm-input" rows="2" oninput="cdSupDraft.entries[${i}].${key}=this.value" placeholder="${ph||""}">${esc(d.entries[i][key])}</textarea>`
+    :`<input class="pmm-input" type="${type}" value="${esc(d.entries[i][key])}" oninput="cdSupDraft.entries[${i}].${key}=this.value" placeholder="${ph||""}"/>`}</div>`;
+  wrap.innerHTML=`<div style="max-width:900px;margin:0 auto;padding:20px 0">${cdNewModeBarHtml()}
+    <div class="pmm-card">
+      <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:4px">Supplier Test Data</div>
+      <div style="font-size:11px;color:#777;margin-bottom:14px">Record tests the supplier performed. Pick an existing product, then add one or more supplier tests. These appear in the main table under <b>Supplier Test Data</b> for that product.</div>
+      <div class="pmm-field">
+        <label class="pmm-label">Product SKU</label>
+        <input class="pmm-input" value="${esc(d.sku)}" oninput="cdSupDraft.sku=this.value;cdSupUpdateStatus()" onblur="cdSupUpdateStatus()" placeholder="e.g. HD-RATCHETKIT-4PK"/>
+        <div id="cd-sup-status" style="font-size:10.5px;margin-top:4px"></div>
+      </div>
+    </div>
+    ${d.entries.map((e,i)=>`<div class="pmm-card" style="border-left:4px solid #0073ea">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#0073ea">Supplier Test ${i+1}</div>
+        ${d.entries.length>1?`<button onclick="cdSupRemoveEntry(${i})" style="font-size:10.5px;color:#e2445c;background:none;border:1px solid #ffd5d5;border-radius:5px;padding:3px 9px;cursor:pointer">Remove</button>`:""}
+      </div>
+      ${fld(i,"description","Test type Description","area","e.g. Salt spray test, 96 hours, on the ratchet housing")}
+      ${fld(i,"link","Test Report Link","url","https://drive.google.com/…")}
+      <div class="pmm-grid2">${fld(i,"date","Tested Date","date")}${fld(i,"supplier","Supplier","text","Supplier name")}</div>
+    </div>`).join("")}
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button onclick="cdSupAddEntry()" style="font-size:11.5px;font-weight:700;color:#0073ea;background:#e8f2ff;border:1px solid #c0d8f8;border-radius:8px;padding:9px 16px;cursor:pointer">+ Add another supplier test</button>
+      <button id="cd-sup-submit" onclick="cdSubmitSupplierData()" style="font-size:12px;font-weight:700;color:#fff;background:#0073ea;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;margin-left:auto">✓ Submit Supplier Test Data</button>
+    </div>
+  </div>`;
+  cdSupUpdateStatus();
+}
+async function cdSubmitSupplierData(){
+  if(cdSupSubmitting) return;
+  if(!accessToken){ alert('Please "Connect & Sync" with Google first.'); return; }
+  const d=cdSupDraft;
+  const item=cdFindExistingItemBySku(d.sku||"");
+  if(!item){ alert('Enter the SKU of a product that already exists. A new product has to be added first under "Rhino-USA 3rd Party Test".'); return; }
+  const entries=d.entries.filter(e=>(e.description||"").trim()||(e.link||"").trim()||e.date||(e.supplier||"").trim());
+  if(!entries.length){ alert("Fill in at least one supplier test."); return; }
+  const noDesc=entries.findIndex(e=>!(e.description||"").trim());
+  if(noDesc!==-1){ alert(`Supplier Test ${noDesc+1} needs a Test type Description.`); return; }
+  const badLink=entries.findIndex(e=>(e.link||"").trim() && !/^https?:\/\//i.test(e.link.trim()));
+  if(badLink!==-1){ alert(`The Test Report Link on Supplier Test ${badLink+1} must start with http:// or https://`); return; }
+  cdSupSubmitting=true;
+  const btn=document.getElementById("cd-sup-submit"); if(btn){ btn.disabled=true; btn.style.opacity=".6"; btn.textContent="Submitting…"; }
+  try{
+    const map=await cdEnsureColumn(SUBITEMS_SHEET,"Supplier Test Data");   // creates the column the first time
+    const used=new Set();
+    const rows=entries.map(e=>{
+      let sid; do{ sid=cdGenerateSubId(); }while(used.has(sid)); used.add(sid);
+      return cdBuildRow(map,{parent_item_id:item.rowId, s:sid, name:cdOneLine(e.description).slice(0,100), "Supplier Test Data":cdFormatSupplierTest(e)});
+    });
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(SUBITEMS_SHEET)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+    const res=await fetch(url,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({values:rows})});
+    cdCheckAuthError(res);
+    if(!res.ok){ const t=await res.text(); throw new Error(`Could not save (${res.status}): ${t.slice(0,150)}`); }
+    const n=rows.length, name=item.name, itemId=item.id;
+    cdSupDraft={sku:"",entries:[cdSupNewEntry()]};
+    await fetchSheetData();
+    iExp[itemId]=true; iTab[itemId]="supplier";   // so it's right there next time they open the main table
+    cdRenderNewEntry();
+    alert(`Saved ${n} supplier test${n!==1?"s":""} for ${name}. Open the Main Table, expand the product and choose "Supplier Test Data" to see ${n!==1?"them":"it"}.`);
+  }catch(e){
+    alert("Could not submit: "+e.message);
+  }finally{
+    cdSupSubmitting=false;
+    const b2=document.getElementById("cd-sup-submit"); if(b2){ b2.disabled=false; b2.style.opacity="1"; b2.textContent="✓ Submit Supplier Test Data"; }
+  }
+}
+
 function cdRenderNewEntry(){
   const wrap=document.getElementById("board-wrap"); if(!wrap) return;
+  if(cdNewMode==="supplier"){ cdRenderSupplierEntry(wrap); return; }
   const d=cdDraft;
   const channelArr=Array.isArray(d.channel)?d.channel:(d.channel?String(d.channel).split(",").map(s=>s.trim()).filter(Boolean):[]);
-  let html=`<div style="max-width:900px;margin:0 auto;padding:20px 0">`;
+  let html=`<div style="max-width:900px;margin:0 auto;padding:20px 0">${cdNewModeBarHtml()}`;
   html+=`<div class="pmm-card">
     <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:16px">Product Details</div>
     <div class="pmm-grid2">
@@ -3804,6 +4151,7 @@ function cdBlockToExec(b){
     report:b.report||"", lab:b.lab||"", cost:String(b.cost||"").replace(/^\$/,""),
     date:cdParseDateToInputFormat(b.date||""),
     samples:cdParseSamplesFromResult(b.result||""),
+    cap:b.cap||"", evidence:b.evidence||"", evidenceLink:b.evidenceLink||"", remarks:b.remarks||"",
   };
 }
 function cdStripKgSuffix(s){ return String(s||"").replace(/\s*\([\d,\.]+\s*kg\)/gi,"").replace(/,/g,"").trim(); }
@@ -4206,7 +4554,7 @@ function cdItemsTableHtml(items, tabKey, emptyMessage){
   return `<div style="background:#fff;border:1.5px solid #e0e3ea;border-radius:10px;overflow:auto">
     <table style="width:100%;border-collapse:collapse;font-size:11.5px">
       <thead><tr style="background:#f2f3f6">
-        ${["Product / SKUs","Description","Priority SKU","Schedule per Test","Status Remarks",""].map(h=>`<th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1.5px solid #dde0e9">${h}</th>`).join("")}
+        ${(tabKey==="completedtest"?["Product / SKUs","Description","Priority SKU","Schedule per Test","Failed Tests — Follow-up","Status Remarks",""]:["Product / SKUs","Description","Priority SKU","Schedule per Test","Status Remarks",""]).map(h=>`<th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1.5px solid #dde0e9">${h}</th>`).join("")}
       </tr></thead>
       <tbody>
         ${items.map(i=>{
@@ -4219,6 +4567,7 @@ function cdItemsTableHtml(items, tabKey, emptyMessage){
             <td style="padding:9px 12px;white-space:normal;min-width:200px;vertical-align:top">${esc(i.description)}</td>
             <td style="padding:9px 12px;vertical-align:top">${i.prioritySku?`<span style="background:#e8f2ff;color:#0055bb;border:1px solid #c0d8f8;border-radius:6px;font-size:11px;font-weight:700;padding:2px 6px">${esc(i.prioritySku)}</span>`:`<span style="color:#ddd;font-size:10px">—</span>`}</td>
             <td style="padding:9px 12px;min-width:220px;vertical-align:top">${cdItemScheduleHtml(i, tabKey)}</td>
+            ${tabKey==="completedtest"?`<td style="padding:9px 12px;min-width:250px;vertical-align:top">${cdFailCellHtml(i)}</td>`:""}
             <td style="padding:9px 12px;white-space:normal;min-width:180px;vertical-align:top;color:${i.status?"#333":"#bbb"}">${esc(i.status)||"Click to add remarks…"}</td>
             <td style="padding:9px 12px;vertical-align:top;white-space:nowrap">
               <button onclick="event.stopPropagation();cdPromptRevertItem('${i.id}')" title="Revert to Monitoring" style="background:none;border:none;cursor:pointer;font-size:13px;margin-right:6px;padding:0">↩️</button>
