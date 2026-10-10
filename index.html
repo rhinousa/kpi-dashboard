@@ -142,8 +142,8 @@ input:not(:placeholder-shown) ~ .sc-clear{display:block}
 .wz-btn{font-size:12px;font-weight:700;border-radius:8px;padding:9px 20px;cursor:pointer;border:none}
 .wz-btn.pri{background:#0073ea;color:#fff}.wz-btn.pri:disabled{background:#b9d6f7;cursor:default}
 .wz-btn.sec{background:#f0f1f3;color:#555}
-.yr-wrap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start}
-.yr-grp{flex:1 1 300px;min-width:0}
+.yr-wrap{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:flex-start}
+.yr-grp{min-width:0;max-width:100%}
 .yr-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.4px;color:#0055bb;background:#e8f2ff;border:1px solid #c0d8f8;border-radius:6px;padding:1px 10px;margin-bottom:7px}
 
 /* ── App shell / sidebar ─────────────────────────────────────────────── */
@@ -306,21 +306,20 @@ textarea.pmm-input{resize:vertical;min-height:52px;font-family:inherit}
           <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#888" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <!-- Priority: compact select -->
+      <!-- Priority SKU: pills -->
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Priority</span>
-        <div style="position:relative">
-          <select id="fp-priority-sel" onchange="setFP(this.value)" style="padding:4px 28px 4px 10px;border:1.5px solid #dde0e7;border-radius:20px;font-size:11px;font-weight:600;background:#fff;color:#333;outline:none;height:30px;cursor:pointer;appearance:none;min-width:110px"></select>
-          <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#888" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
+        <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Priority SKU</span>
+        <div id="fp-priority" style="display:flex;gap:4px;flex-wrap:nowrap"></div>
       </div>
-      <!-- Result: compact select -->
+      <!-- Test result: pills -->
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Result</span>
-        <div style="position:relative">
-          <select id="fp-result-sel" onchange="setFR(this.value)" style="padding:4px 28px 4px 10px;border:1.5px solid #dde0e7;border-radius:20px;font-size:11px;font-weight:600;background:#fff;color:#333;outline:none;height:30px;cursor:pointer;appearance:none;min-width:100px"></select>
-          <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#888" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
+        <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Test result</span>
+        <div id="fp-result" style="display:flex;gap:4px;flex-wrap:nowrap"></div>
+      </div>
+      <!-- Supplier test data: pills -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Supplier test data</span>
+        <div id="fp-supplier" style="display:flex;gap:4px;flex-wrap:nowrap"></div>
       </div>
       <!-- Date (as-is) -->
       <div style="display:flex;align-items:center;gap:6px">
@@ -494,7 +493,7 @@ const PMM_PALETTE_TEXT = ["#0055bb","#0a7a46","#7a5500","#a02020","#5b21b6","#00
 // ── STATE ───────────────────────────────────────────────────────────────────
 let GROUPS = [];
 let searchQ = "", openDD = null, modal = null;
-let fCountry = "ALL", fResult = "ALL", fPriority = "ALL", fDateFrom = "", fDateTo = "", fSku = "", fGroup = "ALL", sortS = null;
+let fCountry = "ALL", fResult = "ALL", fPriority = "ALL", fDateFrom = "", fDateTo = "", fSku = "", fGroup = "ALL", fSupplier = "ALL", sortS = null;
 let activeTab = "table";
 let isSyncing = false, lastSynced = "Never", syncStatus = "ready";
 let syncProgress = 0, syncMsg = "";
@@ -1175,7 +1174,9 @@ function pBadge(p){return `<span class="p${Math.min(p,4)}b">P${p}</span>`;}
 function yearGroupsHtml(sub){
   const ys=Object.keys(sub.yearBlocks||{}).filter(y=>(sub.yearBlocks[y]||[]).length).sort();
   if(!ys.length) return '<span class="yc-empty">No results yet</span>';
-  return `<div class="yr-wrap">${ys.map(y=>`<div class="yr-grp"><span class="yr-tag">${esc(y)}</span>${ycell(sub.yearBlocks[y])}</div>`).join("")}</div>`;
+  // Each year is only as wide as its suppliers need (1-3 cards across), so years sit side by side
+  // with a small gap instead of stretching apart to fill the row.
+  return `<div class="yr-wrap">${ys.map(y=>{ const k=Math.min(3,Math.max(1,(sub.yearBlocks[y]||[]).length)); return `<div class="yr-grp" style="flex:0 1 ${k*250+(k-1)*8}px"><span class="yr-tag">${esc(y)}</span>${ycell(sub.yearBlocks[y])}</div>`; }).join("")}</div>`;
 }
 function itemYears(item){
   const ys=new Set();
@@ -1225,8 +1226,11 @@ function ycell(blocks){
 // ── FILTER / SORT ─────────────────────────────────────────────────────────────
 function matchF(item){
   if(fCountry!=="ALL"&&item.country!==fCountry) return false;
-  if(fResult!=="ALL"&&!item.subs.some(s=>bestResult(s)===fResult)) return false;
+  // Test result is judged per PRODUCT: Failed = any test failed (latest year); Passed = results on file and none failed.
+  if(fResult!=="ALL"){ const k=itemResultKind(item); if((fResult==="FAIL"&&k!=="fail")||(fResult==="PASS"&&k!=="pass")||(fResult==="notest"&&k!=="none")) return false; }
   if(fPriority!=="ALL"&&item.prioritySku!==fPriority) return false;
+  if(fSupplier==="with"&&!(item.supplierTests||[]).length) return false;
+  if(fSupplier==="none"&&(item.supplierTests||[]).length) return false;
   if(fSku&&item.id!=="i"+fSku&&item.name!==fSku) return false;
   if(fGroup!=="ALL"){
     // find which group this item belongs to
@@ -1504,26 +1508,20 @@ function renderToolbar(){
     ge.style.fontWeight=fGroup!=="ALL"?"700":"600";
   }
 
-  // Priority select
-  const pe=document.getElementById("fp-priority-sel");
+  // Priority SKU / Test result / Supplier test data -- visible pill buttons
+  const pe=document.getElementById("fp-priority");
   if(pe){
-    pe.innerHTML=[["ALL","All Priorities"],["Retail","★ Retail"],["A","A SKU"],["B","B SKU"],["C","C SKU"],["NPD","NPD"]].map(([v,l])=>`<option value="${v}" ${fPriority===v?"selected":""}>${l}</option>`).join("");
-    pe.style.borderColor=fPriority!=="ALL"?"#0073ea":"#dde0e7";
-    pe.style.color=fPriority!=="ALL"?"#0073ea":"#333";
-    pe.style.fontWeight=fPriority!=="ALL"?"700":"600";
+    const opts=[["ALL","All"],["A","A"],["B","B"],["C","C"],["Retail","★ Retail"]];
+    if(GROUPS.some(g=>g.items.some(i=>i.prioritySku==="NPD"))) opts.push(["NPD","NPD"]);
+    pe.innerHTML=opts.map(([v,l])=>pill(v,l,fPriority===v,`setFP('${v}')`)).join("");
   }
-
-  // Result select
-  const re=document.getElementById("fp-result-sel");
-  if(re){
-    re.innerHTML=[["ALL","All Results"],["PASS","PASS"],["FAIL","FAIL"],["notest","No Test"]].map(([v,l])=>`<option value="${v}" ${fResult===v?"selected":""}>${l}</option>`).join("");
-    re.style.borderColor=fResult!=="ALL"?"#0073ea":"#dde0e7";
-    re.style.color=fResult!=="ALL"?"#0073ea":"#333";
-    re.style.fontWeight=fResult!=="ALL"?"700":"600";
-  }
+  const re=document.getElementById("fp-result");
+  if(re) re.innerHTML=[["ALL","All"],["PASS","Passed"],["FAIL","Failed"],["notest","No test"]].map(([v,l])=>pill(v,l,fResult===v,`setFR('${v}')`)).join("");
+  const se=document.getElementById("fp-supplier");
+  if(se) se.innerHTML=[["ALL","All"],["with","With data"],["none","None"]].map(([v,l])=>pill(v,l,fSupplier===v,`setFS('${v}')`)).join("");
 
   // Clear All button
-  const af=(fCountry!=="ALL"?1:0)+(fResult!=="ALL"?1:0)+(fPriority!=="ALL"?1:0)+(fGroup!=="ALL"?1:0)+((fDateFrom||fDateTo)?1:0)+(fSku?1:0);
+  const af=(fCountry!=="ALL"?1:0)+(fResult!=="ALL"?1:0)+(fPriority!=="ALL"?1:0)+(fSupplier!=="ALL"?1:0)+(fGroup!=="ALL"?1:0)+((fDateFrom||fDateTo)?1:0)+(fSku?1:0);
   const cab=document.getElementById("clear-all-filters"); if(cab) cab.style.display=af>0?"inline-flex":"none";
 
   // Sort badge
@@ -1534,7 +1532,7 @@ function renderToolbar(){
   renderDropdowns();
 }
 
-function clearAllFilters(){ fCountry="ALL";fResult="ALL";fPriority="ALL";fGroup="ALL";fDateFrom="";fDateTo="";fSku="";onSkuSelect(""); renderAll(); }
+function clearAllFilters(){ fCountry="ALL";fResult="ALL";fPriority="ALL";fSupplier="ALL";fGroup="ALL";fDateFrom="";fDateTo="";fSku="";onSkuSelect(""); renderAll(); }
 
 
 function renderDropdowns(){
@@ -1543,16 +1541,10 @@ function renderDropdowns(){
 
   if(openDD==="sort"){
     dps.style.display="block";
-    const opts=[["name","Product Name"],["prioritySku","Priority SKU · Retail → A → B → C"],["country","Country"],["channel","Channel"],["colors","Report Colors"]];
-    const modes=[["result","failFirst","Failed tests first"],["result","passFirst","Passed tests first"],["supplier","most","Supplier test data · most first"],["supplier","none","Supplier test data · none first"]];
-    const modeRow=([c,d,l])=>{ const on=sortS?.col===c&&sortS?.dir===d; return `<div class="dpi ${on?"sel":""}" onclick="setSortMode('${c}','${d}')">${on?"● ":"· "} ${l}</div>`; };
+    const opts=[["name","Product Name"],["country","Country"],["channel","Channel"],["colors","Report Colors"]];   // priority / result / supplier data are filters now
     dps.innerHTML=`
       <div class="dpl">Sort by</div>
       ${opts.map(([c,l])=>`<div class="dpi ${sortS?.col===c?"sel":""}" onclick="setSort('${c}')">${sortS?.col===c?(sortS.dir==="asc"?"↑ ":"↓ "):"· "} ${l}</div>`).join("")}
-      <div class="dps"></div><div class="dpl">Test results</div>
-      ${modes.filter(m=>m[0]==="result").map(modeRow).join("")}
-      <div class="dps"></div><div class="dpl">Supplier data</div>
-      ${modes.filter(m=>m[0]==="supplier").map(modeRow).join("")}
       ${sortS?`<div class="dps"></div><div class="dpi" onclick="clearSort()" style="color:#e2445c;font-size:11px">✕ Clear sort</div>`:""}`;
   } else dps.style.display="none";
 }
@@ -3320,6 +3312,7 @@ document.addEventListener("click",e=>{
 function setFC(v){ fCountry=v; openDD=null; renderAll(); }
 function setFR(v){ fResult=v; openDD=null; renderAll(); }
 function setFP(v){ fPriority=v; openDD=null; renderAll(); }
+function setFS(v){ fSupplier=v; openDD=null; renderAll(); }
 function setFG(v){ fGroup=v; openDD=null; renderAll(); }
 function setDateFrom(v){ fDateFrom=v; renderAll(); }
 function setDateTo(v){ fDateTo=v; renderAll(); }
@@ -3604,13 +3597,15 @@ function cdApplyFailureDetails(cellText, blockIdx, d){
 
 function cdFormatExecBlock(ex, n){
   const lines=[`Priority Supplier ${n}: ${ex.supplier||""}`];
-  lines.push(`Tensile Test Method: ${ex.method||"Not Specified/Lab Proprietary"}`);
-  const wwlKg=cdLbsToKg(ex.wwl);
-  lines.push(`Rhino Test WWL (lbs.): ${ex.wwl?cdFmtNum(ex.wwl):""}${wwlKg?` (${cdFmtNum(wwlKg)} kg)`:""}`);
-  const claimKg=cdLbsToKg(ex.claim);
-  lines.push(`Rhino Break Strength Test Claim (lbs): ${ex.claim?cdFmtNum(ex.claim):""}${claimKg?` (${cdFmtNum(claimKg)} kg)`:""}`);
-  const sampleTexts=(ex.samples||[]).filter(s=>s.value||s.verdict).map((s,i)=>`Sample ${i+1} = ${s.value?cdFmtNum(s.value):""} lbs${s.verdict?` (${s.verdict})`:""}`);
-  lines.push(`Test Result (lbs): ${sampleTexts.join("  ")}`);
+  lines.push(`Test Method: ${ex.method||"Not Specified/Lab Proprietary"}`);
+  // WWL and Break Strength Claim only belong to tensile / physical tests -- written only when filled in,
+  // so a chemical, coating or colour test never gets two empty lines.
+  if(ex.wwl){ const wwlKg=cdLbsToKg(ex.wwl); lines.push(`Rhino Test WWL (lbs.): ${cdFmtNum(ex.wwl)}${wwlKg?` (${cdFmtNum(wwlKg)} kg)`:""}`); }
+  if(ex.claim){ const claimKg=cdLbsToKg(ex.claim); lines.push(`Rhino Break Strength Test Claim (lbs): ${cdFmtNum(ex.claim)}${claimKg?` (${cdFmtNum(claimKg)} kg)`:""}`); }
+  const filled=(ex.samples||[]).filter(s=>s.value||s.verdict);
+  const sampleTexts=filled.map((s,i)=>s.value?`Sample ${i+1} = ${cdFmtNum(s.value)} lbs${s.verdict?` (${s.verdict})`:""}`:`Sample ${i+1} = ${s.verdict}`);
+  // a lone PASS / FAIL with no figure reads simply as "PASS" / "FAIL"
+  lines.push(`Test Result: ${(filled.length===1&&!filled[0].value)?filled[0].verdict:sampleTexts.join("  ")}`);
   if(ex.report) lines.push(`Test Report: ${ex.report}`);
   if(ex.date) lines.push(`Test Completion Date: ${cdFmtDateUS(ex.date)}`);
   if(ex.lab) lines.push(`Test Lab: ${ex.lab}`);
@@ -3742,7 +3737,7 @@ function cdExecBlockHtml(tt, ti, ex, ei){
     </div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Priority Supplier</label><input class="pmm-input" value="${esc(ex.supplier)}" oninput="cdTestTypes[${ti}].execs[${ei}].supplier=this.value"/></div>
-      <div class="pmm-field"><label class="pmm-label">Tensile Test Method</label><input class="pmm-input" value="${esc(ex.method)}" oninput="cdTestTypes[${ti}].execs[${ei}].method=this.value"/></div>
+      <div class="pmm-field"><label class="pmm-label">Test Method</label><input class="pmm-input" value="${esc(ex.method)}" oninput="cdTestTypes[${ti}].execs[${ei}].method=this.value"/></div>
     </div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Rhino Test WWL (lbs.) <span style="color:#aaa;font-weight:400">— kg auto-added</span></label><input class="pmm-input" value="${esc(ex.wwl)}" oninput="cdTestTypes[${ti}].execs[${ei}].wwl=this.value"/></div>
@@ -4530,6 +4525,12 @@ function cdParseSamplesFromResult(resultText){
     samples.push({value:m[1].replace(/,/g,""), verdict:(m[2]||"").toUpperCase()});
   }
   if(!samples.length){
+    const vre=/Sample\s*\d+\s*=\s*(PASS|FAIL)\b/gi; let vm;
+    while((vm=vre.exec(text))) samples.push({value:"", verdict:vm[1].toUpperCase()});
+    const plain=text.trim().match(/^(PASS|FAIL)$/i);
+    if(!samples.length && plain) samples.push({value:"", verdict:plain[1].toUpperCase()});
+  }
+  if(!samples.length){
     const single=text.replace(/\s*\([\d,\.]+\s*kg\)/gi,"").trim();
     const sm=single.match(/^([\d,\.]+)\s*\(?(PASS|FAIL)?\)?/i);
     if(sm && sm[1]) samples.push({value:sm[1].replace(/,/g,""), verdict:(sm[2]||"").toUpperCase()});
@@ -4603,7 +4604,7 @@ function cdEditExecBlockHtml(tt, ti, ex, ei){
     </div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Priority Supplier</label><input class="pmm-input" value="${esc(ex.supplier)}" oninput="modal.draft.testTypes[${ti}].execs[${ei}].supplier=this.value"/></div>
-      <div class="pmm-field"><label class="pmm-label">Tensile Test Method</label><input class="pmm-input" value="${esc(ex.method)}" oninput="modal.draft.testTypes[${ti}].execs[${ei}].method=this.value"/></div>
+      <div class="pmm-field"><label class="pmm-label">Test Method</label><input class="pmm-input" value="${esc(ex.method)}" oninput="modal.draft.testTypes[${ti}].execs[${ei}].method=this.value"/></div>
     </div>
     <div class="pmm-grid2">
       <div class="pmm-field"><label class="pmm-label">Rhino Test WWL (lbs.)</label><input class="pmm-input" value="${esc(ex.wwl)}" oninput="modal.draft.testTypes[${ti}].execs[${ei}].wwl=this.value"/></div>
