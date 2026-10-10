@@ -88,6 +88,63 @@ input:not(:placeholder-shown) ~ .sc-clear{display:block}
 .it-tab.on{background:#0073ea;border-color:#0073ea;color:#fff;box-shadow:0 1px 4px rgba(0,115,234,.35)}
 .it-cnt{font-size:10px;font-weight:800;padding:1px 7px;border-radius:9px;background:#eef1f6;color:#555}
 .it-tab.on .it-cnt{background:rgba(255,255,255,.25);color:#fff}
+/* a year's results: one compact card per supplier */
+.yc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:8px}
+.yc-card{background:#fff;border:1px solid #e3e8f0;border-left:3px solid #cfd6e2;border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(20,40,90,.05);min-width:0}
+.yc-card.pass{border-left-color:#22b573}
+.yc-card.fail{border-left-color:#e2445c;background:#fffafa}
+.yc-head{display:flex;align-items:center;gap:6px;min-width:0}
+.yc-sup{font-weight:700;font-size:10.5px;color:#1f2430;min-width:0;overflow-wrap:anywhere;line-height:1.35}
+.yc-pill{margin-left:auto;flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.3px;padding:1px 8px;border-radius:9px}
+.yc-pill.pass{background:#e3f6ec;color:#0a7a46;border:1px solid #b8e6cf}
+.yc-pill.fail{background:#fdecec;color:#c0392b;border:1px solid #f5c2c2}
+.yc-res{font-size:10px;font-weight:600;color:#555;margin-top:5px;line-height:1.4}
+.yc-res.pass{color:#0a7a46}.yc-res.fail{color:#c0392b}
+.yc-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.yc-chip{font-size:9px;background:#f3f5f9;color:#6b7385;border-radius:5px;padding:1px 7px}
+.yc-chip b{color:#222;font-weight:700}
+.yc-sub{font-size:9.5px;color:#8a93a6;margin-top:5px}
+.yc-links{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.yc-note{margin-top:6px;padding:4px 8px;border-radius:0 5px 5px 0;font-size:9.5px;line-height:1.45;color:#333}
+.yc-note b{font-weight:800}
+.yc-note.cap{background:#fff8e0;border-left:2px solid #fdab3d}.yc-note.cap b{color:#b07000}
+.yc-note.ev{background:#f0f7ff;border-left:2px solid #0073ea}.yc-note.ev b{color:#0055bb}
+.yc-note.rem{background:#f7f0ff;border-left:2px solid #7c3aed}.yc-note.rem b{color:#5b21b6}
+.yc-evlink{color:#0073ea;font-weight:700;text-decoration:none;white-space:nowrap}
+.yc-evlink:hover{text-decoration:underline}
+.yc-overall{display:inline-flex;font-size:9.5px;font-weight:800;padding:2px 10px;border-radius:5px;margin-bottom:7px;background:#f3f5f9;color:#555}
+.yc-overall.pass{background:#e3f9ee;color:#0a7a46}.yc-overall.fail{background:#ffe8e8;color:#c0392b}
+.yc-empty{color:#b3bacb;font-size:11px;font-style:italic}
+/* guided setup */
+.wz-steps{display:flex;align-items:center;margin:0 0 16px;padding:12px 16px;background:#fff;border:1px solid #e3e8f0;border-radius:10px;overflow-x:auto}
+.wz-step{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.wz-dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:#eef1f6;color:#8a93a6;border:1.5px solid #dde0e7}
+.wz-lbl{font-size:11.5px;font-weight:700;color:#8a93a6}
+.wz-step.on .wz-dot{background:#0073ea;color:#fff;border-color:#0073ea}.wz-step.on .wz-lbl{color:#0055bb}
+.wz-step.done .wz-dot{background:#22b573;color:#fff;border-color:#22b573}.wz-step.done .wz-lbl{color:#0a7a46}
+.wz-line{flex:1;min-width:20px;height:2px;background:#e3e8f0;margin:0 10px}
+.cd-sug-box{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #dde0e7;border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:70;max-height:340px;overflow-y:auto}
+.cd-sug{display:flex;align-items:baseline;gap:9px;padding:8px 12px;cursor:pointer;border-bottom:1px solid #f1f2f5}
+.cd-sug:last-child{border-bottom:none}.cd-sug:hover,.cd-sug.on{background:#f0f6ff}
+.cd-sug-k{flex-shrink:0;font-size:8.5px;font-weight:800;letter-spacing:.4px;padding:2px 7px;border-radius:5px}
+.cd-sug-k.SKU{background:#e8f2ff;color:#0055bb}.cd-sug-k.DESC{background:#f3e8ff;color:#6d28d9}.cd-sug-k.PARENT{background:#e3f6ec;color:#0a7a46}
+.cd-sug-t{font-size:12.5px;color:#222}.cd-sug-t b{color:#0055bb}
+.cd-sug-s{margin-left:auto;font-size:10.5px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%}
+.wz-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.wz-tbl th{text-align:left;padding:7px 9px;font-size:9.5px;font-weight:800;color:#8a93a6;text-transform:uppercase;letter-spacing:.4px;background:#f4f5f9;border-bottom:1.5px solid #e3e8f0}
+.wz-tbl td{padding:8px 9px;border-bottom:1px solid #eef0f4;vertical-align:top;color:#333}
+.wz-tbl tr.pick{cursor:pointer}.wz-tbl tr.pick:hover td{background:#f7faff}.wz-tbl tr.on td{background:#eaf3ff}
+.wz-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+.wz-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.wz-info>div{background:#f7f8fa;border-radius:8px;padding:8px 11px;min-width:0}
+.wz-info .k{font-size:9px;font-weight:800;color:#8a93a6;text-transform:uppercase;letter-spacing:.4px}
+.wz-info .v{font-size:11.5px;color:#222;font-weight:600;margin-top:2px;overflow-wrap:anywhere;line-height:1.4}
+.wz-btn{font-size:12px;font-weight:700;border-radius:8px;padding:9px 20px;cursor:pointer;border:none}
+.wz-btn.pri{background:#0073ea;color:#fff}.wz-btn.pri:disabled{background:#b9d6f7;cursor:default}
+.wz-btn.sec{background:#f0f1f3;color:#555}
+.yr-wrap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start}
+.yr-grp{flex:1 1 300px;min-width:0}
+.yr-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.4px;color:#0055bb;background:#e8f2ff;border:1px solid #c0d8f8;border-radius:6px;padding:1px 10px;margin-bottom:7px}
 
 /* ── App shell / sidebar ─────────────────────────────────────────────── */
 #app-shell{display:flex;min-height:100vh}
@@ -1113,47 +1170,56 @@ function ybClip(val){
 }
 function pBadge(p){return `<span class="p${Math.min(p,4)}b">P${p}</span>`;}
 
+// Years (as strings, ascending) in which ANY test of this product has results.
+// Columns for years with nothing recorded are simply not drawn.
+function yearGroupsHtml(sub){
+  const ys=Object.keys(sub.yearBlocks||{}).filter(y=>(sub.yearBlocks[y]||[]).length).sort();
+  if(!ys.length) return '<span class="yc-empty">No results yet</span>';
+  return `<div class="yr-wrap">${ys.map(y=>`<div class="yr-grp"><span class="yr-tag">${esc(y)}</span>${ycell(sub.yearBlocks[y])}</div>`).join("")}</div>`;
+}
+function itemYears(item){
+  const ys=new Set();
+  (item.subs||[]).forEach(sub=>Object.keys(sub.yearBlocks||{}).forEach(y=>{ if((sub.yearBlocks[y]||[]).length) ys.add(y); }));
+  return [...ys].sort();
+}
+// One year's results for one test: each supplier is a compact card (status colour on the edge,
+// result pill, key figures, report link, then CAP / Evidence / Remarks when the test failed).
 function ycell(blocks){
-  if(!blocks||!blocks.length) return '<span style="color:#ddd;font-size:10px">—</span>';
+  if(!blocks||!blocks.length) return '<span class="yc-empty">—</span>';
   const overall=calcOverall(blocks);
   const ip=/^PASS$/i.test(overall), ifl=/^FAIL$/i.test(overall);
-  const oc=ifl?"#c0392b":ip?"#0a7a46":"#555";
-  let h=`<div style="font-size:10px;line-height:1.5;color:#222">`;
-  if(blocks.length>1){
-    h+=`<div style="display:inline-flex;align-items:center;gap:4px;background:${ip?"#e3f9ee":ifl?"#ffe8e8":"#f7f8fa"};border:1px solid ${ip?"#c3f0da":ifl?"#ffd5d5":"#e0e0e0"};border-radius:4px;padding:2px 7px;margin-bottom:5px;font-size:9px;font-weight:700;color:${oc}">Overall (P1 Rule): ${overall}</div>`;
-  }
-  blocks.forEach((b,idx)=>{
+  let h=`<div class="yc">`;
+  if(blocks.length>1) h+=`<div class="yc-overall ${ip?"pass":ifl?"fail":""}">Overall (P1 Rule): ${esc(overall)}</div>`;
+  h+=`<div class="yc-grid">`;
+  blocks.forEach(b=>{
     const bp=/\bPASS\b/i.test(b.result||""), bf=/\bFAIL\b/i.test(b.result||"");
-    const bc=bf?"#c0392b":bp?"#0a7a46":"#555";
-    if(idx>0) h+=`<div style="margin-top:5px;padding-top:5px;border-top:0.5px dashed #e0e0e0">`;
-    h+=`<div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:2px">${pBadge(b.priority)}`;
-    if(b.supplier) h+=`<span style="font-weight:600;font-size:10px">${esc(b.supplier)}</span>`;
-    h+=`</div>`;
-    if(b.result) h+=`<div style="color:${bc};font-weight:700;margin-bottom:2px;font-size:10px">${esc(b.result)}</div>`;
-    if(b.wwl) h+=`<div style="color:#666;font-size:9px">WWL: ${esc(b.wwl)}${b.claim?" | Claim: "+esc(b.claim):""}</div>`;
-    if(b.date||b.lab) h+=`<div style="color:#888;font-size:9px">${[b.date,b.lab].filter(Boolean).join(" · ")}</div>`;
-    // Render all report links as labeled buttons
+    const st=bf?"fail":bp?"pass":"";
+    h+=`<div class="yc-card ${st}">`;
+    h+=`<div class="yc-head">${pBadge(b.priority)}${b.supplier?`<span class="yc-sup">${esc(b.supplier)}</span>`:""}${st?`<span class="yc-pill ${st}">${bf?"FAIL":"PASS"}</span>`:""}</div>`;
+    // the full result text (sample figures etc.) -- skipped when it is only the word PASS / FAIL
+    if(b.result && !/^\s*(PASS|FAIL)\s*$/i.test(b.result)) h+=`<div class="yc-res ${st}">${esc(b.result)}</div>`;
+    const chips=[b.wwl?`<span class="yc-chip">WWL <b>${esc(b.wwl)}</b></span>`:"", b.claim?`<span class="yc-chip">Claim <b>${esc(b.claim)}</b></span>`:""].join("");
+    if(chips) h+=`<div class="yc-meta">${chips}</div>`;
+    if(b.date||b.lab) h+=`<div class="yc-sub">${[b.date,b.lab].filter(Boolean).map(esc).join(" · ")}</div>`;
     const reportList=b.reports&&b.reports.length?b.reports:(b.report?[{label:"Report",url:b.report}]:[]);
-    reportList.forEach(r=>{
-      // Use onclick window.open as fallback for environments where href clicks are blocked
-      const cleanUrl=r.url.replace(/&amp;/g,"&");
-      const lbl=cdNormalizeReportLabel(r.label);
-      h+=`<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="rpt" onclick="event.stopPropagation()" title="${esc(lbl)}">📄 ${esc(lbl)} ↗</a>`;
-    });
-    if(b.cap) h+=`<div style="margin-top:3px;padding:3px 6px;background:#fff8e0;border-left:2px solid #fdab3d;border-radius:0 3px 3px 0;font-size:9px"><span style="font-weight:700;color:#b07000">CAP:</span> ${esc(b.cap)}</div>`;
-    if(b.evidence){
-      const evUrl=(b.evidence.match(/https?:\/\/[^\s\n"')]+/)?.[0]||"").replace(/&amp;/g,"&");
-      const evText=b.evidence.replace(/https?:\/\/[^\s\n"')]+/g,"").trim();
-      h+=`<div style="margin-top:3px;padding:3px 6px;background:#f0f9ff;border-left:2px solid #0073ea;border-radius:0 3px 3px 0;font-size:9px">
-        <span style="font-weight:700;color:#0055bb">Evidence:</span>
-        ${evText?` ${esc(evText)}`:""}
-        ${evUrl?`<a href="${evUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();window.open('${evUrl.replace(/'/g,"\\'")}','_blank')" style="display:inline-flex;align-items:center;gap:2px;color:#0073ea;font-weight:600;text-decoration:none;margin-left:3px">🔗 View ↗</a>`:""}
-      </div>`;
+    if(reportList.length){
+      h+=`<div class="yc-links">`;
+      reportList.forEach(r=>{
+        const cleanUrl=r.url.replace(/&amp;/g,"&"), lbl=cdNormalizeReportLabel(r.label);
+        h+=`<a href="${esc(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rpt" onclick="event.stopPropagation()" title="${esc(lbl)}">📄 ${esc(lbl)} ↗</a>`;
+      });
+      h+=`</div>`;
     }
-    if(b.remarks) h+=`<div style="margin-top:3px;padding:3px 6px;background:#f7f0ff;border-left:2px solid #7c3aed;border-radius:0 3px 3px 0;font-size:9px"><span style="font-weight:700;color:#5b21b6">Remarks:</span> ${esc(b.remarks)}</div>`;
-    if(idx>0) h+=`</div>`;
+    if(b.cap) h+=`<div class="yc-note cap"><b>CAP:</b> ${esc(b.cap)}</div>`;
+    if(b.evidence||b.evidenceLink){
+      const evUrl=(b.evidenceLink||(b.evidence||"").match(/https?:\/\/[^\s\n"')]+/)?.[0]||"").replace(/&amp;/g,"&");
+      const evText=(b.evidence||"").replace(/https?:\/\/[^\s\n"')]+/g,"").trim();
+      h+=`<div class="yc-note ev"><b>Evidence:</b>${evText?" "+esc(evText):""}${/^https?:\/\//i.test(evUrl)?` <a class="yc-evlink" href="${esc(evUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 View evidence ↗</a>`:""}</div>`;
+    }
+    if(b.remarks) h+=`<div class="yc-note rem"><b>Remarks:</b> ${esc(b.remarks)}</div>`;
+    h+=`</div>`;
   });
-  return h+"</div>";
+  return h+`</div></div>`;
 }
 
 // ── FILTER / SORT ─────────────────────────────────────────────────────────────
@@ -1208,11 +1274,40 @@ function getVis(){
   let all=[];
   GROUPS.forEach(g=>g.items.forEach(i=>all.push({...i,_gid:g.id,_gtitle:g.title,_gc:g.color})));
   all=all.filter(matchF);
-  if(sortS) all.sort((a,b)=>{
-    const av=(a[sortS.col]||"").toLowerCase(),bv=(b[sortS.col]||"").toLowerCase();
-    return sortS.dir==="asc"?av.localeCompare(bv):bv.localeCompare(av);
-  });
+  if(sortS) sortVisible(all);
   return all;
+}
+// Priority order is a ranking, not the alphabet: Retail, then A, B, C, then NPD, blanks last.
+const PRIORITY_RANK={retail:0,a:1,b:2,c:3,npd:4};
+function priRank(i){ const r=PRIORITY_RANK[String(i.prioritySku||"").trim().toLowerCase()]; return r===undefined?9:r; }
+// One product's overall outcome: any test whose latest year failed -> "fail"; otherwise any pass -> "pass".
+function itemResultKind(item){
+  let pass=false;
+  for(const sub of (item.subs||[])){
+    const ys=Object.keys(sub.yearBlocks||{}).filter(y=>(sub.yearBlocks[y]||[]).length).sort();
+    if(!ys.length) continue;
+    const r=calcOverall(sub.yearBlocks[ys[ys.length-1]]);
+    if(r==="FAIL") return "fail";
+    if(r==="PASS") pass=true;
+  }
+  return pass?"pass":"none";
+}
+function sortVisible(all){
+  const nm=(a,b)=>String(a.name||"").localeCompare(String(b.name||""));
+  const {col,dir}=sortS;
+  if(col==="prioritySku") return all.sort((a,b)=>((priRank(a)-priRank(b))*(dir==="desc"?-1:1))||nm(a,b));
+  if(col==="result"){
+    const ord=dir==="passFirst"?{pass:0,fail:1,none:2}:{fail:0,pass:1,none:2};
+    return all.sort((a,b)=>(ord[itemResultKind(a)]-ord[itemResultKind(b)])||nm(a,b));
+  }
+  if(col==="supplier"){
+    const n=i=>(i.supplierTests||[]).length;
+    return all.sort((a,b)=>(dir==="none"?n(a)-n(b):n(b)-n(a))||nm(a,b));
+  }
+  return all.sort((a,b)=>{
+    const av=String(a[col]||"").toLowerCase(),bv=String(b[col]||"").toLowerCase();
+    return dir==="asc"?av.localeCompare(bv):bv.localeCompare(av);
+  });
 }
 function groupVis(items){
   const m={};
@@ -1448,10 +1543,16 @@ function renderDropdowns(){
 
   if(openDD==="sort"){
     dps.style.display="block";
-    const opts=[["name","Product Name"],["prioritySku","Priority SKU"],["country","Country"],["channel","Channel"],["colors","Report Colors"]];
+    const opts=[["name","Product Name"],["prioritySku","Priority SKU · Retail → A → B → C"],["country","Country"],["channel","Channel"],["colors","Report Colors"]];
+    const modes=[["result","failFirst","Failed tests first"],["result","passFirst","Passed tests first"],["supplier","most","Supplier test data · most first"],["supplier","none","Supplier test data · none first"]];
+    const modeRow=([c,d,l])=>{ const on=sortS?.col===c&&sortS?.dir===d; return `<div class="dpi ${on?"sel":""}" onclick="setSortMode('${c}','${d}')">${on?"● ":"· "} ${l}</div>`; };
     dps.innerHTML=`
       <div class="dpl">Sort by</div>
       ${opts.map(([c,l])=>`<div class="dpi ${sortS?.col===c?"sel":""}" onclick="setSort('${c}')">${sortS?.col===c?(sortS.dir==="asc"?"↑ ":"↓ "):"· "} ${l}</div>`).join("")}
+      <div class="dps"></div><div class="dpl">Test results</div>
+      ${modes.filter(m=>m[0]==="result").map(modeRow).join("")}
+      <div class="dps"></div><div class="dpl">Supplier data</div>
+      ${modes.filter(m=>m[0]==="supplier").map(modeRow).join("")}
       ${sortS?`<div class="dps"></div><div class="dpi" onclick="clearSort()" style="color:#e2445c;font-size:11px">✕ Clear sort</div>`:""}`;
   } else dps.style.display="none";
 }
@@ -1617,12 +1718,14 @@ function renderTable(){
           html+=`<div style="background:#f6f7fb;border-bottom:0.5px solid #e0e0e0">${itemTabsHtml(item,tabSel)}`;
           if(tabSel==="supplier"){ html+=supplierTableHtml(item, (searchQ&&!itemMatchedDirectly)?searchQ:""); }
           else{
-          html+=`<div style="display:grid;grid-template-columns:${sg};background:#eeeff5;border-bottom:0.5px solid #dde0e9">
-              ${sHdrs.map((h,i)=>`<div style="padding:5px 10px 5px ${i===0?"44px":"10px"};font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-right:0.5px solid #dde0e9">${h}</div>`).join("")}
+          const rg="minmax(200px,0.9fr) 96px minmax(0,4fr)";
+          const heads=["Test Type","Result","Test Results by Year"];
+          html+=`<div style="display:grid;grid-template-columns:${rg};background:#eeeff5;border-bottom:0.5px solid #dde0e9">
+              ${heads.map((h,i)=>`<div style="padding:6px 10px 6px ${i===0?"44px":"10px"};font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;${i<heads.length-1?"border-right:0.5px solid #dde0e9":""}">${h}</div>`).join("")}
             </div>`;
           fsubs.forEach(sub=>{
             const br=bestResult(sub);
-            html+=`<div class="sr" onclick="openDetail('${sub.id}','${item.id}','${grp.id}')" style="display:grid;grid-template-columns:${sg};border-bottom:0.5px solid #e8eaed;align-items:start">
+            html+=`<div class="sr" onclick="openDetail('${sub.id}','${item.id}','${grp.id}')" style="display:grid;grid-template-columns:${rg};border-bottom:0.5px solid #e8eaed;align-items:start">
               <div style="padding:7px 10px 7px 44px;border-right:0.5px solid #e8eaed;min-width:0">
                 <div style="display:flex;align-items:flex-start;gap:5px">
                   <div style="width:5px;height:5px;border-radius:50%;background:${grp.color};flex-shrink:0;margin-top:4px"></div>
@@ -1630,9 +1733,7 @@ function renderTable(){
                 </div>
               </div>
               <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${rb(br)}</div>
-              <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${ycell(sub.p24)}</div>
-              <div style="padding:7px 10px;border-right:0.5px solid #e8eaed">${ycell(sub.p25)}</div>
-              <div style="padding:7px 10px">${ycell(sub.p26)}</div>
+              <div style="padding:8px 10px">${yearGroupsHtml(sub)}</div>
             </div>`;
           });
           if(!fsubs.length) html+=`<div style="padding:8px 44px;font-size:11px;color:#aaa;font-style:italic">No subtests match search</div>`;
@@ -3236,6 +3337,7 @@ function toggleRetestNext(itemId, subId, checked){
   renderAll();
 }
 function setSort(c){ sortS=sortS?.col===c?{col:c,dir:sortS.dir==="asc"?"desc":"asc"}:{col:c,dir:"asc"}; openDD=null; renderAll(); }
+function setSortMode(c,d){ sortS={col:c,dir:d}; openDD=null; renderAll(); }
 function clearSort(){ sortS=null; openDD=null; renderAll(); }
 
 function viewInMonitoring(parentSku){
@@ -3343,6 +3445,9 @@ let cdDraft = {sku:"",parentSku:"",description:"",prioritySku:"",website:"",meet
 function cdNewExec(){ return {supplier:"",method:"",wwl:"",claim:"",report:"",lab:"",cost:"",date:"",samples:[{value:"",verdict:""}]}; }
 function cdNewTestType(){ return {name:"",std:"",criteria:"",target:"",equipment:"",accreditation:"",labs:"",execs:[cdNewExec()]}; }
 let cdTestTypes = [cdNewTestType()];
+// Guided setup for "Rhino-USA 3rd Party Test": find product -> parent SKU -> review -> choose tests -> form
+let cdWizard={active:true,done:false,step:1,query:"",matches:[],motherId:"",selSubs:new Set(),sug:[],sugIdx:-1,msg:""};
+function cdWzReset(){ cdWizard={active:true,done:false,step:1,query:"",matches:[],motherId:"",selSubs:new Set(),sug:[],sugIdx:-1,msg:""}; }
 let cdSubmitting = false;
 
 // Auto-creates a tab if it doesn't exist yet -- but only for the sheets this
@@ -3655,7 +3760,7 @@ function cdExecBlockHtml(tt, ti, ex, ei){
 function cdTestTypeBlockHtml(tt, ti){
   return `<div style="border:1.5px solid #e0e3ea;border-radius:8px;padding:14px;margin-bottom:14px;background:#fafbfc">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-size:11.5px;font-weight:700;color:#0073ea">Test Type ${ti+1}</div>
+      <div style="font-size:11.5px;font-weight:700;color:#0073ea">Test Type ${ti+1}${tt.fromWizard?` <span style="margin-left:8px;font-size:9.5px;font-weight:700;color:#0a7a46;background:#e3f6ec;border:1px solid #b8e6cf;border-radius:9px;padding:1px 9px">Existing test · new results are added to ${new Date().getFullYear()}</span>`:""}</div>
       ${cdTestTypes.length>1?`<button onclick="cdRemoveTestType(${ti})" style="font-size:10.5px;color:#e2445c;background:none;border:1px solid #ffd5d5;border-radius:5px;padding:3px 9px;cursor:pointer">Remove</button>`:""}
     </div>
     <div class="pmm-field"><label class="pmm-label">Test Type (Name)</label><input class="pmm-input" value="${esc(tt.name)}" oninput="cdTestTypes[${ti}].name=this.value"/></div>
@@ -3773,12 +3878,236 @@ async function cdSubmitSupplierData(){
   }
 }
 
+// ───────────────── New Entry · Rhino-USA 3rd Party Test · guided setup ─────────────────
+const cdWzLow=v=>String(v||"").toLowerCase();
+function cdWzAllItems(){ const out=[]; GROUPS.forEach(g=>g.items.forEach(i=>out.push(i))); return out; }
+function cdWzParentKey(i){ return String(i.parentSku||"").trim()||String(i.name||"").trim(); }
+function cdWzMother(){ return cdWzAllItems().find(i=>i.id===cdWizard.motherId)||null; }
+function cdWzHl(text,q){
+  const t=String(text||""), i=cdWzLow(t).indexOf(cdWzLow(q));
+  if(!q||i<0) return esc(t);
+  return esc(t.slice(0,i))+"<b>"+esc(t.slice(i,i+q.length))+"</b>"+esc(t.slice(i+q.length));
+}
+// Google-style suggestions: SKUs that start with / contain the text, then descriptions, then parent SKUs.
+function cdWzSuggestions(q){
+  q=String(q||"").trim(); if(!q) return [];
+  const ql=cdWzLow(q), items=cdWzAllItems(), out=[], seen=new Set();
+  const push=(kind,text,sub)=>{ if(!text) return; const k=kind+"|"+cdWzLow(text); if(seen.has(k)) return; seen.add(k); out.push({kind,text,sub:sub||""}); };
+  const byName=(a,b)=>String(a.name||"").localeCompare(String(b.name||""));
+  items.filter(i=>cdWzLow(i.name).startsWith(ql)).sort(byName).forEach(i=>push("SKU",i.name,i.description));
+  items.filter(i=>cdWzLow(i.name).includes(ql)&&!cdWzLow(i.name).startsWith(ql)).sort(byName).forEach(i=>push("SKU",i.name,i.description));
+  items.filter(i=>cdWzLow(i.description).includes(ql)).sort(byName).forEach(i=>push("DESC",i.description,i.name));
+  [...new Set(items.map(cdWzParentKey))].filter(k=>cdWzLow(k).includes(ql)).sort().forEach(k=>push("PARENT",k,""));
+  return out.slice(0,10);
+}
+function cdWzMatchesFor(kind,text){
+  const tl=cdWzLow(text), items=cdWzAllItems();
+  if(kind==="SKU") return items.filter(i=>cdWzLow(i.name)===tl);
+  if(kind==="DESC") return items.filter(i=>cdWzLow(i.description)===tl);
+  if(kind==="PARENT") return items.filter(i=>cdWzLow(cdWzParentKey(i))===tl);
+  return items.filter(i=>[i.name,i.description,i.parentSku].some(v=>cdWzLow(v).includes(tl)));
+}
+// One entry per parent SKU. The "mother" is the SKU that actually holds the test data (not a linkage SKU that
+// only reuses it). Two mothers under one parent SKU = a duplicate, so each row shows its Ref # to tell them apart.
+function cdWzGroups(matches){
+  const all=cdWzAllItems(), ids=new Set(matches.map(i=>i.id));
+  return [...new Set(matches.map(cdWzParentKey))].map(key=>{
+    const sibs=all.filter(i=>cdWzParentKey(i)===key);
+    let mothers=sibs.filter(i=>!i._replicatedFrom && (i.subs||[]).length);
+    const noTests=!mothers.length;
+    if(noTests){ mothers=sibs.filter(i=>!i._replicatedFrom && ids.has(i.id)); if(!mothers.length) mothers=sibs.filter(i=>!i._replicatedFrom).slice(0,1); }
+    mothers.sort((a,b)=>((b.subs||[]).length-(a.subs||[]).length)||String(a.name||"").localeCompare(String(b.name||"")));
+    return {key,mothers,linked:sibs.filter(i=>!mothers.includes(i)),noTests,dup:mothers.length>1};
+  }).sort((a,b)=>a.key.localeCompare(b.key));
+}
+function cdWzStepperHtml(){
+  const names=["Find product","Parent SKU","Review","Choose tests","Enter results"];
+  const cur=cdWizard.done?5:cdWizard.step;
+  return `<div class="wz-steps">${names.map((n,i)=>{ const k=i+1, st=k<cur?"done":k===cur?"on":""; return `<div class="wz-step ${st}"><span class="wz-dot">${k<cur?"✓":k}</span><span class="wz-lbl">${n}</span></div>`; }).join('<div class="wz-line"></div>')}</div>`;
+}
+// ---- step 1: search ----
+function cdWzStep1Html(){
+  const w=cdWizard;
+  return `<div class="pmm-card">
+    <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">Find the product</div>
+    <div style="font-size:11.5px;color:#777;margin-bottom:14px">Type a SKU or a product description — suggestions appear as you type. Pick one to see its parent SKU and the tests we already have.</div>
+    <div style="position:relative">
+      <input id="cd-wz-q" class="pmm-input" style="font-size:14px;padding:12px 38px 12px 14px" autocomplete="off" spellcheck="false" placeholder="Search by SKU or product description…" value="${esc(w.query)}" oninput="cdWzOnInput(this.value)" onkeydown="cdWzKey(event)" onfocus="cdWzUpdateSug()" onblur="setTimeout(cdWzHideSug,160)"/>
+      <button type="button" class="sc-clear" title="Clear" onmousedown="event.preventDefault()" onclick="scClear('cd-wz-q')">✕</button>
+      <div id="cd-wz-sug" class="cd-sug-box"></div>
+    </div>
+    ${w.msg?`<div style="margin-top:10px;font-size:11.5px;color:#c0392b">${esc(w.msg)}</div>`:""}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px">
+      <button onclick="cdWzSkip()" style="background:none;border:none;color:#0073ea;font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0">New product that isn't listed? Skip and enter it manually</button>
+      <button class="wz-btn pri" onclick="cdWzSearchGo()">Search →</button>
+    </div>
+  </div>`;
+}
+function cdWzOnInput(v){ cdWizard.query=v; cdWizard.sugIdx=-1; cdWizard.msg=""; cdWzUpdateSug(); }
+function cdWzHideSug(){ const b=document.getElementById("cd-wz-sug"); if(b){ b.style.display="none"; } }
+function cdWzUpdateSug(keep){
+  const box=document.getElementById("cd-wz-sug"); if(!box) return;
+  const w=cdWizard; if(!keep) w.sug=cdWzSuggestions(w.query);
+  if(!w.sug.length||!String(w.query).trim()){ box.style.display="none"; box.innerHTML=""; return; }
+  box.style.display="block";
+  box.innerHTML=w.sug.map((x,i)=>`<div class="cd-sug${i===w.sugIdx?" on":""}" onmousedown="event.preventDefault();cdWzPickSug(${i})"><span class="cd-sug-k ${x.kind}">${x.kind==="DESC"?"DESCRIPTION":x.kind==="PARENT"?"PARENT SKU":"SKU"}</span><span class="cd-sug-t">${cdWzHl(x.text,w.query)}</span>${x.sub?`<span class="cd-sug-s">${esc(x.sub)}</span>`:""}</div>`).join("");
+}
+function cdWzKey(e){
+  const w=cdWizard, n=w.sug.length;
+  if(e.key==="ArrowDown"){ e.preventDefault(); if(n){ w.sugIdx=(w.sugIdx+1)%n; cdWzUpdateSug(true); } }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); if(n){ w.sugIdx=(w.sugIdx-1+n)%n; cdWzUpdateSug(true); } }
+  else if(e.key==="Enter"){ e.preventDefault(); if(w.sugIdx>=0&&w.sug[w.sugIdx]) cdWzPickSug(w.sugIdx); else cdWzSearchGo(); }
+  else if(e.key==="Escape"){ cdWzHideSug(); }
+}
+function cdWzPickSug(i){
+  const x=cdWizard.sug[i]; if(!x) return;
+  cdWizard.query=x.text;
+  cdWzGoStep2(cdWzMatchesFor(x.kind,x.text));
+}
+function cdWzSearchGo(){
+  const q=String(cdWizard.query||"").trim();
+  if(!q){ cdWizard.msg="Type a SKU or a product description first."; cdRenderNewEntry(); return; }
+  const m=cdWzMatchesFor("TEXT",q);
+  if(!m.length){ cdWizard.msg=`No product matches “${q}”. Try another SKU or description, or skip to enter a new product manually.`; cdRenderNewEntry(); return; }
+  cdWzGoStep2(m);
+}
+function cdWzGoStep2(matches){
+  const w=cdWizard; w.matches=matches.map(i=>i.id); w.msg=""; w.step=2; w.motherId=""; w.selSubs=new Set();
+  const gs=cdWzGroups(matches), cands=gs.flatMap(g=>g.mothers);
+  if(cands.length===1) w.motherId=cands[0].id;      // only one possible -- pre-select (still needs Confirm)
+  cdRenderNewEntry();
+}
+function cdWzSkip(){ cdWizard.active=false; cdRenderNewEntry(); }
+function cdWzBack(){ const w=cdWizard; if(w.step>1){ w.step--; cdRenderNewEntry(); } }
+// ---- step 2: parent SKU ----
+function cdWzStep2Html(){
+  const w=cdWizard, items=cdWzAllItems().filter(i=>w.matches.includes(i.id)), gs=cdWzGroups(items);
+  const rows=gs.map(g=>g.mothers.map(m=>{
+    const sel=w.motherId===m.id;
+    return `<tr class="pick ${sel?"on":""}" onclick="cdWzSelectMother('${m.id}')">
+      <td style="width:28px"><input type="radio" name="cd-wz-mother" ${sel?"checked":""} onclick="event.stopPropagation();cdWzSelectMother('${m.id}')"/></td>
+      <td style="font-weight:800;color:#0055bb">${esc(g.key)}</td>
+      <td style="font-weight:600">${esc(m.name)}</td>
+      <td>${esc(m.description||"—")}</td>
+      <td>${m.prioritySku?`<span style="font-weight:700">${esc(m.prioritySku)}</span>`:"—"}</td>
+      <td>${g.noTests?`<span style="color:#b36b00;font-weight:700">None yet</span>`:(m.subs||[]).length}</td>
+      <td>${g.linked.length}</td>
+      <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:${g.dup?"#fff4e0":"#f1f3f7"};color:${g.dup?"#b36b00":"#6b7385"}">Ref #${esc(m.rowId)}</span></td>
+    </tr>`;
+  }).join("")).join("");
+  const anyDup=gs.some(g=>g.dup);
+  return `<div class="pmm-card">
+    <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">Choose the Parent SKU</div>
+    <div style="font-size:11.5px;color:#777;margin-bottom:12px">Each row is a <b>mother SKU</b> — the SKU that holds the main test data for its parent SKU. Linked SKUs (other colours/variants) reuse its results, so they are not listed.</div>
+    ${anyDup?`<div style="background:#fff8e8;border:1px solid #fde0b0;color:#8a5a00;border-radius:8px;padding:8px 12px;font-size:11.5px;margin-bottom:12px">⚠ The same parent SKU has more than one mother SKU. Check the <b>Ref #</b> (the item's reference number in the sheet) to pick the right one.</div>`:""}
+    <div style="overflow-x:auto;border:1px solid #e3e8f0;border-radius:8px"><table class="wz-tbl"><thead><tr><th></th><th>Parent SKU</th><th>Mother SKU</th><th>Description</th><th>Priority</th><th>Tests</th><th>Linked SKUs</th><th>Reference</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="display:flex;justify-content:space-between;margin-top:16px">
+      <button class="wz-btn sec" onclick="cdWzBack()">← Back</button>
+      <button class="wz-btn pri" ${w.motherId?"":"disabled"} onclick="cdWzConfirmParent()">Confirm Parent SKU →</button>
+    </div>
+  </div>`;
+}
+function cdWzSelectMother(id){ cdWizard.motherId=id; cdRenderNewEntry(); }
+function cdWzConfirmParent(){ if(!cdWzMother()) return; cdWizard.step=3; cdWizard.selSubs=new Set(); cdRenderNewEntry(); }
+// ---- step 3: review everything on file ----
+function cdWzResultChips(sub){
+  const ys=Object.keys(sub.yearBlocks||{}).filter(y=>(sub.yearBlocks[y]||[]).length).sort();
+  if(!ys.length) return `<span style="color:#aaa">No results yet</span>`;
+  return ys.map(y=>{ const r=calcOverall(sub.yearBlocks[y]); const c=r==="FAIL"?"#c0392b":r==="PASS"?"#0a7a46":"#6b7385", bg=r==="FAIL"?"#fdecec":r==="PASS"?"#e3f6ec":"#f1f3f7";
+    return `<span style="display:inline-block;margin:0 4px 3px 0;font-size:9.5px;font-weight:700;padding:1px 8px;border-radius:9px;color:${c};background:${bg}">${esc(y)} · ${r==="notest"?"—":r}</span>`; }).join("");
+}
+function cdWzStep3Html(){
+  const m=cdWzMother(); if(!m) return "";
+  const g=cdWzGroups([m])[0], subs=m.subs||[];
+  const hasStd=subs.some(s=>s.std), hasLabs=subs.some(s=>s.labs);
+  const web=m.websiteUrl?(/^https?:\/\//i.test(m.websiteUrl)?`<a href="${esc(m.websiteUrl)}" target="_blank" rel="noopener noreferrer" style="color:#0073ea">${esc(m.websiteUrl)}</a>`:esc(m.websiteUrl)):"";
+  const info=[["Parent SKU",g.key],["Mother SKU",m.name],["Description",m.description],["Priority SKU",m.prioritySku],["Website",web,true],["Meets Claim",m.meetsClaim],["Mechanical Testing",m.mechTesting],["Chemical Testing",m.chemTesting],["Corrosion Testing",m.corrTesting],["Country",m.country],["Colors",m.colors],["Channel",m.channel]];
+  const linked=g.linked.slice(0,14).map(i=>`<span style="display:inline-block;font-size:10px;background:#f1f3f7;color:#555;border-radius:6px;padding:2px 8px;margin:0 5px 5px 0">${esc(i.name)}</span>`).join("")+(g.linked.length>14?`<span style="font-size:10px;color:#999">+${g.linked.length-14} more</span>`:"");
+  const cell=v=>v?`<div class="wz-clamp" title="${esc(v)}">${esc(v)}</div>`:`<span style="color:#bbb">—</span>`;
+  return `<div class="pmm-card">
+    <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">Review the information on file</div>
+    <div style="font-size:11.5px;color:#777;margin-bottom:12px">This is everything we hold for <b>${esc(g.key)}</b> (reference #${esc(m.rowId)}). Check it before adding new results.</div>
+    <div class="wz-info">${info.map(([k,v,raw])=>`<div><div class="k">${k}</div><div class="v">${v?(raw?v:esc(v)):`<span style="color:#bbb;font-weight:400">—</span>`}</div></div>`).join("")}</div>
+    ${g.linked.length?`<div style="margin-top:12px"><div style="font-size:9.5px;font-weight:800;color:#8a93a6;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Linked SKUs that reuse this test data (${g.linked.length})</div>${linked}</div>`:""}
+  </div>
+  <div class="pmm-card">
+    <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">Current tests (${subs.length})</div>
+    ${subs.length?`<div style="overflow-x:auto;border:1px solid #e3e8f0;border-radius:8px"><table class="wz-tbl"><thead><tr><th>Test</th>${hasStd?"<th>Standard</th>":""}<th>Criteria</th><th>Target</th><th>Equipment</th><th>Accreditation</th>${hasLabs?"<th>Labs</th>":""}<th>Results on file</th></tr></thead><tbody>
+      ${subs.map(sub=>`<tr><td style="font-weight:700;min-width:150px">${esc(sub.name)}</td>${hasStd?`<td>${cell(sub.std)}</td>`:""}<td style="min-width:170px">${cell(sub.criteria)}</td><td style="min-width:150px">${cell(sub.target)}</td><td style="min-width:140px">${cell(sub.equipment)}</td><td style="min-width:120px">${cell(sub.accreditation)}</td>${hasLabs?`<td>${cell(sub.labs)}</td>`:""}<td style="min-width:130px">${cdWzResultChips(sub)}</td></tr>`).join("")}
+    </tbody></table></div>`:`<div style="color:#999;font-size:12px;padding:6px 0">This SKU has no tests on file yet — you can add test types in the next steps.</div>`}
+    <div style="display:flex;justify-content:space-between;margin-top:16px">
+      <button class="wz-btn sec" onclick="cdWzBack()">← Back</button>
+      <button class="wz-btn pri" onclick="cdWizard.step=4;cdRenderNewEntry()">Next: choose tests →</button>
+    </div>
+  </div>`;
+}
+// ---- step 4: which tests get new results ----
+function cdWzToggleSub(id,checked){ if(checked) cdWizard.selSubs.add(id); else cdWizard.selSubs.delete(id); cdRenderNewEntry(); }
+function cdWzSelectAll(on){ const m=cdWzMother(); cdWizard.selSubs=new Set(on?(m.subs||[]).map(s=>s.rowId):[]); cdRenderNewEntry(); }
+function cdWzStep4Html(){
+  const m=cdWzMother(); if(!m) return "";
+  const subs=m.subs||[], yr=new Date().getFullYear(), n=cdWizard.selSubs.size;
+  const cell=v=>v?`<div class="wz-clamp" title="${esc(v)}">${esc(v)}</div>`:`<span style="color:#bbb">—</span>`;
+  return `<div class="pmm-card">
+    <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">Which tests get new results?</div>
+    <div style="font-size:11.5px;color:#777;margin-bottom:12px">Tick every test you have new data for. Results are saved in the year of each test's completion date (<b>${yr}</b> if left blank) and are <b>added</b> to what is already there — earlier results are never changed.</div>
+    ${subs.length?`<div style="margin-bottom:8px;font-size:11px"><a href="#" onclick="cdWzSelectAll(true);return false" style="color:#0073ea;font-weight:700">Select all</a> · <a href="#" onclick="cdWzSelectAll(false);return false" style="color:#0073ea;font-weight:700">Clear</a></div>
+    <div style="overflow-x:auto;border:1px solid #e3e8f0;border-radius:8px"><table class="wz-tbl"><thead><tr><th></th><th>Test</th><th>Criteria</th><th>Target</th><th>Latest results</th><th>New results go to</th></tr></thead><tbody>
+    ${subs.map(sub=>{ const on=cdWizard.selSubs.has(sub.rowId); return `<tr class="pick ${on?"on":""}" onclick="cdWzToggleSub('${esc(sub.rowId)}',${!on})"><td style="width:28px"><input type="checkbox" ${on?"checked":""} onclick="event.stopPropagation();cdWzToggleSub('${esc(sub.rowId)}',this.checked)"/></td><td style="font-weight:700;min-width:160px">${esc(sub.name)}</td><td style="min-width:180px">${cell(sub.criteria)}</td><td style="min-width:150px">${cell(sub.target)}</td><td style="min-width:130px">${cdWzResultChips(sub)}</td><td><span style="font-size:10px;font-weight:800;color:#0055bb;background:#e8f2ff;border:1px solid #c0d8f8;border-radius:6px;padding:2px 9px">${yr}</span></td></tr>`; }).join("")}
+    </tbody></table></div>`:`<div style="color:#999;font-size:12px">No tests on file for this SKU. Continue to add test types manually in the next step.</div>`}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+      <button class="wz-btn sec" onclick="cdWzBack()">← Back</button>
+      <button class="wz-btn pri" ${(n||!subs.length)?"":"disabled"} onclick="cdWzApply()">${subs.length?`Continue with ${n} test${n!==1?"s":""} →`:"Continue →"}</button>
+    </div>
+  </div>`;
+}
+// ---- hand-off into the existing entry form ----
+function cdWzApply(){
+  const m=cdWzMother(); if(!m) return;
+  const chosen=(m.subs||[]).filter(sub=>cdWizard.selSubs.has(sub.rowId));
+  if((m.subs||[]).length && !chosen.length){ alert("Tick at least one test to add new results to."); return; }
+  cdDraft={sku:"",parentSku:cdWzParentKey(m),description:"",prioritySku:m.prioritySku||"",website:m.websiteUrl||"",meetsClaim:m.meetsClaim||"",mechTesting:m.mechTesting||"",chemTesting:m.chemTesting||"",corrTesting:m.corrTesting||"",country:m.country||"",colors:m.colors||"",channel:m.channel?String(m.channel).split(",").map(x=>x.trim()).filter(Boolean):[]};
+  cdTestTypes=chosen.length?chosen.map(sub=>({subId:sub.rowId,name:sub.name||"",std:sub.std||"",criteria:sub.criteria||"",target:sub.target||"",equipment:sub.equipment||"",accreditation:sub.accreditation||"",labs:sub.labs||"",execs:[cdNewExec()],fromWizard:true,appendToExisting:true}))
+                          :[cdNewTestType()];
+  cdClearLookupRecommendations();
+  cdWizard.done=true; cdWizard.active=true;
+  cdRenderNewEntry();
+  window.scrollTo&&window.scrollTo(0,0);
+}
+function cdWzUseMotherSku(){ const m=cdWzMother(); if(!m) return; cdDraft.sku=m.name; cdLookupSku(); }
+function cdWzRestart(){
+  if(!confirm("Start the guided setup again? What you've entered in the form will be cleared.")) return;
+  cdDraft={sku:"",parentSku:"",description:"",prioritySku:"",website:"",meetsClaim:"",mechTesting:"",chemTesting:"",corrTesting:"",country:"",colors:"",channel:[]};
+  cdTestTypes=[cdNewTestType()]; cdClearLookupRecommendations(); cdWzReset(); cdRenderNewEntry();
+}
+function cdWzUseGuided(){ cdWzReset(); cdRenderNewEntry(); }
+// what shows above the existing form
+function cdWzFormTopHtml(){
+  if(cdWizard.done){
+    const m=cdWzMother(), n=cdTestTypes.filter(t=>t.fromWizard).length;
+    return `${cdWzStepperHtml()}<div style="background:#eef6ff;border:1.5px solid #c0d8f8;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px"><div style="font-size:12.5px;font-weight:800;color:#0055bb">Setup complete — now enter the new results</div>
+      <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.5">Parent SKU <b>${esc(cdDraft.parentSku)}</b> · mother SKU <b>${esc(m?m.name:"")}</b> · ${n} test${n!==1?"s":""} carried over. Type the SKU name below — its description and priority SKU are filled in from Items, then the Master Data sheet.</div></div>
+      ${m?`<button onclick="cdWzUseMotherSku()" class="wz-btn sec" style="font-size:11px;padding:7px 14px;background:#fff;border:1px solid #c0d8f8;color:#0055bb">Use ${esc(m.name)} (retest this SKU)</button>`:""}
+      <button onclick="cdWzRestart()" class="wz-btn sec" style="font-size:11px;padding:7px 14px">↺ Change selection</button></div>`;
+  }
+  if(!cdWizard.active) return `<div style="margin-bottom:12px"><button onclick="cdWzUseGuided()" style="background:#e8f2ff;border:1px solid #c0d8f8;color:#0055bb;font-size:11.5px;font-weight:700;border-radius:8px;padding:7px 14px;cursor:pointer">🧭 Use the guided setup (find an existing product first)</button></div>`;
+  return "";
+}
+function cdRenderWizard(wrap){
+  const w=cdWizard;
+  const body=w.step===1?cdWzStep1Html():w.step===2?cdWzStep2Html():w.step===3?cdWzStep3Html():cdWzStep4Html();
+  wrap.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding:20px 0">${cdNewModeBarHtml()}${cdWzStepperHtml()}${body}</div>`;
+  if(w.step===1){ const el=document.getElementById("cd-wz-q"); if(el){ el.focus(); const n=el.value.length; try{ el.setSelectionRange(n,n); }catch(e){} cdWzUpdateSug(); } }
+}
+
 function cdRenderNewEntry(){
   const wrap=document.getElementById("board-wrap"); if(!wrap) return;
   if(cdNewMode==="supplier"){ cdRenderSupplierEntry(wrap); return; }
+  if(cdWizard.active && !cdWizard.done){ cdRenderWizard(wrap); return; }
   const d=cdDraft;
   const channelArr=Array.isArray(d.channel)?d.channel:(d.channel?String(d.channel).split(",").map(s=>s.trim()).filter(Boolean):[]);
-  let html=`<div style="max-width:900px;margin:0 auto;padding:20px 0">${cdNewModeBarHtml()}`;
+  let html=`<div style="max-width:900px;margin:0 auto;padding:20px 0">${cdNewModeBarHtml()}${cdWzFormTopHtml()}`;
   html+=`<div class="pmm-card">
     <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:16px">Product Details</div>
     <div class="pmm-grid2">
@@ -3848,6 +4177,7 @@ function cdResetNewEntryForm(){
   cdDraft={sku:"",parentSku:"",description:"",prioritySku:"",website:"",meetsClaim:"",mechTesting:"",chemTesting:"",corrTesting:"",country:"",colors:"",channel:[]};
   cdTestTypes=[cdNewTestType()];
   cdClearLookupRecommendations();
+  const skipped=!cdWizard.active; cdWzReset(); if(skipped) cdWizard.active=false;   // keep manual mode if they chose it
   cdRenderNewEntry();
 }
 function cdToggleChannel(opt, checked){
@@ -3978,19 +4308,73 @@ async function cdLoadFulfilLookup(){
     return idx;
   }catch(e){ return {}; }
 }
+// ── Master Data sheet: used when a typed SKU is not in Items yet ─────────────
+// "Master Data IMPORTRANGE" (first tab): Column A = SKU, B = SKU Family, D = Description,
+// E = Tier (the current priority SKU). Read once per page load.
+const CD_MASTERDATA_SPREADSHEET_ID="1ZUrFW3zYJlz_f6UFxIJmMKLa_EOy378f8YO9-njtctU";
+let cdMasterDataIndex=null, cdMasterDataError="";
+async function cdLoadMasterData(){
+  if(cdMasterDataIndex) return cdMasterDataIndex;
+  if(!accessToken) return {};
+  try{
+    const H={headers:{Authorization:"Bearer "+accessToken}};
+    const mres=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${CD_MASTERDATA_SPREADSHEET_ID}?fields=sheets.properties`,H);
+    cdCheckAuthError(mres);
+    if(!mres.ok) throw new Error(`Master Data sheet not readable (${mres.status}) — make sure your Google account can open it.`);
+    const sheets=((await mres.json()).sheets||[]).map(x=>x.properties);
+    const tab=sheets.find(x=>x.sheetId===0)||sheets[0];       // the tab in the link you gave is gid=0
+    if(!tab) throw new Error("Master Data sheet has no tabs.");
+    const rres=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${CD_MASTERDATA_SPREADSHEET_ID}/values/${encodeURIComponent(tab.title)}!A:E?valueRenderOption=FORMATTED_VALUE`,H);
+    cdCheckAuthError(rres);
+    if(!rres.ok) throw new Error(`Could not read Master Data (${rres.status}).`);
+    const idx={};
+    ((await rres.json()).values||[]).forEach((r,i)=>{
+      if(i===0) return;                                         // header row
+      const sku=String(r[0]||"").trim().toUpperCase();
+      if(sku && !idx[sku]) idx[sku]={family:String(r[1]||"").trim(), description:String(r[3]||"").trim(), tier:String(r[4]||"").trim()};
+    });
+    cdMasterDataIndex=idx; cdMasterDataError="";
+    return idx;
+  }catch(e){ cdMasterDataError=String(e.message||e); return {}; }
+}
+// Tier -> the app's Priority SKU values. NPD counts as A (same rule the Fulfil lookup used);
+// tiers the app has no option for (Other, Merch, ...) are left blank rather than saving junk.
+function cdTierToPriority(t){
+  const u=String(t||"").trim().toUpperCase(); if(!u) return "";
+  if(u==="NPD") return "A";
+  return CD_PRIORITY_SKU_OPTIONS.find(o=>o.toUpperCase()===u)||"";
+}
+
 async function cdLookupSku(){
   const sku=(cdDraft.sku||"").trim();
   const statusEl=document.getElementById("cd-sku-lookup-status");
+  const setStatus=t=>{ const el=document.getElementById("cd-sku-lookup-status"); if(el) el.textContent=t; };
   cdClearLookupRecommendations();
   if(!sku){ if(statusEl) statusEl.textContent=""; cdRenderNewEntry(); return; }
+  // 1) Items sheet
   const existing=cdFindExistingItemBySku(sku);
   if(existing){
     cdApplyItemToDraft(existing);
-    cdOfferTestTypeRecommendations(existing, true);
+    if(!cdWizard.done) cdOfferTestTypeRecommendations(existing, true);   // guided setup has already chosen the tests
     cdRenderNewEntry();
-    const s=document.getElementById("cd-sku-lookup-status"); if(s) s.textContent="Found in existing items — fields auto-filled.";
+    setStatus("Found in Items — description & priority SKU auto-filled.");
     return;
   }
+  // 2) Master Data sheet: Column D (Description) and Column E (Tier = priority SKU)
+  if(statusEl) statusEl.textContent="Not in Items — checking the Master Data sheet…";
+  const md=await cdLoadMasterData();
+  const hit=md[sku.toUpperCase()];
+  if(hit){
+    if(hit.description) cdDraft.description=hit.description;
+    const pr=cdTierToPriority(hit.tier); if(pr) cdDraft.prioritySku=pr;
+    if(!cdDraft.parentSku && hit.family) cdDraft.parentSku=hit.family;
+    cdRenderNewEntry();
+    const tierNote=hit.tier?` (Tier ${hit.tier}${pr&&pr!==hit.tier?` → ${pr}`:""}${hit.tier&&!pr?" — no matching priority option, set it manually":""})`:"";
+    const famNote=(cdWizard.done&&hit.family&&cdDraft.parentSku&&hit.family.toUpperCase()!==cdDraft.parentSku.toUpperCase())?` Note: Master Data lists this SKU under family “${hit.family}”, not “${cdDraft.parentSku}”.`:"";
+    setStatus(`Found in Master Data — description & priority SKU${tierNote} auto-filled.${famNote}`);
+    return;
+  }
+  // 3) older Fulfil lookup (kept as the last fallback)
   if(statusEl) statusEl.textContent="Checking Fulfil lookup…";
   const idx=await cdLoadFulfilLookup();
   const match=idx[sku.toUpperCase()];
@@ -4087,6 +4471,13 @@ async function cdSubmitEntry(){
     // Update-in-place or append, same logic used everywhere else -- so
     // re-submitting an existing SKU (or a recommended test type copied from
     // this same item) never creates a duplicate Subitems row.
+    // Tests chosen in the guided setup belong to the MOTHER SKU. If the SKU typed here is that same
+    // item, update its rows in place (new results appended). Anything else becomes a new item, so
+    // its tests are created as new rows -- never re-using the mother's row IDs.
+    if(cdWizard.done){
+      const same=!!existing && existing.id===cdWizard.motherId;
+      cdTestTypes.forEach(tt=>{ if(tt.fromWizard && !same){ tt.subId=""; tt.appendToExisting=false; } });
+    }
     await cdWriteTestTypesToSubitems(cdTestTypes, newId);
 
     const wasUpdate=updatedExisting;
@@ -4094,6 +4485,7 @@ async function cdSubmitEntry(){
     cdDraft={sku:"",parentSku:"",description:"",prioritySku:"",website:"",meetsClaim:"",mechTesting:"",chemTesting:"",corrTesting:"",country:"",colors:"",channel:[]};
     cdTestTypes=[cdNewTestType()];
     cdClearLookupRecommendations();
+    cdWzReset();
     await fetchSheetData();
     // Items are identified in GROUPS as "i"+id (see buildGroups) -- mark the
     // item as transferred so it shows up in the curated Tracking list.
@@ -4307,12 +4699,13 @@ async function cdWriteTestTypesToSubitems(testTypes, parentItemId){
   for(const tt of testTypes){
     const hasAnyExecData=tt.execs.some(ex=>ex.supplier||ex.method||ex.wwl||ex.claim||ex.report||ex.lab||ex.cost||ex.date||(ex.samples||[]).some(s=>s.value||s.verdict));
     if(!tt.name.trim() && !tt.std.trim() && !hasAnyExecData) continue; // skip a fully-blank "+ Add Test Type" row
-    const yearBlocks={};
+    const yearBlocks={}, yearExecs={};
     tt.execs.forEach(ex=>{
       const hasData=ex.supplier||ex.method||ex.wwl||ex.claim||ex.report||ex.lab||ex.cost||ex.date||(ex.samples||[]).some(s=>s.value||s.verdict);
       if(!hasData) return;
       const yr=cdYearColFor(ex.date);
       if(!yearBlocks[yr]) yearBlocks[yr]=[];
+      (yearExecs[yr]=yearExecs[yr]||[]).push(ex);
       yearBlocks[yr].push(cdFormatExecBlock(ex, yearBlocks[yr].length+1));
     });
     (tt.originalYears||[]).forEach(yr=>{ if(!(yr in yearBlocks)) yearBlocks[yr]=[]; }); // clear years the user emptied out
@@ -4331,6 +4724,19 @@ async function cdWriteTestTypesToSubitems(testTypes, parentItemId){
       const gid=await pmmGetSheetGidFor(SUBITEMS_SHEET);
       const fieldsToWrite={ name:tt.name, std:tt.std, criteria:tt.criteria, target:tt.target, equipment:tt.equipment, accreditation:tt.accreditation, labs:tt.labs };
       Object.entries(yearBlocks).forEach(([yr,blocks])=>{ fieldsToWrite[yr]=blocks.join("\n\n"); });
+      // Tests picked through the guided setup already have results on file. Their new results are
+      // ADDED after whatever the year's cell already holds (numbered after the existing suppliers),
+      // so nothing recorded earlier is overwritten or re-worded.
+      if(tt.appendToExisting){
+        Object.entries(yearExecs).forEach(([yr,exs])=>{
+          const cur=String(((rawRows[rowIndex-1]||[])[freshMap[yr]])||"").trim();
+          const has=!!cur && !/^no\s*test$/i.test(cur);
+          const nums=has?[...cur.matchAll(/^\s*(?:Priority Supplier|Supplier Priority)\s*(\d+)\s*:/gim)].map(m=>parseInt(m[1],10)):[];
+          const base=has?Math.max(parsePBlocks(cur).length,0,...nums):0;
+          const added=exs.map((ex,k)=>cdFormatExecBlock(ex,base+k+1)).join("\n\n");
+          fieldsToWrite[yr]=has?cur+"\n\n"+added:added;
+        });
+      }
       const requests=[];
       Object.entries(fieldsToWrite).forEach(([key,val])=>{
         if(freshMap[key]===undefined) return;
