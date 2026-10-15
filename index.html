@@ -48,7 +48,7 @@
         .d-title .right { margin-left:auto; }
         .d-label { font-size:9px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;display:block; }
         .ed-input, .ed-area { width:100%;background:#ffffff;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:12px;color:#111827;font-family:inherit;transition:border-color .15s, box-shadow .15s; }
-        .ed-area { resize:vertical;line-height:1.5;min-height:64px; }
+        .ed-area { resize:vertical;line-height:1.5;min-height:36px; }
         .ed-input:hover, .ed-area:hover { border-color:#9ca3af; }
         .ed-input:focus, .ed-area:focus { outline:none;border-color:var(--pantone-802c);box-shadow:0 0 0 3px rgba(68,214,44,0.18); }
         .ed-input.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
@@ -74,6 +74,19 @@
         .drop-zone:hover, .drop-zone:focus, .drop-zone.over { border-color:var(--pantone-802c);background:#f0fdf4;color:#15803d;outline:none; }
         .drop-zone .big { font-size:22px; }
         .ed-foot { background:#ffffff;border-top:1px solid #e5e7eb;position:sticky;bottom:-28px;z-index:5; }
+        .ed-input.ro, .ed-area.ro { background:#f9fafb;border-color:#e5e7eb;color:#111827;cursor:default; }
+        .ed-input.ro:focus, .ed-area.ro:focus { box-shadow:none;border-color:#e5e7eb; }
+        .ed-area { overflow:hidden; }
+        .sg-hint { text-transform:none;letter-spacing:0;font-weight:600;color:#9ca3af; }
+        .sg-list { position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);max-height:300px;overflow-y:auto; }
+        .sg-item { padding:7px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6; }
+        .sg-item:hover, .sg-item.active { background:#f0fdf4; }
+        .sg-main { font-size:12px;font-weight:700;color:#111827; }
+        .sg-sub { font-size:10px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .sg-empty { padding:10px 12px;font-size:11px;color:#9ca3af; }
+        #workflow-modal { display:none;position:fixed;inset:0;z-index:9991;background:rgba(3,7,18,0.72);backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto; }
+        #workflow-modal.show { display:flex; }
+        .wf-step { background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;line-height:1.5; }
         .dirty-dot { width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block; }
 
         /* Print only the report */
@@ -186,6 +199,36 @@
     <div class="detail-box" id="detail-box"></div>
 </div>
 
+<!-- ESCALATION WORKFLOW POP-OUT -->
+<div id="workflow-modal" class="no-print" onclick="if(event.target===this) closeWorkflow()">
+    <div class="detail-box" style="width:1060px">
+        <div class="ed-head">
+            <div class="accent"></div>
+            <div class="flex items-start justify-between gap-4 px-6 pt-4 pb-4">
+                <div>
+                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Product escalation · Process flow</div>
+                    <h2 class="font-black text-lg mt-1" style="color:#111827">Escalation Workflow</h2>
+                    <div class="text-[11px] text-gray-500 mt-0.5">From the <b>Workflow</b> tab of the Rhino-USA Escalation Form template. Green labels show who is responsible for each step.</div>
+                </div>
+                <button onclick="closeWorkflow()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer">✕ Close</button>
+            </div>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="d-section"><div id="workflow-body"></div></div>
+            <div class="d-section">
+                <div class="d-title"><span class="bar"></span>How this system follows the flow</div>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-[11px] text-gray-700">
+                    <div class="wf-step"><b>1 · Log the CAR</b><br>QE creates the item on the monday board — they become the <b>QE in charge</b>.</div>
+                    <div class="wf-step"><b>2 · Fill the report</b><br>Issue, root cause, photos, corrective actions and evidence in the editor.</div>
+                    <div class="wf-step"><b>3 · Assign approver</b><br>QE in charge picks an @rhinousainc.com approver and submits.</div>
+                    <div class="wf-step"><b>4 · Approve or return</b><br>Approver reviews; returning sends it back with a comment.</div>
+                    <div class="wf-step"><b>5 · Completed</b><br>Approval moves the CAR to <b>Completed</b> with status <b>Done</b>.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- SIDEBAR -->
 <div class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0 h-screen sticky top-0 no-print z-50 shadow-2xl">
     <div class="flex-1 overflow-y-auto p-6 space-y-8">
@@ -200,6 +243,10 @@
                     📊 Escalations
                     <span id="monitor-count-badge" class="ml-auto bg-black/20 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
                 </button>
+                <button onclick="setGroupFilter('mine')" id="tab-approvals" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white flex items-center gap-2 transition cursor-pointer mt-1">
+                    ✅ My Approvals
+                    <span id="approvals-count-badge" class="ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+                </button>
             </div>
             <div class="space-y-1">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block px-2 mb-2">Groups</span>
@@ -213,6 +260,7 @@
             <span id="drive-save-indicator" class="text-[10px] text-gray-600 font-bold"></span>
             <button onclick="syncFromCloud()" class="text-[10px] text-gray-500 hover:text-pantone cursor-pointer font-bold transition flex items-center gap-1">🔄 Sync</button>
         </div>
+        <button onclick="openWorkflow()" class="w-full bg-pantone/10 hover:bg-pantone/20 border border-pantone/30 text-pantone text-[9px] font-black py-1.5 rounded-lg cursor-pointer transition">🔀 Escalation Workflow</button>
         <a id="master-sheet-link" target="_blank" class="block w-full text-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[9px] font-bold py-1.5 rounded-lg cursor-pointer transition no-underline">📗 Open Master Sheet</a>
         <p id="last-sync-label" class="text-[9px] text-gray-700 leading-tight">Reads live from the QPE Master Google Sheet</p>
     </div>
@@ -247,7 +295,7 @@
             </div>
 
             <!-- Summary tiles -->
-            <div id="summary-tiles" class="grid grid-cols-2 lg:grid-cols-5 gap-2"></div>
+            <div id="summary-tiles" class="grid grid-cols-2 lg:grid-cols-6 gap-2"></div>
 
             <!-- Group chips -->
             <div id="group-chips" class="flex flex-wrap gap-2"></div>
@@ -256,7 +304,7 @@
             <div class="cs-bar flex items-center gap-3 rounded-xl px-4 py-2.5" style="background:#050805;border:1px solid #1f2a1f">
                 <span class="text-gray-500 text-sm">🔍</span>
                 <input type="text" id="monitor-search" autocomplete="off" oninput="applyFilters()"
-                    placeholder="Search by CAR No., issue, SKU, supplier, status…"
+                    placeholder="Search by CAR No., issue, SKU, supplier, QE, status…"
                     class="flex-1 bg-transparent text-white text-xs focus:outline-none placeholder-gray-600">
                 <button onclick="document.getElementById('monitor-search').value='';applyFilters()" class="text-gray-600 hover:text-gray-400 text-xs cursor-pointer">✕ Clear</button>
             </div>
@@ -264,7 +312,7 @@
             <!-- Table -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                 <div style="overflow-x:auto;width:100%">
-                    <table id="monitor-table" style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:1100px">
+                    <table id="monitor-table" style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:1240px">
                         <colgroup>
                             <col style="width:130px">  <!-- CAR No -->
                             <col style="width:auto">   <!-- Issue -->
@@ -272,7 +320,8 @@
                             <col style="width:100px">  <!-- Date Started -->
                             <col style="width:130px">  <!-- Target -->
                             <col style="width:110px">  <!-- Completion -->
-                            <col style="width:220px">  <!-- Supplier -->
+                            <col style="width:200px">  <!-- Supplier -->
+                            <col style="width:130px">  <!-- QE In Charge -->
                             <col style="width:170px">  <!-- Report -->
                         </colgroup>
                         <thead>
@@ -284,6 +333,7 @@
                                 <th class="px-3 py-2.5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Completion</th>
                                 <th class="px-3 py-2.5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Date Completion</th>
                                 <th class="px-3 py-2.5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Supplier</th>
+                                <th class="px-3 py-2.5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">QE In Charge</th>
                                 <th class="px-3 py-2.5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">View Report</th>
                             </tr>
                         </thead>
@@ -314,7 +364,14 @@ const TABS = {
 };
 const QPE_FOLDER_ID = '12AWAEb9gaqwMT7pAYDD8ZXzO8qcHSUpX';   // folder holding the Master sheet
 const PHOTO_ROOT_NAME = 'QPE Report Photos';                    // per-CAR photo folders live in here
-const REPORT_HEADERS = ['CAR No.','Report Link','Report Date','Supplier Name','Supplier Address','Supplier Contact','Supplier Email','Product Description','SKU','UPC','Issue Description','Root Cause','Evidence Notes','Issue Photo Count','Evidence Photo Count','Photos Folder','Last Synced'];
+const REPORT_HEADERS = ['CAR No.','Report Link','Report Date','Supplier Name','Supplier Address','Supplier Contact','Supplier Email','Product Description','SKU','UPC','Issue Description','Root Cause','Evidence Notes','Issue Photo Count','Evidence Photo Count','Photos Folder','Last Synced',
+    'Approver Email','Approval Status','Submitted By','Submitted At','Approved By','Approved At','Approval Comment','Show Supplier Acknowledgement','Supplier Acknowledged By / Date'];
+// Only these accounts can edit escalation reports. Approvers can approve/return what is assigned to them.
+const EDITORS = ['kevin.mariano@rhinousainc.com'];
+const ORG_DOMAIN = 'rhinousainc.com';
+// Type-ahead sources
+const SUPPLIER_SHEET = { id: '1tLhjjoD8a2Q613SrlZrHmcMcBKvrrFP93H6nuDdshVA', tab: "Supplier's Contact Infortion" };   // Supplier Name | Address | Contact | Email
+const SKU_SHEET = { id: '1ZUrFW3zYJlz_f6UFxIJmMKLa_EOy378f8YO9-njtctU', tab: 'IMPORTRANGE_MASTERDATA' };              // A SKU · D Description · F UPC
 const GROUP_ORDER = ['Open', 'In Progress', 'Completed', 'Stuck/Invalidate'];
 
 const GDRIVE_CLIENT_ID = '494765023704-qb7uj3tg4l37f8a5ien6g81s7pgfksti.apps.googleusercontent.com';
@@ -635,12 +692,14 @@ function buildRecords({ items, reports, actions, photos }) {
             mondayLink: val(it['monday Link']) || `${MONDAY_BOARD_URL}/pulses/${car}`,
             createdAt: val(it['Created At (UTC)']),
             updatedAt: val(it['Last Updated (UTC)']),
+            qe: val(it['QE In Charge']),
+            qeEmail: val(it['QE Email']),
             report: rep,
             actions: normalizeActions(actBy[car] || []),
             photos: (phoBy[car] || []).map(p => ({
                 section: val(p['Section']), n: +val(p['Photo #']) || 0, cell: val(p['Anchor Cell']),
                 name: val(p['File Name']), link: val(p['Photo Link']), id: driveIdFromUrl(p['Photo Link']),
-            })).filter(p => p.id).sort((a, b) => (a.section === b.section ? a.n - b.n : (a.section === 'Issue' ? -1 : 1))),
+            })).filter(p => p.id).sort((a, b) => ({ Issue: 0, Evidence: 1, Stamp: 2 }[a.section] ?? 9) - ({ Issue: 0, Evidence: 1, Stamp: 2 }[b.section] ?? 9) || a.n - b.n),
         };
     });
 }
@@ -684,6 +743,7 @@ function renderMonitor() {
         { label: 'In Progress', n: count(r => r.group === 'In Progress'), color: 'text-sky-300' },
         { label: 'Completed', n: count(r => r.group === 'Completed'), color: 'text-pantone' },
         { label: 'Overdue', n: count(isOverdue), color: 'text-red-400' },
+        { label: 'Pending Approval', n: count(r => apStatus(r) === 'Pending Approval'), color: 'text-amber-300' },
     ];
     document.getElementById('summary-tiles').innerHTML = tiles.map(t => `
         <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
@@ -695,7 +755,13 @@ function renderMonitor() {
     const groups = GROUP_ORDER.filter(g => RECORDS.some(r => r.group === g))
         .concat([...new Set(RECORDS.map(r => r.group))].filter(g => g && !GROUP_ORDER.includes(g)));
     const chip = (key, label, n) => `<button class="grp-chip ${groupFilter === key ? 'active' : ''}" onclick="setGroupFilter('${esc(key)}')">${esc(label)} <span class="n">${n}</span></button>`;
-    document.getElementById('group-chips').innerHTML = chip('all', 'All', RECORDS.length) + groups.map(g => chip(g, g, count(r => r.group === g))).join('');
+    const pendingN = count(r => apStatus(r) === 'Pending Approval');
+    document.getElementById('group-chips').innerHTML = chip('all', 'All', RECORDS.length) + groups.map(g => chip(g, g, count(r => r.group === g))).join('')
+        + chip('pending', '⏳ Pending approval', pendingN) + chip('mine', '✅ My approvals', count(isMyApproval));
+    const ab = document.getElementById('approvals-count-badge');
+    const myN = count(isMyApproval);
+    ab.textContent = myN;
+    ab.className = myN ? 'ml-auto bg-amber-400 text-black text-[10px] font-black px-2 py-0.5 rounded-full' : 'ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full';
     const base = 'w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-gray-800 hover:text-white flex items-center gap-2 transition cursor-pointer';
     document.getElementById('sidebar-groups').innerHTML = groups.map(g => `
         <button onclick="setGroupFilter('${esc(g)}')" class="${base} ${groupFilter === g ? 'bg-gray-800 text-white' : ''}">
@@ -707,7 +773,7 @@ function renderMonitor() {
     groups.forEach(g => {
         const recs = RECORDS.filter(r => r.group === g);
         if (!recs.length) return;
-        html.push(`<tr class="group-row" data-group="${esc(g)}"><td colspan="8" class="px-3 py-2 bg-gray-950/60 text-[10px] font-black text-gray-500 uppercase tracking-widest">${esc(g)} · ${recs.length}</td></tr>`);
+        html.push(`<tr class="group-row" data-group="${esc(g)}"><td colspan="9" class="px-3 py-2 bg-gray-950/60 text-[10px] font-black text-gray-500 uppercase tracking-widest">${esc(g)} · ${recs.length}</td></tr>`);
         recs.forEach(r => html.push(buildMonitorRow(r)));
     });
     document.getElementById('monitor-grid').innerHTML = html.join('');
@@ -726,7 +792,7 @@ function buildMonitorRow(r) {
             <div class="text-[11px] text-white font-medium" title="${esc(r.name)}">${esc(r.name) || '—'}</div>
             ${r.report && r.report['SKU'] ? `<div class="text-[10px] text-gray-500 font-mono mt-0.5">${esc(r.report['SKU'])}</div>` : ''}
         </td>
-        <td class="px-3 py-2">${statusPill(r.status)}</td>
+        <td class="px-3 py-2">${statusPill(r.status)}${approvalTag(r)}</td>
         <td class="px-3 py-2"><div class="text-[11px] text-gray-400 whitespace-nowrap">${dash(fmtDate(r.started))}</div></td>
         <td class="px-3 py-2">
             <div class="text-[11px] ${overdue ? 'text-red-400 font-bold' : 'text-gray-400'} whitespace-nowrap">${dash(fmtDate(r.target))}</div>
@@ -734,6 +800,7 @@ function buildMonitorRow(r) {
         </td>
         <td class="px-3 py-2"><div class="text-[11px] text-gray-400 whitespace-nowrap">${dash(fmtDate(r.completed))}</div></td>
         <td class="px-3 py-2"><div class="text-[11px] text-gray-300 truncate" title="${esc(r.supplier)}">${dash(r.supplier)}</div></td>
+        <td class="px-3 py-2"><div class="text-[11px] text-gray-300 truncate" title="${esc(r.qeEmail)}">${dash(r.qe)}</div></td>
         <td class="px-3 py-2" onclick="event.stopPropagation()">
             <div class="flex items-center gap-1 flex-nowrap">
                 ${hasReport ? `
@@ -745,6 +812,14 @@ function buildMonitorRow(r) {
     </tr>`;
 }
 
+function apStatus(r) { return val(r.report && r.report['Approval Status']); }
+function isMyApproval(r) { return apStatus(r) === 'Pending Approval' && val(r.report['Approver Email']).toLowerCase() === String(currentUser?.email || '').toLowerCase(); }
+function approvalTag(r) {
+    const st = apStatus(r);
+    if (!st) return '';
+    const m = { 'Pending Approval': ['⏳ Pending approval', 'text-amber-300'], 'Approved': ['✔ Approved', 'text-pantone'], 'Returned': ['↩ Returned', 'text-red-400'] }[st] || [st, 'text-gray-400'];
+    return `<div class="text-[8px] font-black uppercase tracking-widest mt-1 ${m[1]}" title="${esc(r.report['Approver Email'] || '')}">${m[0]}</div>`;
+}
 function setGroupFilter(key) {
     groupFilter = key;
     renderMonitor();
@@ -757,7 +832,10 @@ function applyFilters() {
     document.querySelectorAll('#monitor-grid tr.data-row').forEach(row => {
         const rec = RECORDS[+row.dataset.idx];
         const hay = [rec.car, rec.name, rec.status, rec.supplier, rec.group, rec.report && rec.report['SKU'], rec.report && rec.report['Product Description'], rec.report && rec.report['Supplier Name']].join(' ').toLowerCase();
-        const show = (groupFilter === 'all' || rec.group === groupFilter) && tokens.every(t => hay.includes(t));
+        const inGroup = groupFilter === 'all' || rec.group === groupFilter
+            || (groupFilter === 'pending' && apStatus(rec) === 'Pending Approval')
+            || (groupFilter === 'mine' && isMyApproval(rec));
+        const show = inGroup && tokens.every(t => (hay + ' ' + rec.qe).toLowerCase().includes(t));
         row.style.display = show ? '' : 'none';
         if (show) { visible++; visibleByGroup[rec.group] = (visibleByGroup[rec.group] || 0) + 1; }
     });
@@ -769,6 +847,9 @@ function applyFilters() {
     tab.className = groupFilter === 'all'
         ? 'w-full text-left px-3 py-2 rounded-lg text-sm font-bold bg-pantone text-black flex items-center gap-2 transition cursor-pointer shadow'
         : 'w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white flex items-center gap-2 transition cursor-pointer';
+    document.getElementById('tab-approvals').className = groupFilter === 'mine'
+        ? 'w-full text-left px-3 py-2 rounded-lg text-sm font-bold bg-pantone text-black flex items-center gap-2 transition cursor-pointer shadow mt-1'
+        : 'w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white flex items-center gap-2 transition cursor-pointer mt-1';
     const badge = document.getElementById('monitor-count-badge');
     badge.className = groupFilter === 'all' ? 'ml-auto bg-black/20 text-black text-[10px] font-bold px-2 py-0.5 rounded-full' : 'ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full';
 }
@@ -787,6 +868,22 @@ const ACTION_KINDS = [
 const SECTION_LABEL = { affected: null, team: 'Affected Team', corrective: 'Corrective Action', change: 'Change Implementation' };
 let lastZoneSection = 'Issue';
 
+// ── Who can do what ───────────────────────────────────────────
+function myEmail() { return String(currentUser?.email || '').toLowerCase(); }
+function isEditor() { return EDITORS.includes(myEmail()); }
+function isOrgEmail(e) { return new RegExp('^[^@\\s]+@' + ORG_DOMAIN.replace('.', '\\.') + '$', 'i').test(String(e || '').trim()); }
+function approvalStatus(rep) { return val(rep && rep['Approval Status']); }
+function edCanEdit() { return !!editor && isEditor() && approvalStatus(editor.report) !== 'Approved' && approvalStatus(editor.report) !== 'Pending Approval'; }
+function edCanAssign() {
+    if (!editor) return false;
+    const st = approvalStatus(editor.report);
+    if (st === 'Approved' || st === 'Pending Approval') return false;
+    return isEditor() || (editor.qeEmail && editor.qeEmail.toLowerCase() === myEmail());
+}
+function edIsApprover() {
+    return !!editor && approvalStatus(editor.report) === 'Pending Approval' && val(editor.report['Approver Email']).toLowerCase() === myEmail();
+}
+
 function openDetail(idx) {
     const r = RECORDS[idx];
     if (!r) return;
@@ -804,12 +901,14 @@ function openDetail(idx) {
     editor = {
         idx, car: r.car, name: r.name, status: r.status, group: r.group,
         started: r.started, target: r.target, completed: r.completed, supplier: r.supplier,
+        qe: r.qe, qeEmail: r.qeEmail,
         mondayLink: r.mondayLink, isNew: !r.report,
         report,
         affectedLabel: (r.actions.find(a => a.kind === 'affected') || {}).section || AFFECTED_DEFAULT,
         actions: acts,
         otherActions: r.actions.filter(a => a.kind === 'other'),
         photos: r.photos.map(p => ({ ...p })),
+        approvalComment: '',
     };
     editorDirty = false;
     renderEditor();
@@ -818,15 +917,29 @@ function openDetail(idx) {
     modal.scrollTop = 0;
     document.body.style.overflow = 'hidden';
     history.replaceState(null, '', '#car=' + r.car);
+    loadLookups(); // supplier + SKU master data for the type-ahead fields
 }
 
+// ── Field builders ────────────────────────────────────────────
+function roAttr() { return edCanEdit() ? '' : 'readonly tabindex="-1"'; }
 function edField(label, path, opts = {}) {
     const v = getPath(path);
-    const cls = `ed-input ${opts.mono ? 'mono' : ''}`;
-    const ctl = opts.area
-        ? `<textarea class="ed-area" rows="${opts.rows || 3}" data-path="${esc(path)}" oninput="edSet(this)" placeholder="${esc(opts.ph || '')}">${esc(v)}</textarea>`
-        : `<input class="${cls}" data-path="${esc(path)}" value="${esc(v)}" oninput="edSet(this)" placeholder="${esc(opts.ph || '')}">`;
-    return `<div class="${opts.span || ''}"><label class="d-label">${label}</label>${ctl}</div>`;
+    const ro = roAttr();
+    const cls = `ed-input ${opts.mono ? 'mono' : ''} ${ro ? 'ro' : ''}`;
+    let ctl;
+    if (opts.area) {
+        ctl = `<textarea class="ed-area ${ro ? 'ro' : ''}" rows="${opts.rows || 2}" data-path="${esc(path)}" oninput="edSet(this);autoGrow(this)" ${ro} placeholder="${esc(ro ? '' : (opts.ph || ''))}">${esc(v)}</textarea>`;
+    } else if (opts.suggest && !ro) {
+        ctl = `<div class="relative">
+            <input class="${cls}" data-path="${esc(path)}" data-suggest="${opts.suggest}" value="${esc(v)}" autocomplete="off"
+                oninput="edSet(this);onSuggestInput(this)" onfocus="onSuggestInput(this)" onblur="onSuggestBlur(this)" onkeydown="onSuggestKey(event,this)"
+                placeholder="${esc(opts.ph || '')}">
+            <div class="sg-list hidden"></div>
+        </div>`;
+    } else {
+        ctl = `<input class="${cls}" data-path="${esc(path)}" value="${esc(v)}" oninput="edSet(this)" ${ro} placeholder="${esc(ro ? '' : (opts.ph || ''))}">`;
+    }
+    return `<div class="${opts.span || ''}"><label class="d-label">${label}${opts.suggest && !ro ? ' <span class="sg-hint">' + (opts.suggest === 'sku' ? '· type to search — auto-fills description & UPC' : '· type to search — auto-fills address, contact & email') + '</span>' : ''}</label>${ctl}</div>`;
 }
 function getPath(path) {
     const parts = path.split('|');
@@ -834,33 +947,134 @@ function getPath(path) {
     for (const p of parts) { if (o == null) return ''; o = o[p]; }
     return o == null ? '' : o;
 }
-function edSet(el) {
-    const parts = el.dataset.path.split('|');
+function setPath(path, value) {
+    const parts = path.split('|');
     let o = editor;
     for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
-    o[parts[parts.length - 1]] = el.value;
-    markDirty();
+    o[parts[parts.length - 1]] = value;
 }
+function edSet(el) { setPath(el.dataset.path, el.value); markDirty(); }
 function markDirty() {
     if (editorDirty) return;
     editorDirty = true;
     const d = document.getElementById('ed-dirty');
     if (d) d.innerHTML = '<span class="dirty-dot"></span> Unsaved changes';
 }
+// Long text: every textarea grows to show its whole content — no inner scrollbars.
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+function autoGrowAll(root) { root.querySelectorAll('textarea.ed-area').forEach(autoGrow); }
 
+// ── Supplier + SKU look-ups (type-ahead) ─────────────────────
+let LOOKUPS = null, lookupsPromise = null;
+function loadLookups() {
+    if (LOOKUPS) return Promise.resolve(LOOKUPS);
+    if (lookupsPromise) return lookupsPromise;
+    const get = (id, range) => gdriveFetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`).then(r => r.json()).then(j => j.values || []);
+    lookupsPromise = Promise.all([
+        get(SUPPLIER_SHEET.id, `'${SUPPLIER_SHEET.tab}'!A2:D`).catch(e => { console.error('Supplier list', e); return []; }),
+        get(SKU_SHEET.id, `'${SKU_SHEET.tab}'!A2:F`).catch(e => { console.error('SKU list', e); return []; }),
+    ]).then(([sup, sku]) => {
+        const clean = x => { const t = val(x); return t === '-' ? '' : t; };
+        LOOKUPS = {
+            suppliers: sup.filter(r => val(r[0])).map(r => ({ name: val(r[0]), address: clean(r[1]), contact: clean(r[2]), email: clean(r[3]) })),
+            skus: sku.filter(r => val(r[0])).map(r => ({ sku: val(r[0]), desc: clean(r[3]), upc: clean(r[5]) })),
+        };
+        LOOKUPS.skuMap = {};
+        LOOKUPS.skus.forEach(s => { LOOKUPS.skuMap[s.sku.toUpperCase()] = s; });
+        return LOOKUPS;
+    });
+    return lookupsPromise;
+}
+let sgActive = -1;
+function suggestMatches(kind, q) {
+    if (!LOOKUPS) return [];
+    const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!toks.length) return [];
+    if (kind === 'supplier') {
+        return LOOKUPS.suppliers.filter(s => toks.every(t => s.name.toLowerCase().includes(t))).slice(0, 10)
+            .map(s => ({ key: s.name, main: s.name, sub: [s.contact, s.email].filter(Boolean).join(' · ') || s.address, data: s }));
+    }
+    const qq = q.trim().toUpperCase();
+    const starts = LOOKUPS.skus.filter(s => s.sku.toUpperCase().startsWith(qq));
+    const rest = LOOKUPS.skus.filter(s => !s.sku.toUpperCase().startsWith(qq) && toks.every(t => (s.sku + ' ' + s.desc).toLowerCase().includes(t)));
+    return starts.concat(rest).slice(0, 10).map(s => ({ key: s.sku, main: s.sku, sub: s.desc + (s.upc ? ' · UPC ' + s.upc : ''), data: s }));
+}
+async function onSuggestInput(el) {
+    const list = el.parentElement.querySelector('.sg-list');
+    if (!LOOKUPS) { list.innerHTML = '<div class="sg-empty">Loading list…</div>'; list.classList.remove('hidden'); await loadLookups(); }
+    const items = suggestMatches(el.dataset.suggest, el.value);
+    sgActive = -1;
+    if (!items.length) { list.classList.add('hidden'); return; }
+    list._items = items;
+    list.innerHTML = items.map((it, i) => `<div class="sg-item" data-i="${i}" onmousedown="event.preventDefault();pickSuggest(this.closest('.relative').querySelector('input'),${i})"><div class="sg-main">${esc(it.main)}</div><div class="sg-sub">${esc(it.sub)}</div></div>`).join('');
+    list.classList.remove('hidden');
+}
+function onSuggestKey(e, el) {
+    const list = el.parentElement.querySelector('.sg-list');
+    const items = list._items || [];
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!items.length || list.classList.contains('hidden')) return;
+        e.preventDefault();
+        sgActive = (sgActive + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        list.querySelectorAll('.sg-item').forEach((n, i) => n.classList.toggle('active', i === sgActive));
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (items.length && !list.classList.contains('hidden')) pickSuggest(el, sgActive >= 0 ? sgActive : 0);
+        else commitExact(el);
+    } else if (e.key === 'Escape') { list.classList.add('hidden'); e.stopPropagation(); }
+}
+function onSuggestBlur(el) {
+    setTimeout(() => { const l = el.parentElement && el.parentElement.querySelector('.sg-list'); if (l) l.classList.add('hidden'); }, 150);
+    commitExact(el);
+}
+// Typed an exact SKU / supplier name without clicking the list? Still auto-fill.
+function commitExact(el) {
+    if (!LOOKUPS || !editor) return;
+    const v = el.value.trim();
+    if (el.dataset.suggest === 'sku') {
+        const hit = LOOKUPS.skuMap[v.toUpperCase()];
+        if (hit && (editor.report['Product Description'] !== hit.desc || editor.report['UPC'] !== hit.upc)) applyPick('sku', hit);
+    } else {
+        const hit = LOOKUPS.suppliers.find(s => s.name.toLowerCase() === v.toLowerCase());
+        if (hit && editor.report['Supplier Address'] !== hit.address) applyPick('supplier', hit);
+    }
+}
+function pickSuggest(el, i) {
+    const list = el.parentElement.querySelector('.sg-list');
+    const it = (list._items || [])[i];
+    if (!it) return;
+    list.classList.add('hidden');
+    applyPick(el.dataset.suggest, it.data);
+}
+function applyPick(kind, d) {
+    if (kind === 'supplier') {
+        Object.assign(editor.report, { 'Supplier Name': d.name, 'Supplier Address': d.address, 'Supplier Contact': d.contact, 'Supplier Email': d.email });
+        showToast('🏭', `Filled supplier details for ${d.name}.`);
+    } else {
+        Object.assign(editor.report, { 'SKU': d.sku, 'Product Description': d.desc, 'UPC': d.upc });
+        showToast('🏷️', `Filled description & UPC for ${d.sku}.`);
+    }
+    markDirty();
+    renderEditor(true);
+}
+
+// ── Action tables ─────────────────────────────────────────────
 function actionTableEditor(k) {
     const rows = editor.actions[k.kind];
+    const can = edCanEdit();
+    const ro = roAttr();
+    const roc = ro ? 'ro' : '';
     const titleExtra = k.kind === 'affected'
-        ? `<div class="right flex items-center gap-2 normal-case tracking-normal"><span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Label</span><input class="ed-input" style="width:220px;padding:4px 8px;font-size:11px" data-path="affectedLabel" value="${esc(editor.affectedLabel)}" oninput="edSet(this)"></div>`
+        ? `<div class="right flex items-center gap-2 normal-case tracking-normal"><span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Label</span><input class="ed-input ${roc}" ${ro} style="width:220px;padding:4px 8px;font-size:11px" data-path="affectedLabel" value="${esc(editor.affectedLabel)}" oninput="edSet(this)"></div>`
         : '';
     const body = rows.length ? rows.map((a, i) => `
         <tr>
             <td class="num">${i + 1}</td>
-            <td><textarea class="ed-area" rows="1" data-path="actions|${k.kind}|${i}|description" oninput="edSet(this)" placeholder="${esc(k.hint)}">${esc(a.description)}</textarea></td>
-            ${k.owner ? `<td style="width:150px"><input class="ed-input" data-path="actions|${k.kind}|${i}|owner" value="${esc(a.owner)}" oninput="edSet(this)" placeholder="Owner"></td>` : ''}
-            <td style="width:120px"><input class="ed-input" data-path="actions|${k.kind}|${i}|date" value="${esc(a.date)}" oninput="edSet(this)" placeholder="MM/DD/YY"></td>
-            <td style="width:230px"><textarea class="ed-area" rows="1" data-path="actions|${k.kind}|${i}|comment" oninput="edSet(this)" placeholder="Comment">${esc(a.comment)}</textarea></td>
-            <td style="width:34px"><button class="row-del" title="Remove row" onclick="edDelRow('${k.kind}',${i})">✕</button></td>
+            <td><textarea class="ed-area ${roc}" ${ro} rows="1" data-path="actions|${k.kind}|${i}|description" oninput="edSet(this);autoGrow(this)" placeholder="${can ? esc(k.hint) : ''}">${esc(a.description)}</textarea></td>
+            ${k.owner ? `<td style="width:150px"><input class="ed-input ${roc}" ${ro} data-path="actions|${k.kind}|${i}|owner" value="${esc(a.owner)}" oninput="edSet(this)" placeholder="${can ? 'Owner' : ''}"></td>` : ''}
+            <td style="width:120px"><input class="ed-input ${roc}" ${ro} data-path="actions|${k.kind}|${i}|date" value="${esc(a.date)}" oninput="edSet(this)" placeholder="${can ? 'MM/DD/YY' : ''}"></td>
+            <td style="width:230px"><textarea class="ed-area ${roc}" ${ro} rows="1" data-path="actions|${k.kind}|${i}|comment" oninput="edSet(this);autoGrow(this)" placeholder="${can ? 'Comment' : ''}">${esc(a.comment)}</textarea></td>
+            <td style="width:34px">${can ? `<button class="row-del" title="Remove row" onclick="edDelRow('${k.kind}',${i})">✕</button>` : ''}</td>
         </tr>`).join('')
         : `<tr><td colspan="6" class="text-[11px] text-gray-400 italic" style="padding:10px 6px">Nothing recorded yet.</td></tr>`;
     return `<div class="d-section">
@@ -869,12 +1083,13 @@ function actionTableEditor(k) {
             <thead><tr><th>#</th><th>Description</th>${k.owner ? '<th>Owner</th>' : ''}<th>Date</th><th>Comment</th><th></th></tr></thead>
             <tbody>${body}</tbody>
         </table>
-        <div class="mt-2"><button class="add-btn" onclick="edAddRow('${k.kind}')">＋ Add row</button></div>
+        ${can ? `<div class="mt-2"><button class="add-btn" onclick="edAddRow('${k.kind}')">＋ Add row</button></div>` : ''}
     </div>`;
 }
 function edAddRow(kind) { editor.actions[kind].push({ description: '', owner: '', date: '', comment: '' }); markDirty(); renderEditor(true); }
 function edDelRow(kind, i) { editor.actions[kind].splice(i, 1); markDirty(); renderEditor(true); }
 
+// ── Photos ────────────────────────────────────────────────────
 function photoTile(p) {
     const view = driveViewLink(p.id);
     return `<div class="photo-tile">
@@ -884,37 +1099,42 @@ function photoTile(p) {
         <span class="cap">${esc(p.section.toUpperCase())} ${p.n}</span>
         <div class="tools">
             ${view ? `<a href="${view}" target="_blank" title="Open in Drive" onclick="event.stopPropagation()">↗</a>` : ''}
-            <button title="Remove from report" onclick="event.stopPropagation();edRemovePhoto('${esc(p.id)}')">🗑</button>
+            ${edCanEdit() ? `<button title="Remove from report" onclick="event.stopPropagation();edRemovePhoto('${esc(p.id)}')">🗑</button>` : ''}
         </div>
     </div>`;
 }
-function photoGridEditor(section) {
+function photoGridEditor(section, max = 0) {
     const arr = editor.photos.filter(p => p.section === section);
+    const canAdd = edCanEdit() && (!max || arr.length < max);
+    const label = section === 'Stamp' ? 'supplier stamp / signature' : section.toLowerCase() + ' photo';
+    if (!arr.length && !canAdd) return '<div class="text-[11px] text-gray-400 italic">No photos.</div>';
     return `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         ${arr.map(photoTile).join('')}
-        <div class="drop-zone" tabindex="0" data-section="${section}"
+        ${canAdd ? `<div class="drop-zone" tabindex="0" data-section="${section}"
              onclick="edPickFiles('${section}')"
              onfocus="lastZoneSection='${section}'" onmouseenter="lastZoneSection='${section}'"
              ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')"
              ondrop="edDrop(event,'${section}')">
-            <span class="big">📷</span>
-            Add ${section.toLowerCase()} photo
+            <span class="big">${section === 'Stamp' ? '🖋️' : '📷'}</span>
+            Add ${label}
             <span class="text-[9px] font-medium text-gray-400">Click, drop, or paste (Ctrl/⌘+V)</span>
-        </div>
+        </div>` : ''}
     </div>`;
 }
+const PHOTO_ORDER = { Issue: 0, Evidence: 1, Stamp: 2 };
 function renumberPhotos() {
+    editor.photos.sort((a, b) => (PHOTO_ORDER[a.section] ?? 9) - (PHOTO_ORDER[b.section] ?? 9));
     const n = {};
     editor.photos.forEach(p => { n[p.section] = (n[p.section] || 0) + 1; p.n = n[p.section]; });
 }
 function edAddPhotoBlob(section, blob) {
+    if (!edCanEdit()) return;
     if (!blob || !/^image\//.test(blob.type)) { showToast('⚠️', 'Only image files can be added.'); return; }
+    if (section === 'Stamp') editor.photos = editor.photos.filter(p => p.section !== 'Stamp'); // one stamp only
     const id = 'tmp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const url = URL.createObjectURL(blob);
     photoCache[id] = Promise.resolve(url);
     editor.photos.push({ section, n: 0, id, pending: true, blob, name: '', cell: '' });
-    // keep Issue photos before Evidence photos
-    editor.photos.sort((a, b) => (a.section === b.section ? 0 : a.section === 'Issue' ? -1 : b.section === 'Issue' ? 1 : 0));
     renumberPhotos();
     markDirty();
     renderEditor(true);
@@ -927,7 +1147,7 @@ function edRemovePhoto(id) {
 }
 function edPickFiles(section) {
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = section !== 'Stamp';
     inp.onchange = () => [...inp.files].forEach(f => edAddPhotoBlob(section, f));
     inp.click();
 }
@@ -937,7 +1157,7 @@ function edDrop(e, section) {
     [...(e.dataTransfer.files || [])].forEach(f => edAddPhotoBlob(section, f));
 }
 document.addEventListener('paste', e => {
-    if (!editor || !document.getElementById('detail-modal').classList.contains('show')) return;
+    if (!editor || !edCanEdit() || !document.getElementById('detail-modal').classList.contains('show')) return;
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return; // normal text paste
     const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
@@ -947,15 +1167,131 @@ document.addEventListener('paste', e => {
     files.forEach(f => edAddPhotoBlob(zone, f));
 });
 
+function toggleAck(on) {
+    editor.report['Show Supplier Acknowledgement'] = on ? 'TRUE' : '';
+    markDirty();
+    renderEditor(true);
+}
+
+// ── Approval panel ────────────────────────────────────────────
+function knownOrgPeople() {
+    const m = {};
+    const add = (email, name) => { email = val(email).toLowerCase(); if (isOrgEmail(email) && !m[email]) m[email] = val(name) || email; };
+    EDITORS.forEach(e => add(e, ''));
+    RECORDS.forEach(r => { add(r.qeEmail, r.qe); if (r.report) add(r.report['Approver Email'], ''); });
+    add(myEmail(), currentUser?.name);
+    return Object.entries(m).map(([email, name]) => ({ email, name }));
+}
+function approvalPill(st) {
+    const map = {
+        '': ['Draft', 'background:#f3f4f6;color:#4b5563;border-color:#d1d5db'],
+        'Pending Approval': ['Pending approval', 'background:#fffbeb;color:#b45309;border-color:#fcd34d'],
+        'Approved': ['Approved', 'background:#ecfdf5;color:#15803d;border-color:#86efac'],
+        'Returned': ['Returned for revision', 'background:#fef2f2;color:#b91c1c;border-color:#fca5a5'],
+    };
+    const [label, style] = map[st] || [st, map[''][1]];
+    return `<span class="text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wide whitespace-nowrap" style="${style}">${esc(label)}</span>`;
+}
+function approvalPanel() {
+    const rep = editor.report;
+    const st = approvalStatus(rep);
+    const canAssign = edCanAssign();
+    const approver = val(rep['Approver Email']);
+    const people = knownOrgPeople().filter(p => p.email !== myEmail());
+    const history = [];
+    if (rep['Submitted By']) history.push(`Submitted by <b>${esc(rep['Submitted By'])}</b> · ${esc(rep['Submitted At'])}`);
+    if (st === 'Approved') history.push(`Approved by <b>${esc(rep['Approved By'])}</b> · ${esc(rep['Approved At'])}`);
+    if (st === 'Returned') history.push(`Returned by <b>${esc(rep['Approved By'])}</b> · ${esc(rep['Approved At'])}`);
+    if (val(rep['Approval Comment'])) history.push(`Comment: <i>${esc(rep['Approval Comment'])}</i>`);
+    let actions = '';
+    if (canAssign) {
+        actions = `<button onclick="submitForApproval()" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow whitespace-nowrap">📨 Submit for approval</button>`;
+    } else if (edIsApprover()) {
+        actions = `<button onclick="decideApproval('Returned')" class="bg-white hover:bg-red-50 border border-red-300 text-red-700 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer whitespace-nowrap">↩ Return for revision</button>
+                   <button onclick="decideApproval('Approved')" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow whitespace-nowrap">✅ Approve</button>`;
+    } else if (st === 'Approved' && isEditor()) {
+        actions = `<button onclick="reopenReport()" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer whitespace-nowrap">↺ Reopen for editing</button>`;
+    }
+    const waitingNote = st === 'Pending Approval' && !edIsApprover()
+        ? `<div class="text-[11px] text-amber-700 mt-2">Waiting for <b>${esc(approver)}</b> to approve. The report is locked until then.</div>` : '';
+    return `<div class="d-section" style="border-color:${st === 'Pending Approval' ? '#fcd34d' : st === 'Approved' ? '#86efac' : '#e5e7eb'}">
+        <div class="d-title"><span class="bar"></span>Approval <span class="ml-1">${approvalPill(st)}</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+            <div class="md:col-span-3"><label class="d-label">QE In Charge</label>
+                <div class="ed-input ro" style="display:flex;flex-direction:column;justify-content:center;min-height:34px"><span class="font-bold">${dash(editor.qe)}</span>${editor.qeEmail ? `<span class="text-[10px] text-gray-500">${esc(editor.qeEmail)}</span>` : ''}</div>
+            </div>
+            <div class="md:col-span-5"><label class="d-label">Approver <span class="sg-hint">· @${ORG_DOMAIN} account</span></label>
+                <input class="ed-input ${canAssign ? '' : 'ro'}" ${canAssign ? '' : 'readonly tabindex="-1"'} list="org-people" data-path="report|Approver Email" value="${esc(approver)}" oninput="edSet(this)" placeholder="name@${ORG_DOMAIN}">
+                <datalist id="org-people">${people.map(p => `<option value="${esc(p.email)}">${esc(p.name)}</option>`).join('')}</datalist>
+            </div>
+            <div class="md:col-span-4 flex gap-2 justify-end flex-wrap">${actions}</div>
+        </div>
+        ${edIsApprover() ? `<div class="mt-3"><label class="d-label">Comment to QE (required if returning)</label><textarea class="ed-area" rows="2" data-path="approvalComment" oninput="edSet(this);autoGrow(this)" placeholder="Optional when approving"></textarea></div>` : ''}
+        ${waitingNote}
+        ${history.length ? `<div class="text-[11px] text-gray-500 mt-3 space-y-0.5">${history.map(h => `<div>${h}</div>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+function addApprover() {
+    editor.showApproval = true;
+    renderEditor();
+    document.getElementById('detail-modal').scrollTop = 0;
+    setTimeout(() => { const el = document.querySelector('input[data-path="report|Approver Email"]'); if (el) el.focus(); }, 50);
+}
+function nowStamp() {
+    const d = new Date();
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()} ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+}
+function meLabel() { return currentUser?.name ? `${currentUser.name} (${myEmail()})` : myEmail(); }
+
+async function submitForApproval() {
+    const ap = val(editor.report['Approver Email']).toLowerCase();
+    if (!isOrgEmail(ap)) { showToast('⚠️', `Pick an approver with an @${ORG_DOMAIN} account.`); return; }
+    if (ap === myEmail()) { showToast('⚠️', 'You can’t approve your own submission — pick someone else.'); return; }
+    if (!confirm(`Submit CAR ${editor.car} to ${ap} for approval?\n\nThe report will be locked until it is approved or returned.`)) return;
+    Object.assign(editor.report, {
+        'Approver Email': ap, 'Approval Status': 'Pending Approval', 'Submitted By': meLabel(), 'Submitted At': nowStamp(),
+        'Approved By': '', 'Approved At': '', 'Approval Comment': '',
+    });
+    await saveEditor({ toast: `Sent to ${ap} for approval.` });
+}
+async function decideApproval(decision) {
+    const comment = val(editor.approvalComment);
+    if (decision === 'Returned' && !comment) { showToast('⚠️', 'Add a comment so the QE knows what to fix.'); return; }
+    const msg = decision === 'Approved'
+        ? `Approve CAR ${editor.car}?\n\nIt will move to the Completed group (status Done).`
+        : `Return CAR ${editor.car} to the QE for revision?`;
+    if (!confirm(msg)) return;
+    Object.assign(editor.report, { 'Approval Status': decision, 'Approved By': meLabel(), 'Approved At': nowStamp(), 'Approval Comment': comment });
+    const itemUpdate = decision === 'Approved'
+        ? { 'Group': 'Completed', 'Status': 'Done', 'Date Completion': val(editor.completed) || isoToday() }
+        : null;
+    await saveEditor({ itemUpdate, toast: decision === 'Approved' ? `CAR ${editor.car} approved — moved to Completed.` : `CAR ${editor.car} returned to the QE.` });
+}
+async function reopenReport() {
+    if (!confirm(`Reopen CAR ${editor.car} for editing?\n\nIt will need to be submitted and approved again.`)) return;
+    Object.assign(editor.report, { 'Approval Status': '', 'Approved By': '', 'Approved At': '' });
+    await saveEditor({ toast: 'Report reopened for editing.' });
+}
+function isoToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+// ── Render ────────────────────────────────────────────────────
 function renderEditor(keepScroll = false) {
     const modal = document.getElementById('detail-modal');
     const top = modal.scrollTop;
     const ed = editor;
+    const can = edCanEdit();
     const overdue = isOverdue(ed);
     const issueN = ed.photos.filter(p => p.section === 'Issue').length;
     const evidN = ed.photos.filter(p => p.section === 'Evidence').length;
-    const folder = ed.report['Photos Folder'];
-    const link = ed.report['Report Link'];
+    // Approval panel only appears once it's needed: an approver was added, or a submission/decision exists.
+    const showApproval = ed.showApproval || !!val(ed.report['Approver Email']) || !!approvalStatus(ed.report);
+    const ackOn = val(ed.report['Show Supplier Acknowledgement']).toUpperCase() === 'TRUE';
+    const st = approvalStatus(ed.report);
+    const lockMsg = !isEditor()
+        ? `View only — editing is limited to ${EDITORS.join(', ')}.`
+        : st === 'Pending Approval' ? 'Locked while waiting for approval.'
+        : st === 'Approved' ? 'Approved reports are locked. Reopen to edit.' : '';
     document.getElementById('detail-box').innerHTML = `
     <div class="ed-head">
         <div class="accent"></div>
@@ -964,46 +1300,49 @@ function renderEditor(keepScroll = false) {
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-[10px] font-black px-2 py-0.5 rounded-full font-mono" style="background:#ecfdf5;color:#15803d;border:1px solid #86efac">CAR ${esc(ed.car)}</span>
                     ${lightStatusPill(ed.status)}
+                    ${approvalPill(st)}
                     <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${esc(ed.group)}</span>
                     ${overdue ? '<span class="text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full uppercase tracking-widest">Overdue</span>' : ''}
                     ${ed.isNew ? '<span class="text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-widest">New report</span>' : ''}
                 </div>
                 <h2 class="font-black text-lg mt-2 leading-snug" style="color:#111827">${esc(ed.name)}</h2>
-                <div class="text-[11px] text-gray-500 mt-1">Started <b class="text-gray-700">${dash(fmtDate(ed.started))}</b> · Target <b class="${overdue ? 'text-red-600' : 'text-gray-700'}">${dash(fmtDate(ed.target))}</b> · Completed <b class="text-gray-700">${dash(fmtDate(ed.completed))}</b></div>
+                <div class="text-[11px] text-gray-500 mt-1">QE <b class="text-gray-700">${dash(ed.qe)}</b> · Started <b class="text-gray-700">${dash(fmtDate(ed.started))}</b> · Target <b class="${overdue ? 'text-red-600' : 'text-gray-700'}">${dash(fmtDate(ed.target))}</b> · Completed <b class="text-gray-700">${dash(fmtDate(ed.completed))}</b></div>
             </div>
             <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                 <button onclick="openPdfFromEditor()" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">👁 Preview PDF</button>
-                ${link ? `<a href="${esc(link)}" target="_blank" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg no-underline">🔗 Original Report</a>` : ''}
-                ${folder ? `<a href="${esc(folder)}" target="_blank" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg no-underline">📁 Photos</a>` : ''}
+                ${!showApproval && edCanAssign() ? `<button onclick="addApprover()" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer">👤 Add approver</button>` : ''}
                 <button onclick="closeDetail()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer">✕ Close</button>
             </div>
         </div>
+        ${lockMsg ? `<div class="px-6 py-1.5 text-[11px] font-bold" style="background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280">🔒 ${esc(lockMsg)}</div>` : ''}
     </div>
 
     <div class="p-6 space-y-4">
+        ${showApproval ? approvalPanel() : ''}
+
         <div class="d-section">
             <div class="d-title"><span class="bar"></span>Rhino-USA Escalation Form</div>
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                ${edField('Report Date', 'report|Report Date', { ph: 'MM/DD/YYYY', span: 'md:col-span-1' })}
-                ${edField('Original Report Link', 'report|Report Link', { ph: 'https://docs.google.com/…', span: 'md:col-span-5' })}
-                ${edField('Supplier Name', 'report|Supplier Name', { span: 'md:col-span-3' })}
-                ${edField('Supplier Address', 'report|Supplier Address', { span: 'md:col-span-3' })}
+                ${edField('Report Date', 'report|Report Date', { ph: 'MM/DD/YYYY', span: 'md:col-span-2' })}
+                <div class="md:col-span-4"></div>
+                ${edField('Supplier Name', 'report|Supplier Name', { span: 'md:col-span-3', suggest: 'supplier', ph: 'Search supplier…' })}
+                ${edField('Supplier Address', 'report|Supplier Address', { span: 'md:col-span-3', area: true, rows: 1 })}
                 ${edField('Supplier Contact Person', 'report|Supplier Contact', { span: 'md:col-span-3' })}
                 ${edField('Supplier Contact Email', 'report|Supplier Email', { span: 'md:col-span-3' })}
-                ${edField('Product Description', 'report|Product Description', { span: 'md:col-span-3' })}
-                ${edField('SKU Number', 'report|SKU', { mono: true, span: 'md:col-span-2' })}
+                ${edField('SKU Number', 'report|SKU', { mono: true, span: 'md:col-span-2', suggest: 'sku', ph: 'Type a SKU…' })}
+                ${edField('Product Description', 'report|Product Description', { span: 'md:col-span-3', area: true, rows: 1 })}
                 ${edField('UPC Number', 'report|UPC', { mono: true, span: 'md:col-span-1' })}
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div class="d-section md:col-span-2">
                 <div class="d-title"><span class="bar"></span>Issue Description</div>
-                <textarea class="ed-area" rows="6" data-path="report|Issue Description" oninput="edSet(this)" placeholder="Describe the issue…">${esc(ed.report['Issue Description'])}</textarea>
+                ${edField('', 'report|Issue Description', { area: true, rows: 4, ph: 'Describe the issue…' })}
             </div>
             <div class="d-section">
                 <div class="d-title"><span class="bar"></span>Root Cause</div>
-                <textarea class="ed-area" rows="6" data-path="report|Root Cause" oninput="edSet(this)" placeholder="Root cause…">${esc(ed.report['Root Cause'])}</textarea>
+                ${edField('', 'report|Root Cause', { area: true, rows: 4, ph: 'Root cause…' })}
             </div>
         </div>
 
@@ -1012,30 +1351,43 @@ function renderEditor(keepScroll = false) {
             ${photoGridEditor('Issue')}
         </div>
 
-        ${actionTableEditor(ACTION_KINDS[0])}
-        ${actionTableEditor(ACTION_KINDS[1])}
-        ${actionTableEditor(ACTION_KINDS[2])}
-        ${actionTableEditor(ACTION_KINDS[3])}
+        ${ACTION_KINDS.map(actionTableEditor).join('')}
 
         <div class="d-section">
             <div class="d-title"><span class="bar"></span>Evidences · ${evidN} photo${evidN === 1 ? '' : 's'}</div>
-            <label class="d-label">Evidence notes</label>
-            <textarea class="ed-area mb-3" rows="4" data-path="report|Evidence Notes" oninput="edSet(this)" placeholder="What was done and how it was verified…">${esc(ed.report['Evidence Notes'])}</textarea>
-            ${photoGridEditor('Evidence')}
+            ${edField('Evidence notes', 'report|Evidence Notes', { area: true, rows: 3, ph: 'What was done and how it was verified…' })}
+            <div class="mt-3">${photoGridEditor('Evidence')}</div>
+        </div>
+
+        <div class="d-section">
+            <div class="d-title"><span class="bar"></span>Supplier Acknowledgement
+                <label class="right flex items-center gap-2 normal-case tracking-normal text-[11px] font-bold text-gray-600 ${can ? 'cursor-pointer' : ''}">
+                    <input type="checkbox" ${ackOn ? 'checked' : ''} ${can ? '' : 'disabled'} onchange="toggleAck(this.checked)" class="accent-green-600 w-4 h-4"> Show on report
+                </label>
+            </div>
+            ${ackOn ? `
+                <div class="text-[11px] text-gray-500 mb-3">Adds a signature & company-stamp block to the PDF for the supplier to acknowledge the corrective action.</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    ${edField('Acknowledged by / Date (optional)', 'report|Supplier Acknowledged By / Date', { ph: 'Name — MM/DD/YYYY' })}
+                    <div><label class="d-label">Returned stamp / signature (optional)</label>${photoGridEditor('Stamp', 1).replace('md:grid-cols-4', 'md:grid-cols-2')}</div>
+                </div>` : `<div class="text-[11px] text-gray-400">Hidden — the acknowledgement block is not printed on the report.</div>`}
         </div>
     </div>
 
     <div class="ed-foot flex items-center justify-between gap-3 px-6 py-3">
         <div class="text-[11px] text-gray-500 flex items-center gap-2">
-            <span id="ed-dirty">${editorDirty ? '<span class="dirty-dot"></span> Unsaved changes' : '✓ All changes saved'}</span>
+            <span id="ed-dirty">${editorDirty ? '<span class="dirty-dot"></span> Unsaved changes' : (can ? '✓ All changes saved' : 'View only')}</span>
             ${ed.report['Last Synced'] ? `<span class="text-gray-300">|</span><span>Last updated ${esc(ed.report['Last Synced'])}</span>` : ''}
         </div>
         <div class="flex items-center gap-2">
-            <button onclick="closeDetail()" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">Cancel</button>
-            <button id="ed-save-btn" onclick="saveEditor()" class="bg-pantone text-black text-xs font-black px-5 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">💾 Save changes</button>
+            <button onclick="closeDetail()" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">${can || edCanAssign() ? 'Cancel' : 'Close'}</button>
+            ${can || edCanAssign() ? `<button id="ed-save-btn" onclick="saveEditor()" class="bg-pantone text-black text-xs font-black px-5 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">💾 Save changes</button>` : ''}
         </div>
     </div>`;
-    hydratePhotos(document.getElementById('detail-box'));
+    const box = document.getElementById('detail-box');
+    hydratePhotos(box);
+    autoGrowAll(box);
+    requestAnimationFrame(() => autoGrowAll(box)); // again once fonts/layout settle
     if (keepScroll) modal.scrollTop = top;
 }
 
@@ -1060,7 +1412,8 @@ function editorAsRecord() {
     ACTION_KINDS.forEach(k => ed.actions[k.kind].forEach(a => actions.push({ ...a, kind: k.kind, section: k.kind === 'affected' ? ed.affectedLabel : SECTION_LABEL[k.kind] })));
     return {
         car: ed.car, name: ed.name, status: ed.status, started: ed.started, target: ed.target, completed: ed.completed,
-        supplier: ed.report['Supplier Name'] || ed.supplier, report: ed.report, actions, photos: ed.photos,
+        supplier: ed.report['Supplier Name'] || ed.supplier, qe: ed.qe, qeEmail: ed.qeEmail,
+        report: ed.report, actions, photos: ed.photos,
     };
 }
 function openPdfFromEditor() { openPdfRec(editorAsRecord()); }
@@ -1084,6 +1437,7 @@ document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (document.getElementById('img-zoom-modal').style.display === 'flex') { closeZoom(); return; }
     if (document.getElementById('pdf-popup').classList.contains('show')) { closePdfPopup(); return; }
+    if (document.getElementById('workflow-modal').classList.contains('show')) { closeWorkflow(); return; }
     if (document.getElementById('detail-modal').classList.contains('show')) closeDetail();
 });
 window.addEventListener('beforeunload', e => { if (editorDirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -1092,6 +1446,7 @@ window.addEventListener('beforeunload', e => { if (editorDirty) { e.preventDefau
 function sheetsUrl(path) { return `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}${path}`; }
 function a1(tab, range) { return encodeURIComponent(`'${tab}'!${range}`); }
 function todayMDY() { const d = new Date(); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
+function colLetter(i) { let s = ''; i += 1; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
 
 async function findCarRows(tab, car) {
     const json = await (await gdriveFetch(sheetsUrl(`/values/${a1(tab, 'A:A')}`))).json();
@@ -1112,6 +1467,17 @@ async function replaceCarRows(tab, car, newRows) {
         await gdriveFetch(sheetsUrl(`/values/${a1(tab, 'A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`), { method: 'POST', body: { values: newRows } });
     }
 }
+// Update named columns of the CAR's row on the Items tab (used when an approval completes a CAR).
+async function updateItemRow(car, fields) {
+    const head = ((await (await gdriveFetch(sheetsUrl(`/values/${a1(TABS.items, '1:1')}`))).json()).values || [[]])[0];
+    const rows = await findCarRows(TABS.items, car);
+    if (!rows.length) return;
+    const data = Object.entries(fields).map(([h, v]) => {
+        const c = head.indexOf(h);
+        return c < 0 ? null : { range: `'${TABS.items}'!${colLetter(c)}${rows[0]}`, values: [[v]] };
+    }).filter(Boolean);
+    if (data.length) await gdriveFetch(sheetsUrl('/values:batchUpdate'), { method: 'POST', body: { valueInputOption: 'RAW', data } });
+}
 
 async function driveList(q) {
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -1125,7 +1491,7 @@ async function driveCreateFolder(name, parent) {
 }
 async function ensureCarFolder(car) {
     const folderQ = (name, parent) => `name='${name.replace(/'/g, "\\'")}' and '${parent}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-    let root = (await driveList(folderQ(PHOTO_ROOT_NAME, QPE_FOLDER_ID)))[0];
+    const root = (await driveList(folderQ(PHOTO_ROOT_NAME, QPE_FOLDER_ID)))[0];
     const rootId = root ? root.id : await driveCreateFolder(PHOTO_ROOT_NAME, QPE_FOLDER_ID);
     const sub = (await driveList(folderQ(car, rootId)))[0];
     return sub ? sub.id : await driveCreateFolder(car, rootId);
@@ -1146,10 +1512,10 @@ async function uploadPhotoToDrive(blob, name, folderId) {
 }
 function folderIdFromUrl(u) { const m = String(u || '').match(/folders\/([a-zA-Z0-9_-]{10,})/); return m ? m[1] : null; }
 
-async function saveEditor() {
+async function saveEditor(opts = {}) {
     if (!editor) return;
     const ed = editor;
-    const btn = document.getElementById('ed-save-btn');
+    const btn = document.getElementById('ed-save-btn') || { set textContent(v) {}, set disabled(v) {} };
     btn.disabled = true; btn.textContent = 'Saving…';
     setStatus('💾 Saving…', 'text-blue-400');
     try {
@@ -1173,39 +1539,43 @@ async function saveEditor() {
         }
         btn.textContent = 'Saving…';
 
-        // 2) Escalation Reports row
+        // 2) Escalation Reports row (A:Z)
         ed.report['CAR No.'] = ed.car;
         ed.report['Issue Photo Count'] = String(ed.photos.filter(p => p.section === 'Issue').length);
         ed.report['Evidence Photo Count'] = String(ed.photos.filter(p => p.section === 'Evidence').length);
         ed.report['Last Synced'] = todayMDY();
         const repRow = REPORT_HEADERS.map(h => val(ed.report[h]));
+        const lastCol = colLetter(REPORT_HEADERS.length - 1);
         const repRows = await findCarRows(TABS.reports, ed.car);
         if (repRows.length) {
-            await gdriveFetch(sheetsUrl(`/values/${a1(TABS.reports, `A${repRows[0]}:Q${repRows[0]}`)}?valueInputOption=RAW`), { method: 'PUT', body: { values: [repRow] } });
+            await gdriveFetch(sheetsUrl(`/values/${a1(TABS.reports, `A${repRows[0]}:${lastCol}${repRows[0]}`)}?valueInputOption=RAW`), { method: 'PUT', body: { values: [repRow] } });
         } else {
             await gdriveFetch(sheetsUrl(`/values/${a1(TABS.reports, 'A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`), { method: 'POST', body: { values: [repRow] } });
         }
 
-        // 3) Report Actions (blank rows are dropped)
-        const actionRows = [];
-        ACTION_KINDS.forEach(k => {
-            let seq = 0;
-            ed.actions[k.kind].forEach(a => {
-                if (![a.description, a.owner, a.date, a.comment].some(x => val(x))) return;
-                seq++;
-                const section = k.kind === 'affected' ? (val(ed.affectedLabel) || AFFECTED_DEFAULT) : SECTION_LABEL[k.kind];
-                actionRows.push([ed.car, section, String(seq), val(a.description), k.owner ? val(a.owner) : '', val(a.date), val(a.comment)]);
+        // 3) Report Actions + 4) Report Photos — only rewritten by editors
+        if (isEditor()) {
+            const actionRows = [];
+            ACTION_KINDS.forEach(k => {
+                let seq = 0;
+                ed.actions[k.kind].forEach(a => {
+                    if (![a.description, a.owner, a.date, a.comment].some(x => val(x))) return;
+                    seq++;
+                    const section = k.kind === 'affected' ? (val(ed.affectedLabel) || AFFECTED_DEFAULT) : SECTION_LABEL[k.kind];
+                    actionRows.push([ed.car, section, String(seq), val(a.description), k.owner ? val(a.owner) : '', val(a.date), val(a.comment)]);
+                });
             });
-        });
-        ed.otherActions.forEach(a => actionRows.push([ed.car, a.section, a.seq, a.description, a.owner, a.date, a.comment]));
-        await replaceCarRows(TABS.actions, ed.car, actionRows);
+            ed.otherActions.forEach(a => actionRows.push([ed.car, a.section, a.seq, a.description, a.owner, a.date, a.comment]));
+            await replaceCarRows(TABS.actions, ed.car, actionRows);
+            const photoRows = ed.photos.map(p => [ed.car, p.section, String(p.n), p.cell || '', p.name || '', p.link || `https://drive.google.com/file/d/${p.id}/view`]);
+            await replaceCarRows(TABS.photos, ed.car, photoRows);
+        }
 
-        // 4) Report Photos
-        const photoRows = ed.photos.map(p => [ed.car, p.section, String(p.n), p.cell || '', p.name || '', p.link || `https://drive.google.com/file/d/${p.id}/view`]);
-        await replaceCarRows(TABS.photos, ed.car, photoRows);
+        // 5) Approval that completes the CAR moves it to Completed on the Items tab
+        if (opts.itemUpdate) await updateItemRow(ed.car, opts.itemUpdate);
 
         editorDirty = false;
-        showToast('✅', `CAR ${ed.car} saved to the Master sheet.`);
+        showToast('✅', opts.toast || `CAR ${ed.car} saved to the Master sheet.`);
         const car = ed.car;
         await syncFromCloud();
         const r = RECORDS.find(x => x.car === car);
@@ -1219,10 +1589,89 @@ async function saveEditor() {
 }
 
 // ============================================================
+// ESCALATION WORKFLOW pop-out (from the "Workflow" tab of the report template)
+// ============================================================
+function openWorkflow() {
+    document.getElementById('workflow-body').innerHTML = buildWorkflowSVG();
+    document.getElementById('workflow-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeWorkflow() {
+    document.getElementById('workflow-modal').classList.remove('show');
+    if (!document.getElementById('detail-modal').classList.contains('show')) document.body.style.overflow = '';
+}
+function buildWorkflowSVG() {
+    const W = 1000, H = 1110;
+    const MAIN = 300, RIGHT = 660, FAR = 900;
+    const N = {
+        start: { x: MAIN, y: 40, t: 'term', label: 'Start' },
+        n1: { x: MAIN, y: 125, t: 'box', label: 'Encountered non-conforming product', role: 'QC Inspector / Customer' },
+        n2: { x: MAIN, y: 215, t: 'box', label: 'Inform Rhino team', role: 'QC Inspector / Customer' },
+        n3: { x: MAIN, y: 305, t: 'box', label: 'Review details of non-conformance', role: 'QA Engineer / Management' },
+        d1: { x: MAIN, y: 410, t: 'dec', label: 'Valid?', role: 'QA Engineer' },
+        r1: { x: RIGHT, y: 360, t: 'box', label: 'Customer complaint: record details', role: 'QA Engineer', w: 250 },
+        r2: { x: RIGHT, y: 460, t: 'box', label: 'QC inspection: proceed with PO', role: 'QA Engineer', w: 250 },
+        e1: { x: FAR, y: 410, t: 'term', label: 'End' },
+        n4: { x: MAIN, y: 530, t: 'box', label: 'Inform supplier about issue / problem', role: 'Procurement' },
+        n5: { x: MAIN, y: 620, t: 'box', label: 'Provide root cause analysis and corrective action', role: 'Supplier' },
+        d2: { x: MAIN, y: 725, t: 'dec', label: 'Accepted?', role: 'QA Engineer / Rhino-USA Team' },
+        n6: { x: MAIN, y: 850, t: 'box', label: 'Discuss with supplier', role: 'QA Engineer / Rhino-USA Team' },
+        v1: { x: RIGHT, y: 725, t: 'box', label: 'Validate evidences', role: 'QA Engineer / Rhino-USA Team', w: 250 },
+        d3: { x: RIGHT, y: 850, t: 'dec', label: 'Valid evidences?', role: '' },
+        s1: { x: RIGHT, y: 965, t: 'box', label: 'Save all records in the Product Escalation Form', role: 'QA Engineer', w: 270 },
+        e2: { x: RIGHT, y: 1060, t: 'term', label: 'End' },
+    };
+    const size = n => n.t === 'box' ? { w: n.w || 300, h: 58 } : n.t === 'dec' ? { w: 170, h: 84 } : { w: 120, h: 40 };
+    const edge = (n, side) => { const s = size(n); return side === 'top' ? [n.x, n.y - s.h / 2] : side === 'bottom' ? [n.x, n.y + s.h / 2] : side === 'left' ? [n.x - s.w / 2, n.y] : [n.x + s.w / 2, n.y]; };
+    const path = (pts, label, lpos) => {
+        const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' ');
+        const lab = label ? `<g><rect x="${lpos[0] - 20}" y="${lpos[1] - 10}" width="40" height="20" rx="10" fill="${label === 'YES' ? '#ecfdf5' : '#fef2f2'}" stroke="${label === 'YES' ? '#86efac' : '#fca5a5'}"/><text x="${lpos[0]}" y="${lpos[1] + 4}" text-anchor="middle" font-size="10" font-weight="800" fill="${label === 'YES' ? '#15803d' : '#b91c1c'}">${label}</text></g>` : '';
+        return `<path d="${d}" fill="none" stroke="#6b7280" stroke-width="1.6" marker-end="url(#arr)"/>${lab}`;
+    };
+    const wrap = (text, max) => { const words = text.split(' '), lines = []; let cur = ''; words.forEach(w => { if ((cur + ' ' + w).trim().length > max) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }); if (cur.trim()) lines.push(cur.trim()); return lines; };
+    const node = n => {
+        const s = size(n);
+        if (n.t === 'term') return `<rect x="${n.x - s.w / 2}" y="${n.y - s.h / 2}" width="${s.w}" height="${s.h}" rx="20" fill="#44D62C"/><text x="${n.x}" y="${n.y + 5}" text-anchor="middle" font-size="13" font-weight="900" fill="#000">${n.label}</text>`;
+        if (n.t === 'dec') {
+            const pts = `${n.x},${n.y - s.h / 2} ${n.x + s.w / 2},${n.y} ${n.x},${n.y + s.h / 2} ${n.x - s.w / 2},${n.y}`;
+            const lines = wrap(n.label, 12);
+            return `<polygon points="${pts}" fill="#fff" stroke="#44D62C" stroke-width="2.5"/>${lines.map((l, i) => `<text x="${n.x}" y="${n.y + 4 + (i - (lines.length - 1) / 2) * 14}" text-anchor="middle" font-size="12" font-weight="800" fill="#111827">${l}</text>`).join('')}
+                ${n.role ? `<text x="${n.x - s.w / 2 - 8}" y="${n.y + 4}" text-anchor="end" font-size="9.5" font-weight="700" fill="#6b7280">${n.role}</text>` : ''}`;
+        }
+        const lines = wrap(n.label, Math.round(s.w / 7.6));
+        return `<rect x="${n.x - s.w / 2}" y="${n.y - s.h / 2}" width="${s.w}" height="${s.h}" rx="8" fill="#1F3864"/>
+            ${lines.map((l, i) => `<text x="${n.x}" y="${n.y - 6 + (i - (lines.length - 1) / 2) * 14}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${l}</text>`).join('')}
+            <text x="${n.x}" y="${n.y + s.h / 2 - 8}" text-anchor="middle" font-size="9" font-weight="800" fill="#86efac" letter-spacing=".04em">${(n.role || '').toUpperCase()}</text>`;
+    };
+    const e = [];
+    const down = (a, b, label) => e.push(path([edge(N[a], 'bottom'), edge(N[b], 'top')], label, label ? [N[a].x + 28, (edge(N[a], 'bottom')[1] + edge(N[b], 'top')[1]) / 2] : null));
+    down('start', 'n1'); down('n1', 'n2'); down('n2', 'n3'); down('n3', 'd1');
+    // Valid? NO → complaint record / QC proceed → End
+    const d1r = edge(N.d1, 'right'), bx = 475;
+    e.push(path([d1r, [bx, d1r[1]], [bx, N.r1.y], edge(N.r1, 'left')], 'NO', [bx - 30, d1r[1] - 14]));
+    e.push(path([[bx, d1r[1]], [bx, N.r2.y], edge(N.r2, 'left')]));
+    const ex = edge(N.e1, 'left')[0] - 20;
+    e.push(path([edge(N.r1, 'right'), [ex, N.r1.y], [ex, N.e1.y], edge(N.e1, 'left')]));
+    e.push(path([edge(N.r2, 'right'), [ex, N.r2.y], [ex, N.e1.y]]).replace('marker-end="url(#arr)"', ''));
+    down('d1', 'n4', 'YES'); down('n4', 'n5'); down('n5', 'd2');
+    // Accepted? YES → validate evidences, NO → discuss with supplier (loops back to root cause)
+    e.push(path([edge(N.d2, 'right'), edge(N.v1, 'left')], 'YES', [(edge(N.d2, 'right')[0] + edge(N.v1, 'left')[0]) / 2, N.d2.y - 14]));
+    down('d2', 'n6', 'NO');
+    const lx = 36;
+    e.push(path([edge(N.n6, 'left'), [lx, N.n6.y], [lx, N.n5.y], edge(N.n5, 'left')]));
+    down('v1', 'd3');
+    e.push(path([edge(N.d3, 'left'), edge(N.n6, 'right')], 'NO', [(edge(N.d3, 'left')[0] + edge(N.n6, 'right')[0]) / 2, N.d3.y - 14]));
+    down('d3', 's1', 'YES'); down('s1', 'e2');
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin:0 auto;font-family:Arial,Helvetica,sans-serif">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+        ${e.join('')}
+        ${Object.values(N).map(node).join('')}
+    </svg>`;
+}
+
+// ============================================================
 // PDF REPORT — Rhino-USA Escalation Form on the company letterhead
 // ============================================================
-const PHOTOS_FIRST_PAGE = 3;   // photos that fit under the text on the form's own page
-const PHOTOS_PER_PAGE = 6;     // photos per continuation page (2 rows x 3)
 
 function openPdfReport(idx) { const r = RECORDS[idx]; if (r) openPdfRec(r); }
 async function openPdfRec(r) {
@@ -1264,8 +1713,11 @@ function writeReportToContainer(rec, urls) {
 function buildReportHTML(rec, urls) {
     const rep = rec.report || {};
     const issue = rec.photos.filter(p => p.section === 'Issue');
-    const evid = rec.photos.filter(p => p.section !== 'Issue');
+    const evid = rec.photos.filter(p => p.section === 'Evidence');
+    const stamp = rec.photos.find(p => p.section === 'Stamp');
     const acts = k => rec.actions.filter(a => a.kind === k);
+    const ackOn = val(rep['Show Supplier Acknowledgement']).toUpperCase() === 'TRUE';
+    const st = val(rep['Approval Status']);
 
     const L = 'background:#f3f4f6;border:1px solid #9ca3af;padding:6px 10px;font-size:9px;font-weight:700;color:#374151;text-transform:uppercase';
     const V = 'background:#fff;border:1px solid #9ca3af;padding:6px 10px;vertical-align:top;word-wrap:break-word;white-space:pre-wrap;font-size:11px';
@@ -1273,25 +1725,27 @@ function buildReportHTML(rec, urls) {
     const bandRow = t => `<tr style="background:#e5e7eb"><td colspan="6" style="padding:6px 10px;border:1px solid #9ca3af;font-weight:900;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;background:#d1d5db">${t}</td></tr>`;
     const textRow = t => `<tr><td colspan="6" style="${V};font-size:12px;line-height:1.45">${val(t) ? esc(t) : '—'}</td></tr>`;
 
-    const photoCell = p => {
+    // Same photo box as the Spec Database report, sized to how many photos share the page.
+    const photoBox = (p, maxH) => {
         const src = urls[p.id];
-        const inner = src ? `<img src="${src}" style="max-width:100%;max-height:230px;object-fit:contain">` : '<span style="color:#9ca3af;font-size:11px">Photo unavailable</span>';
+        const img = src ? `<img src="${src}" style="max-width:100%;max-height:${maxH - 20}px;object-fit:contain">` : '<span style="color:#9ca3af;font-size:11px">Photo unavailable</span>';
         const link = driveViewLink(p.id);
-        return `<td colspan="2" style="padding:10px;border:1px solid #9ca3af;text-align:center;vertical-align:top">
-            <div style="font-size:9px;font-weight:700;color:#374151;text-transform:uppercase;margin-bottom:6px">${esc(p.section)} ${p.n}</div>
-            <div style="width:100%;min-height:170px;max-height:250px;border:1px solid #d1d5db;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f9fafb;box-sizing:border-box;padding:8px">
-                ${link ? `<a class="photo-drivelink" data-href="${link}" style="text-decoration:none;color:inherit">${inner}</a>` : inner}
-            </div></td>`;
+        return `<div style="text-align:center;max-width:100%">
+            <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">${esc(p.section === 'Issue' ? 'Image' : p.section)} ${p.n}</div>
+            <div style="width:100%;min-height:${Math.round(maxH * 0.7)}px;max-height:${maxH}px;border:1px solid #d1d5db;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f9fafb;box-sizing:border-box;padding:8px">
+                ${link ? `<a class="photo-drivelink" data-href="${link}" style="text-decoration:none;color:inherit">${img}</a>` : img}
+            </div></div>`;
     };
-    const photoRows = arr => {
-        if (!arr.length) return `<tr><td colspan="6" style="padding:16px;border:1px solid #9ca3af;color:#9ca3af;font-style:italic;text-align:center">No photos attached.</td></tr>`;
-        const rows = [];
-        for (let i = 0; i < arr.length; i += 3) {
-            const chunk = arr.slice(i, i + 3);
-            rows.push(`<tr>${chunk.map(photoCell).join('')}${'<td colspan="2" style="border:1px solid #9ca3af"></td>'.repeat(3 - chunk.length)}</tr>`);
-        }
-        return rows.join('');
+    const cell = (p, span, maxH) => `<td colspan="${span}" style="padding:12px;border:1px solid #9ca3af;vertical-align:top">${photoBox(p, maxH)}</td>`;
+    // 1 photo → one enlarged photo · 2 → side by side · 3 → 2 + 1 wide · 4 → 2 × 2 grid
+    const photoRows = c => {
+        if (c.length === 1) return `<tr>${cell(c[0], 6, 760)}</tr>`;
+        if (c.length === 2) return `<tr>${cell(c[0], 3, 520)}${cell(c[1], 3, 520)}</tr>`;
+        if (c.length === 3) return `<tr>${cell(c[0], 3, 340)}${cell(c[1], 3, 340)}</tr><tr>${cell(c[2], 6, 340)}</tr>`;
+        return `<tr>${cell(c[0], 3, 340)}${cell(c[1], 3, 340)}</tr><tr>${cell(c[2], 3, 340)}${cell(c[3], 3, 340)}</tr>`;
     };
+    const chunks = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+
     const actRows = (label, rows, isChange) => {
         const head = isChange
             ? `<tr><td colspan="4" style="${L}">${label}</td><td style="${L}">Date</td><td style="${L}">Comment</td></tr>`
@@ -1304,12 +1758,48 @@ function buildReportHTML(rec, urls) {
     };
     const affectedLabel = (rec.actions.find(a => a.kind === 'affected') || {}).section || 'Affected PO Numbers';
 
-    // Pages: 1 = form + issue photos, 2 = actions + evidence, then continuation photo pages
-    const issueFirst = issue.slice(0, PHOTOS_FIRST_PAGE), issueMore = issue.slice(PHOTOS_FIRST_PAGE);
-    const evidFirst = evid.slice(0, PHOTOS_FIRST_PAGE), evidMore = evid.slice(PHOTOS_FIRST_PAGE);
-    const chunks = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
-    const issueCont = chunks(issueMore, PHOTOS_PER_PAGE), evidCont = chunks(evidMore, PHOTOS_PER_PAGE);
-    const total = 2 + issueCont.length + evidCont.length;
+    const formInner = `
+        ${titleRow('Rhino-USA Escalation Form')}
+        <tr><td style="${L}">Rhino-USA CAR No.</td><td colspan="2" style="${V};font-weight:900;font-family:monospace;font-size:12px">${esc(rec.car)}</td><td style="${L}">Date</td><td colspan="2" style="${V}">${dash(fmtDate(rep['Report Date'] || rec.started))}</td></tr>
+        <tr><td colspan="3" style="${L}">Supplier Name</td><td colspan="3" style="${L}">Supplier Address</td></tr>
+        <tr><td colspan="3" style="${V}">${dash(rep['Supplier Name'] || rec.supplier)}</td><td colspan="3" style="${V}">${dash(rep['Supplier Address'])}</td></tr>
+        <tr><td style="${L}">Contact Person</td><td colspan="2" style="${V}">${dash(rep['Supplier Contact'])}</td><td style="${L}">Contact Email</td><td colspan="2" style="${V}">${dash(rep['Supplier Email'])}</td></tr>
+        <tr><td colspan="3" style="${L}">Product Description</td><td colspan="2" style="${L}">SKU Number</td><td style="${L}">UPC Number</td></tr>
+        <tr><td colspan="3" style="${V}">${dash(rep['Product Description'])}</td><td colspan="2" style="${V};font-family:monospace">${dash(rep['SKU'])}</td><td style="${V};font-family:monospace">${dash(rep['UPC'])}</td></tr>
+        <tr><td style="${L}">QE In Charge</td><td colspan="2" style="${V}">${dash(rec.qe)}</td><td style="${L}">Status</td><td colspan="2" style="${V}">${dash(rec.status)}</td></tr>
+        ${bandRow('Issue Description')}
+        ${textRow(rep['Issue Description'])}
+        ${bandRow('Root Cause')}
+        ${textRow(rep['Root Cause'])}`;
+
+    const signoff = `
+        ${bandRow('Sign-off')}
+        <tr><td colspan="2" style="${L}">Prepared by (QE in charge)</td><td colspan="2" style="${L}">Approved by</td><td colspan="2" style="${L}">Approval date</td></tr>
+        <tr><td colspan="2" style="${V}">${dash(rec.qe)}</td>
+            <td colspan="2" style="${V}">${st === 'Approved' ? dash(String(rep['Approved By']).replace(/\s*\(.*\)\s*$/, '')) : (val(rep['Approver Email']) ? esc(rep['Approver Email']) + ' <span style="color:#b45309">(pending)</span>' : '—')}</td>
+            <td colspan="2" style="${V}">${st === 'Approved' ? dash(String(rep['Approved At']).split(' ')[0]) : '—'}</td></tr>`;
+    const stampSrc = stamp && urls[stamp.id];
+    const ack = !ackOn ? '' : `
+        ${bandRow('Supplier Acknowledgement')}
+        <tr><td colspan="6" style="${V};font-size:11px;color:#374151">We, the supplier named above, acknowledge receipt of this escalation and commit to implementing the corrective actions listed in this report.</td></tr>
+        <tr><td colspan="2" style="${L}">Supplier Name</td><td colspan="2" style="${L}">Acknowledged by / Date</td><td colspan="2" style="${L}">Company stamp &amp; signature</td></tr>
+        <tr><td colspan="2" style="${V}">${dash(rep['Supplier Name'] || rec.supplier)}</td>
+            <td colspan="2" style="${V}">${val(rep['Supplier Acknowledged By / Date']) ? esc(rep['Supplier Acknowledged By / Date']) : '<div style="height:40px;border-bottom:1px solid #9ca3af"></div>'}</td>
+            <td colspan="2" style="${V};height:140px;text-align:center;vertical-align:middle">${stampSrc ? `<img src="${stampSrc}" style="max-width:100%;max-height:130px;object-fit:contain">` : '<span style="color:#d1d5db;font-size:10px">STAMP HERE</span>'}</td></tr>`;
+
+    const actionsInner = `
+        ${titleRow('Containment & Corrective Action')}
+        ${actRows(affectedLabel, acts('affected'), false)}
+        ${actRows('Affected Team', acts('team'), false)}
+        ${actRows('Corrective Action', acts('corrective'), false)}
+        ${actRows('Change Implementation', acts('change'), true)}
+        ${bandRow('Evidences')}
+        ${textRow(rep['Evidence Notes'])}
+        ${signoff}
+        ${ack}`;
+
+    const issuePages = chunks(issue, 4), evidPages = chunks(evid, 4);
+    const total = 2 + issuePages.length + evidPages.length;
     let pageNum = 1;
     const page = inner => `
     <div class="report-page">
@@ -1321,45 +1811,14 @@ function buildReportHTML(rec, urls) {
         <img src="${REPORT_LETTERHEAD_FOOTER}" style="width:calc(100% + 60px);max-width:none;display:block;margin:14px -30px -20px -30px">
     </div>
     </div>`;
+    const photoPage = (title, c, i, n) => page(`${titleRow(title)}${n > 4 ? bandRow(`Photos ${i * 4 + 1}–${i * 4 + c.length} of ${n}`) : ''}${photoRows(c)}`);
 
-    const p1Inner = `
-        ${titleRow('Rhino-USA Escalation Form')}
-        <tr><td style="${L}">Rhino-USA CAR No.</td><td colspan="2" style="${V};font-weight:900;font-family:monospace;font-size:12px">${esc(rec.car)}</td><td style="${L}">Date</td><td colspan="2" style="${V}">${dash(fmtDate(rep['Report Date'] || rec.started))}</td></tr>
-        <tr><td colspan="3" style="${L}">Supplier Name</td><td colspan="3" style="${L}">Supplier Address</td></tr>
-        <tr><td colspan="3" style="${V}">${dash(rep['Supplier Name'] || rec.supplier)}</td><td colspan="3" style="${V}">${dash(rep['Supplier Address'])}</td></tr>
-        <tr><td style="${L}">Contact Person</td><td colspan="2" style="${V}">${dash(rep['Supplier Contact'])}</td><td style="${L}">Contact Email</td><td colspan="2" style="${V}">${dash(rep['Supplier Email'])}</td></tr>
-        <tr><td colspan="3" style="${L}">Product Description</td><td colspan="2" style="${L}">SKU Number</td><td style="${L}">UPC Number</td></tr>
-        <tr><td colspan="3" style="${V}">${dash(rep['Product Description'])}</td><td colspan="2" style="${V};font-family:monospace">${dash(rep['SKU'])}</td><td style="${V};font-family:monospace">${dash(rep['UPC'])}</td></tr>
-        <tr><td style="${L}">Status</td><td colspan="2" style="${V}">${dash(rec.status)}</td><td style="${L}">Target / Completed</td><td colspan="2" style="${V}">${dash(fmtDate(rec.target))} / ${dash(fmtDate(rec.completed))}</td></tr>
-        ${bandRow('Issue Description')}
-        ${textRow(rep['Issue Description'])}
-        ${bandRow('Root Cause')}
-        ${textRow(rep['Root Cause'])}
-        ${bandRow(`Images, Other Detail${issue.length > PHOTOS_FIRST_PAGE ? ` (1–${PHOTOS_FIRST_PAGE} of ${issue.length})` : ''}`)}
-        ${photoRows(issueFirst)}`;
-
-    const p2Inner = `
-        ${titleRow('Containment & Corrective Action')}
-        ${actRows(affectedLabel, acts('affected'), false)}
-        ${actRows('Affected Team', acts('team'), false)}
-        ${actRows('Corrective Action', acts('corrective'), false)}
-        ${actRows('Change Implementation', acts('change'), true)}
-        ${bandRow(`Evidences${evid.length > PHOTOS_FIRST_PAGE ? ` (1–${PHOTOS_FIRST_PAGE} of ${evid.length})` : ''}`)}
-        ${val(rep['Evidence Notes']) ? textRow(rep['Evidence Notes']) : ''}
-        ${photoRows(evidFirst)}`;
-
-    const contInner = (title, label, c, i, totalN) => {
-        const s = PHOTOS_FIRST_PAGE + i * PHOTOS_PER_PAGE + 1;
-        const e = s + c.length - 1;
-        return `${titleRow(title)}${bandRow(`${label} photos ${s}–${e} of ${totalN}`)}${photoRows(c)}`;
-    };
-
-    // Display order: form page → its extra issue-photo pages → action/evidence page → extra evidence pages
+    // Order: form → Images, Other Detail → Containment & Corrective Action → Evidences
     return [
-        page(p1Inner),
-        ...issueCont.map((c, i) => page(contInner('Images, Other Detail (continued)', 'Issue', c, i, issue.length))),
-        page(p2Inner),
-        ...evidCont.map((c, i) => page(contInner('Evidences (continued)', 'Evidence', c, i, evid.length))),
+        page(formInner),
+        ...issuePages.map((c, i) => photoPage('Images, Other Detail', c, i, issue.length)),
+        page(actionsInner),
+        ...evidPages.map((c, i) => photoPage('Evidences', c, i, evid.length)),
     ].join('');
 }
 
