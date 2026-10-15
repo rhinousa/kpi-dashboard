@@ -36,26 +36,45 @@
         .grp-chip.active { background:rgba(68,214,44,0.10);border-color:rgba(68,214,44,.55);color:var(--pantone-802c); }
         .grp-chip .n { background:#111827;border-radius:999px;padding:1px 6px;font-size:9px;color:#d1d5db; }
 
-        /* Detail pop-out */
-        #detail-modal { display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.80);align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto; }
+        /* Escalation editor pop-out — light theme */
+        #detail-modal { display:none;position:fixed;inset:0;z-index:9990;background:rgba(3,7,18,0.72);backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto; }
         #detail-modal.show { display:flex; }
-        .detail-box { background:#111827;border:1px solid #374151;border-radius:16px;width:1040px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.6); }
-        .d-section { background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px; }
-        .d-title { font-size:10px;font-weight:900;color:#6b7280;text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;display:flex;align-items:center;gap:8px; }
+        .detail-box { background:#f3f4f6;border:1px solid #d1d5db;border-radius:16px;width:1080px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.45);color:#111827;overflow:clip; }
+        .ed-head { background:#ffffff;border-bottom:1px solid #e5e7eb;position:sticky;top:-28px;z-index:5; }
+        .ed-head .accent { height:4px;background:linear-gradient(90deg,#44D62C,#2fa71d); }
+        .d-section { background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+        .d-title { font-size:10px;font-weight:900;color:#374151;text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;display:flex;align-items:center;gap:8px; }
         .d-title .bar { width:3px;height:12px;background:var(--pantone-802c);border-radius:2px; }
-        .d-label { font-size:9px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.1em; }
-        .d-val { font-size:12px;color:#f3f4f6;font-weight:600;word-break:break-word; }
-        .d-text { font-size:12px;color:#e5e7eb;white-space:pre-wrap;line-height:1.55; }
-        .d-table { width:100%;border-collapse:collapse;font-size:11px; }
-        .d-table th { text-align:left;font-size:9px;font-weight:900;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;padding:7px 10px;background:#1f2937;border-bottom:1px solid #374151; }
-        .d-table td { padding:8px 10px;border-bottom:1px solid #1e293b;color:#e5e7eb;vertical-align:top;white-space:pre-wrap; }
-        .photo-tile { position:relative;border:1px solid #1e293b;border-radius:10px;background:#020617;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center; }
+        .d-title .right { margin-left:auto; }
+        .d-label { font-size:9px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;display:block; }
+        .ed-input, .ed-area { width:100%;background:#ffffff;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:12px;color:#111827;font-family:inherit;transition:border-color .15s, box-shadow .15s; }
+        .ed-area { resize:vertical;line-height:1.5;min-height:64px; }
+        .ed-input:hover, .ed-area:hover { border-color:#9ca3af; }
+        .ed-input:focus, .ed-area:focus { outline:none;border-color:var(--pantone-802c);box-shadow:0 0 0 3px rgba(68,214,44,0.18); }
+        .ed-input.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+        .ed-table { width:100%;border-collapse:separate;border-spacing:0;font-size:11px; }
+        .ed-table th { text-align:left;font-size:9px;font-weight:900;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;padding:6px 6px;border-bottom:1px solid #e5e7eb; }
+        .ed-table td { padding:5px 4px;vertical-align:top; }
+        .ed-table td.num { color:#9ca3af;font-weight:800;padding-top:12px;text-align:center;width:28px; }
+        .ed-table .ed-area { min-height:36px; }
+        .row-del { color:#9ca3af;background:transparent;border:1px solid transparent;border-radius:6px;width:28px;height:30px;cursor:pointer;font-size:13px; }
+        .row-del:hover { color:#dc2626;background:#fef2f2;border-color:#fecaca; }
+        .add-btn { font-size:10px;font-weight:800;color:#15803d;background:#f0fdf4;border:1px dashed #86efac;border-radius:8px;padding:6px 12px;cursor:pointer; }
+        .add-btn:hover { background:#dcfce7; }
+        .photo-tile { position:relative;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center; }
         .photo-tile img { width:100%;height:100%;object-fit:contain;cursor:zoom-in; }
-        .photo-tile .cap { position:absolute;left:6px;bottom:6px;font-size:9px;font-weight:800;color:#fff;background:rgba(0,0,0,.65);padding:2px 6px;border-radius:4px;letter-spacing:.06em; }
-        .photo-tile .spin { font-size:10px;color:#475569; }
-        .upd { border-left:2px solid #1f2937;padding-left:12px;margin-left:4px; }
-        .upd + .upd { margin-top:14px; }
-        .upd .reply { margin-top:8px;margin-left:14px;padding:8px 10px;background:#0b1220;border:1px solid #1e293b;border-radius:8px; }
+        .photo-tile .cap { position:absolute;left:6px;bottom:6px;font-size:9px;font-weight:800;color:#fff;background:rgba(17,24,39,.75);padding:2px 6px;border-radius:4px;letter-spacing:.06em; }
+        .photo-tile .new { position:absolute;left:6px;top:6px;font-size:8px;font-weight:900;color:#000;background:var(--pantone-802c);padding:2px 6px;border-radius:4px;letter-spacing:.08em; }
+        .photo-tile .spin { font-size:10px;color:#9ca3af; }
+        .photo-tile .tools { position:absolute;right:6px;top:6px;display:flex;gap:4px;opacity:0;transition:opacity .15s; }
+        .photo-tile:hover .tools { opacity:1; }
+        .photo-tile .tools a, .photo-tile .tools button { background:rgba(255,255,255,.95);border:1px solid #e5e7eb;border-radius:6px;font-size:11px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;color:#374151; }
+        .photo-tile .tools button:hover { color:#dc2626;border-color:#fecaca; }
+        .drop-zone { border:2px dashed #d1d5db;border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;background:#fafafa;text-align:center;padding:10px;transition:all .15s; }
+        .drop-zone:hover, .drop-zone:focus, .drop-zone.over { border-color:var(--pantone-802c);background:#f0fdf4;color:#15803d;outline:none; }
+        .drop-zone .big { font-size:22px; }
+        .ed-foot { background:#ffffff;border-top:1px solid #e5e7eb;position:sticky;bottom:-28px;z-index:5; }
+        .dirty-dot { width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block; }
 
         /* Print only the report */
         @media print {
@@ -219,7 +238,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-lg font-black text-white tracking-tight">Product Escalation Monitor</h1>
-                    <p class="text-xs text-gray-500 mt-0.5">Every CAR from the Quality Product Escalation board. Click a row for the full report, photos and updates.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Every CAR from the Quality Product Escalation board. Click a row to open and edit its escalation report.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="syncFromCloud()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition flex items-center gap-1.5">🔄 Refresh</button>
@@ -291,9 +310,11 @@
 const MASTER_SHEET_ID = '1HXRBBHe41H63Smop8I6lVLh1DebvcVsCAB8DzHmX4rQ'; // Quality Product Escalation – Master
 const MONDAY_BOARD_URL = 'https://rhinousa.monday.com/boards/7628623310';
 const TABS = {
-    items: 'Items', subitems: 'Subitems', updates: 'Updates',
-    reports: 'Escalation Reports', actions: 'Report Actions', photos: 'Report Photos',
+    items: 'Items', reports: 'Escalation Reports', actions: 'Report Actions', photos: 'Report Photos',
 };
+const QPE_FOLDER_ID = '12AWAEb9gaqwMT7pAYDD8ZXzO8qcHSUpX';   // folder holding the Master sheet
+const PHOTO_ROOT_NAME = 'QPE Report Photos';                    // per-CAR photo folders live in here
+const REPORT_HEADERS = ['CAR No.','Report Link','Report Date','Supplier Name','Supplier Address','Supplier Contact','Supplier Email','Product Description','SKU','UPC','Issue Description','Root Cause','Evidence Notes','Issue Photo Count','Evidence Photo Count','Photos Folder','Last Synced'];
 const GROUP_ORDER = ['Open', 'In Progress', 'Completed', 'Stuck/Invalidate'];
 
 const GDRIVE_CLIENT_ID = '494765023704-qb7uj3tg4l37f8a5ien6g81s7pgfksti.apps.googleusercontent.com';
@@ -315,6 +336,9 @@ let RECORDS = [];            // one per CAR (board item)
 let groupFilter = 'all';
 let currentPdfRec = null;
 let currentDetailRec = null;
+let SHEET_IDS = {};          // tab title -> numeric sheetId (needed to delete rows)
+let editor = null;           // working copy of the escalation being edited
+let editorDirty = false;
 
 // ============================================================
 // HELPERS
@@ -348,11 +372,14 @@ function fmtDate(s) {
 function rowsToObjects(values) {
     if (!values || !values.length) return [];
     const head = values[0].map(h => String(h).trim());
-    return values.slice(1).filter(r => r.some(c => String(c).trim() !== '')).map(r => {
-        const o = {};
-        head.forEach((h, i) => { o[h] = r[i] == null ? '' : String(r[i]); });
-        return o;
+    const out = [];
+    values.slice(1).forEach((r, i) => {
+        if (!r.some(c => String(c).trim() !== '')) return;
+        const o = { _row: i + 2 };
+        head.forEach((h, j) => { o[h] = r[j] == null ? '' : String(r[j]); });
+        out.push(o);
     });
+    return out;
 }
 
 const STATUS_STYLE = {
@@ -460,13 +487,19 @@ async function connectGDrive(mode = 'login') {
     }
 }
 
-async function gdriveFetch(url, isRetry = false) {
+async function gdriveFetch(url, opts = {}, isRetry = false) {
     if (!gdriveToken) throw new Error('Not authenticated');
-    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + gdriveToken } });
+    const headers = Object.assign({ Authorization: 'Bearer ' + gdriveToken }, opts.headers || {});
+    let body = opts.body;
+    if (body && !(body instanceof Uint8Array) && !(body instanceof Blob) && typeof body !== 'string') {
+        body = JSON.stringify(body);
+        headers['Content-Type'] = 'application/json';
+    }
+    const res = await fetch(url, { method: opts.method || 'GET', headers, body });
     if (!res.ok) {
         if (res.status === 401 && !isRetry) {
             const ok = await silentReconnectGDrive().catch(() => false);
-            if (ok) return gdriveFetch(url, true);
+            if (ok) return gdriveFetch(url, opts, true);
             gdriveToken = null; gdriveEnabled = false; sessionStorage.removeItem('gdrive_token');
             showReconnectOverlay();
         }
@@ -536,9 +569,14 @@ async function syncFromCloud() {
         const ranges = Object.values(TABS).map(t => `'${t}'!A1:Z`);
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}/values:batchGet?` +
             ranges.map(r => 'ranges=' + encodeURIComponent(r)).join('&');
-        const json = await (await gdriveFetch(url)).json();
-        const [items, subitems, updates, reports, actions, photos] = json.valueRanges.map(v => rowsToObjects(v.values));
-        RECORDS = buildRecords({ items, subitems, updates, reports, actions, photos });
+        const [json, meta] = await Promise.all([
+            gdriveFetch(url).then(r => r.json()),
+            gdriveFetch(`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}?fields=sheets.properties(sheetId,title)`).then(r => r.json()),
+        ]);
+        SHEET_IDS = {};
+        (meta.sheets || []).forEach(sh => { SHEET_IDS[sh.properties.title] = sh.properties.sheetId; });
+        const [items, reports, actions, photos] = json.valueRanges.map(v => rowsToObjects(v.values));
+        RECORDS = buildRecords({ items, reports, actions, photos });
         renderMonitor();
         setStatus('✅ Synced', 'text-green-400');
         document.getElementById('last-sync-label').textContent = 'Last synced ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -575,13 +613,11 @@ function sectionKind(section) {
     return 'other';
 }
 
-function buildRecords({ items, subitems, updates, reports, actions, photos }) {
+function buildRecords({ items, reports, actions, photos }) {
     const by = (arr, key) => arr.reduce((m, r) => { const k = val(r[key]); (m[k] = m[k] || []).push(r); return m; }, {});
     const repBy = by(reports, 'CAR No.');
     const actBy = by(actions, 'CAR No.');
     const phoBy = by(photos, 'CAR No.');
-    const subBy = by(subitems, 'Parent Item ID');
-    const updBy = by(updates, 'Item ID');
     return items.map((it, i) => {
         const car = val(it['Item ID (CAR No.)']);
         const rep = (repBy[car] || [])[0] || null;
@@ -605,8 +641,6 @@ function buildRecords({ items, subitems, updates, reports, actions, photos }) {
                 section: val(p['Section']), n: +val(p['Photo #']) || 0, cell: val(p['Anchor Cell']),
                 name: val(p['File Name']), link: val(p['Photo Link']), id: driveIdFromUrl(p['Photo Link']),
             })).filter(p => p.id).sort((a, b) => (a.section === b.section ? a.n - b.n : (a.section === 'Issue' ? -1 : 1))),
-            subitems: subBy[car] || [],
-            updates: (updBy[car] || []),
         };
     });
 }
@@ -633,7 +667,7 @@ function hydratePhotos(root) {
         });
     });
 }
-function driveViewLink(id) { return id ? `https://drive.google.com/file/d/${id}/view` : null; }
+function driveViewLink(id) { return id && !String(id).startsWith('tmp_') ? `https://drive.google.com/file/d/${id}/view` : null; }
 
 // ============================================================
 // MONITOR VIEW
@@ -682,7 +716,7 @@ function renderMonitor() {
 
 function buildMonitorRow(r) {
     const overdue = isOverdue(r);
-    const hasReport = !!r.reportLink;
+    const hasReport = !!(r.report || r.reportLink);
     return `
     <tr class="data-row transition" data-idx="${r.idx}" data-group="${esc(r.group)}" onclick="openDetail(${r.idx})">
         <td class="px-3 py-2">
@@ -704,8 +738,8 @@ function buildMonitorRow(r) {
             <div class="flex items-center gap-1 flex-nowrap">
                 ${hasReport ? `
                 <button onclick="openPdfReport(${r.idx})" title="Preview PDF" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[9px] font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1">👁 Preview PDF</button>
-                <a href="${esc(r.reportLink)}" target="_blank" class="bg-blue-900/40 hover:bg-blue-900/70 border border-blue-700/50 text-blue-300 text-[9px] font-bold px-2 py-1.5 rounded no-underline cursor-pointer whitespace-nowrap shrink-0">🔗 Sheet</a>
-                ` : `<span class="text-[9px] text-gray-600 italic">No report yet</span>`}
+                ${r.reportLink ? `<a href="${esc(r.reportLink)}" target="_blank" class="bg-blue-900/40 hover:bg-blue-900/70 border border-blue-700/50 text-blue-300 text-[9px] font-bold px-2 py-1.5 rounded no-underline cursor-pointer whitespace-nowrap shrink-0">🔗 Sheet</a>` : ''}
+                ` : `<button onclick="openDetail(${r.idx})" class="bg-pantone/10 hover:bg-pantone/20 border border-pantone/30 text-pantone text-[9px] font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap">➕ Create report</button>`}
             </div>
         </td>
     </tr>`;
@@ -740,141 +774,304 @@ function applyFilters() {
 }
 
 // ============================================================
-// DETAIL POP-OUT — the whole picture of one escalation
+// ESCALATION EDITOR POP-OUT — everything here is the escalation report,
+// edited in place and saved straight back to the Master sheet.
 // ============================================================
-function photoTile(p) {
-    return `<div class="photo-tile">
-        <span class="spin">Loading…</span>
-        <img data-photo-id="${esc(p.id)}" style="visibility:hidden;position:absolute;inset:0" onclick="event.stopPropagation();openZoom(this.src)" alt="${esc(p.name)}">
-        <span class="cap">${esc(p.section.toUpperCase())} ${p.n}</span>
-    </div>`;
-}
-function actionTable(rows, kind) {
-    if (!rows.length) return '<div class="text-[11px] text-gray-600 italic">None recorded.</div>';
-    const isChange = kind === 'change';
-    return `<table class="d-table">
-        <thead><tr><th style="width:40px">#</th><th>Description</th>${isChange ? '' : '<th style="width:140px">Owner</th>'}<th style="width:110px">Date</th><th style="width:220px">Comment</th></tr></thead>
-        <tbody>${rows.map((a, i) => `<tr><td class="text-gray-500 font-bold">${i + 1}</td><td>${dash(a.description)}</td>${isChange ? '' : `<td>${dash(a.owner)}</td>`}<td class="whitespace-nowrap">${dash(a.date)}</td><td>${dash(a.comment)}</td></tr>`).join('')}</tbody>
-    </table>`;
-}
-function dSection(title, inner, extra = '') {
-    return `<div class="d-section ${extra}"><div class="d-title"><span class="bar"></span>${title}</div>${inner}</div>`;
-}
-function kv(label, value, mono = false) {
-    return `<div><div class="d-label">${label}</div><div class="d-val ${mono ? 'font-mono' : ''}">${value}</div></div>`;
-}
+const AFFECTED_DEFAULT = 'Affected PO Numbers';
+const ACTION_KINDS = [
+    { kind: 'affected',   title: 'Affected PO / Container Numbers', owner: true,  hint: 'PO or container number' },
+    { kind: 'team',       title: 'Affected Team',                   owner: true,  hint: 'Team(s) affected' },
+    { kind: 'corrective', title: 'Corrective Action',               owner: true,  hint: 'Corrective action' },
+    { kind: 'change',     title: 'Change Implementation',           owner: false, hint: 'Change implemented' },
+];
+const SECTION_LABEL = { affected: null, team: 'Affected Team', corrective: 'Corrective Action', change: 'Change Implementation' };
+let lastZoneSection = 'Issue';
 
 function openDetail(idx) {
     const r = RECORDS[idx];
     if (!r) return;
     currentDetailRec = r;
     const rep = r.report || {};
-    const issuePhotos = r.photos.filter(p => p.section === 'Issue');
-    const evidencePhotos = r.photos.filter(p => p.section === 'Evidence');
-    const otherPhotos = r.photos.filter(p => p.section !== 'Issue' && p.section !== 'Evidence');
-    const acts = k => r.actions.filter(a => a.kind === k);
-    const grid = arr => arr.length
-        ? `<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${arr.map(photoTile).join('')}</div>`
-        : '<div class="text-[11px] text-gray-600 italic">No photos.</div>';
+    const report = {};
+    REPORT_HEADERS.forEach(h => { report[h] = val(rep[h]); });
+    report['CAR No.'] = r.car;
+    if (!report['Report Link']) report['Report Link'] = r.reportLink;
+    if (!report['Supplier Name']) report['Supplier Name'] = r.supplier;
+    const acts = {};
+    ACTION_KINDS.forEach(k => {
+        acts[k.kind] = r.actions.filter(a => a.kind === k.kind).map(a => ({ description: a.description, owner: a.owner, date: a.date, comment: a.comment }));
+    });
+    editor = {
+        idx, car: r.car, name: r.name, status: r.status, group: r.group,
+        started: r.started, target: r.target, completed: r.completed, supplier: r.supplier,
+        mondayLink: r.mondayLink, isNew: !r.report,
+        report,
+        affectedLabel: (r.actions.find(a => a.kind === 'affected') || {}).section || AFFECTED_DEFAULT,
+        actions: acts,
+        otherActions: r.actions.filter(a => a.kind === 'other'),
+        photos: r.photos.map(p => ({ ...p })),
+    };
+    editorDirty = false;
+    renderEditor();
+    const modal = document.getElementById('detail-modal');
+    modal.classList.add('show');
+    modal.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+    history.replaceState(null, '', '#car=' + r.car);
+}
 
-    // monday updates: top-level updates with their replies
-    const tops = r.updates.filter(u => val(u['Type']) !== 'Reply');
-    const replies = r.updates.filter(u => val(u['Type']) === 'Reply');
-    const subName = id => { const s = r.subitems.find(x => val(x['Subitem ID']) === id); return s ? val(s['Subitem Name']) : ''; };
-    const updatesHtml = tops.length ? tops.map(u => {
-        const rs = replies.filter(x => val(x['Reply To Update ID']) === val(u['Update ID']));
-        const onSub = val(u['Level']) === 'Subitem';
-        return `<div class="upd">
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[11px] font-black text-white">${esc(u['Author'])}</span>
-                <span class="text-[10px] text-gray-500">${esc(u['Posted At (UTC)'])} UTC</span>
-                ${onSub ? `<span class="text-[9px] font-bold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-1.5 py-0.5 rounded">Subitem · ${esc(subName(val(u['Subitem ID'])) || u['Subitem Name'])}</span>` : ''}
-                ${+val(u['Attachment Count']) ? `<span class="text-[9px] text-gray-500">📎 ${esc(u['Attachment Count'])}</span>` : ''}
-            </div>
-            <div class="d-text mt-1">${val(u['Text']) ? linkify(u['Text']) : '<span class="text-gray-600 italic">(attachment only)</span>'}</div>
-            ${rs.map(x => `<div class="reply"><div class="flex items-center gap-2"><span class="text-[10px] font-black text-gray-200">↳ ${esc(x['Author'])}</span><span class="text-[10px] text-gray-500">${esc(x['Posted At (UTC)'])} UTC</span></div><div class="d-text mt-1">${linkify(x['Text'])}</div></div>`).join('')}
-        </div>`;
-    }).join('') : '<div class="text-[11px] text-gray-600 italic">No updates on monday.</div>';
+function edField(label, path, opts = {}) {
+    const v = getPath(path);
+    const cls = `ed-input ${opts.mono ? 'mono' : ''}`;
+    const ctl = opts.area
+        ? `<textarea class="ed-area" rows="${opts.rows || 3}" data-path="${esc(path)}" oninput="edSet(this)" placeholder="${esc(opts.ph || '')}">${esc(v)}</textarea>`
+        : `<input class="${cls}" data-path="${esc(path)}" value="${esc(v)}" oninput="edSet(this)" placeholder="${esc(opts.ph || '')}">`;
+    return `<div class="${opts.span || ''}"><label class="d-label">${label}</label>${ctl}</div>`;
+}
+function getPath(path) {
+    const parts = path.split('|');
+    let o = editor;
+    for (const p of parts) { if (o == null) return ''; o = o[p]; }
+    return o == null ? '' : o;
+}
+function edSet(el) {
+    const parts = el.dataset.path.split('|');
+    let o = editor;
+    for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+    o[parts[parts.length - 1]] = el.value;
+    markDirty();
+}
+function markDirty() {
+    if (editorDirty) return;
+    editorDirty = true;
+    const d = document.getElementById('ed-dirty');
+    if (d) d.innerHTML = '<span class="dirty-dot"></span> Unsaved changes';
+}
 
-    const subitemsHtml = r.subitems.length ? `<table class="d-table">
-        <thead><tr><th>Action Item</th><th style="width:130px">Status</th><th style="width:120px">Date Completed</th><th style="width:240px">Remarks</th></tr></thead>
-        <tbody>${r.subitems.map(s => `<tr><td>${dash(s['Subitem Name'])}</td><td>${statusPill(s['Status'])}</td><td class="whitespace-nowrap">${dash(fmtDate(s['Date Completed']))}</td><td>${dash(s['Remarks'])}</td></tr>`).join('')}</tbody>
-    </table>` : '<div class="text-[11px] text-gray-600 italic">No subitems.</div>';
+function actionTableEditor(k) {
+    const rows = editor.actions[k.kind];
+    const titleExtra = k.kind === 'affected'
+        ? `<div class="right flex items-center gap-2 normal-case tracking-normal"><span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Label</span><input class="ed-input" style="width:220px;padding:4px 8px;font-size:11px" data-path="affectedLabel" value="${esc(editor.affectedLabel)}" oninput="edSet(this)"></div>`
+        : '';
+    const body = rows.length ? rows.map((a, i) => `
+        <tr>
+            <td class="num">${i + 1}</td>
+            <td><textarea class="ed-area" rows="1" data-path="actions|${k.kind}|${i}|description" oninput="edSet(this)" placeholder="${esc(k.hint)}">${esc(a.description)}</textarea></td>
+            ${k.owner ? `<td style="width:150px"><input class="ed-input" data-path="actions|${k.kind}|${i}|owner" value="${esc(a.owner)}" oninput="edSet(this)" placeholder="Owner"></td>` : ''}
+            <td style="width:120px"><input class="ed-input" data-path="actions|${k.kind}|${i}|date" value="${esc(a.date)}" oninput="edSet(this)" placeholder="MM/DD/YY"></td>
+            <td style="width:230px"><textarea class="ed-area" rows="1" data-path="actions|${k.kind}|${i}|comment" oninput="edSet(this)" placeholder="Comment">${esc(a.comment)}</textarea></td>
+            <td style="width:34px"><button class="row-del" title="Remove row" onclick="edDelRow('${k.kind}',${i})">✕</button></td>
+        </tr>`).join('')
+        : `<tr><td colspan="6" class="text-[11px] text-gray-400 italic" style="padding:10px 6px">Nothing recorded yet.</td></tr>`;
+    return `<div class="d-section">
+        <div class="d-title"><span class="bar"></span>${k.title}${titleExtra}</div>
+        <table class="ed-table">
+            <thead><tr><th>#</th><th>Description</th>${k.owner ? '<th>Owner</th>' : ''}<th>Date</th><th>Comment</th><th></th></tr></thead>
+            <tbody>${body}</tbody>
+        </table>
+        <div class="mt-2"><button class="add-btn" onclick="edAddRow('${k.kind}')">＋ Add row</button></div>
+    </div>`;
+}
+function edAddRow(kind) { editor.actions[kind].push({ description: '', owner: '', date: '', comment: '' }); markDirty(); renderEditor(true); }
+function edDelRow(kind, i) { editor.actions[kind].splice(i, 1); markDirty(); renderEditor(true); }
 
-    const overdue = isOverdue(r);
-    document.getElementById('detail-box').innerHTML = `
-    <div class="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-gray-800">
-        <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="bg-pantone/10 text-pantone text-[10px] font-black px-2 py-0.5 rounded-full border border-pantone/20 font-mono">CAR ${esc(r.car)}</span>
-                ${statusPill(r.status)}
-                <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">${esc(r.group)}</span>
-                ${overdue ? '<span class="text-[9px] font-black text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest">Overdue</span>' : ''}
-            </div>
-            <h2 class="text-white font-black text-lg mt-2 leading-snug">${esc(r.name)}</h2>
-            ${rep['Product Description'] ? `<div class="text-xs text-gray-400 mt-0.5">${esc(rep['Product Description'])}</div>` : ''}
+function photoTile(p) {
+    const view = driveViewLink(p.id);
+    return `<div class="photo-tile">
+        <span class="spin">Loading…</span>
+        <img data-photo-id="${esc(p.id)}" style="visibility:hidden;position:absolute;inset:0" onclick="event.stopPropagation();openZoom(this.src)" alt="${esc(p.name)}">
+        ${p.pending ? '<span class="new">NEW · UNSAVED</span>' : ''}
+        <span class="cap">${esc(p.section.toUpperCase())} ${p.n}</span>
+        <div class="tools">
+            ${view ? `<a href="${view}" target="_blank" title="Open in Drive" onclick="event.stopPropagation()">↗</a>` : ''}
+            <button title="Remove from report" onclick="event.stopPropagation();edRemovePhoto('${esc(p.id)}')">🗑</button>
         </div>
-        <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            ${r.reportLink ? `<button onclick="openPdfReport(${r.idx})" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">👁 Preview PDF</button>` : ''}
-            ${r.reportLink ? `<a href="${esc(r.reportLink)}" target="_blank" class="bg-blue-900/40 hover:bg-blue-900/70 border border-blue-700/50 text-blue-300 text-xs font-bold px-3 py-2 rounded-lg no-underline">🔗 Original Report</a>` : ''}
-            <a href="${esc(r.mondayLink)}" target="_blank" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-lg no-underline">monday ↗</a>
-            ${rep['Photos Folder'] ? `<a href="${esc(rep['Photos Folder'])}" target="_blank" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-lg no-underline">📁 Photos</a>` : ''}
-            <button onclick="closeDetail()" class="bg-gray-800 text-gray-300 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-700">✕ Close</button>
+    </div>`;
+}
+function photoGridEditor(section) {
+    const arr = editor.photos.filter(p => p.section === section);
+    return `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        ${arr.map(photoTile).join('')}
+        <div class="drop-zone" tabindex="0" data-section="${section}"
+             onclick="edPickFiles('${section}')"
+             onfocus="lastZoneSection='${section}'" onmouseenter="lastZoneSection='${section}'"
+             ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')"
+             ondrop="edDrop(event,'${section}')">
+            <span class="big">📷</span>
+            Add ${section.toLowerCase()} photo
+            <span class="text-[9px] font-medium text-gray-400">Click, drop, or paste (Ctrl/⌘+V)</span>
+        </div>
+    </div>`;
+}
+function renumberPhotos() {
+    const n = {};
+    editor.photos.forEach(p => { n[p.section] = (n[p.section] || 0) + 1; p.n = n[p.section]; });
+}
+function edAddPhotoBlob(section, blob) {
+    if (!blob || !/^image\//.test(blob.type)) { showToast('⚠️', 'Only image files can be added.'); return; }
+    const id = 'tmp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const url = URL.createObjectURL(blob);
+    photoCache[id] = Promise.resolve(url);
+    editor.photos.push({ section, n: 0, id, pending: true, blob, name: '', cell: '' });
+    // keep Issue photos before Evidence photos
+    editor.photos.sort((a, b) => (a.section === b.section ? 0 : a.section === 'Issue' ? -1 : b.section === 'Issue' ? 1 : 0));
+    renumberPhotos();
+    markDirty();
+    renderEditor(true);
+}
+function edRemovePhoto(id) {
+    editor.photos = editor.photos.filter(p => p.id !== id);
+    renumberPhotos();
+    markDirty();
+    renderEditor(true);
+}
+function edPickFiles(section) {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.onchange = () => [...inp.files].forEach(f => edAddPhotoBlob(section, f));
+    inp.click();
+}
+function edDrop(e, section) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('over');
+    [...(e.dataTransfer.files || [])].forEach(f => edAddPhotoBlob(section, f));
+}
+document.addEventListener('paste', e => {
+    if (!editor || !document.getElementById('detail-modal').classList.contains('show')) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return; // normal text paste
+    const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
+    if (!files.length) return;
+    e.preventDefault();
+    const zone = document.activeElement && document.activeElement.classList.contains('drop-zone') ? document.activeElement.dataset.section : lastZoneSection;
+    files.forEach(f => edAddPhotoBlob(zone, f));
+});
+
+function renderEditor(keepScroll = false) {
+    const modal = document.getElementById('detail-modal');
+    const top = modal.scrollTop;
+    const ed = editor;
+    const overdue = isOverdue(ed);
+    const issueN = ed.photos.filter(p => p.section === 'Issue').length;
+    const evidN = ed.photos.filter(p => p.section === 'Evidence').length;
+    const folder = ed.report['Photos Folder'];
+    const link = ed.report['Report Link'];
+    document.getElementById('detail-box').innerHTML = `
+    <div class="ed-head">
+        <div class="accent"></div>
+        <div class="flex items-start justify-between gap-4 px-6 pt-4 pb-4">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full font-mono" style="background:#ecfdf5;color:#15803d;border:1px solid #86efac">CAR ${esc(ed.car)}</span>
+                    ${lightStatusPill(ed.status)}
+                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${esc(ed.group)}</span>
+                    ${overdue ? '<span class="text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full uppercase tracking-widest">Overdue</span>' : ''}
+                    ${ed.isNew ? '<span class="text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-widest">New report</span>' : ''}
+                </div>
+                <h2 class="font-black text-lg mt-2 leading-snug" style="color:#111827">${esc(ed.name)}</h2>
+                <div class="text-[11px] text-gray-500 mt-1">Started <b class="text-gray-700">${dash(fmtDate(ed.started))}</b> · Target <b class="${overdue ? 'text-red-600' : 'text-gray-700'}">${dash(fmtDate(ed.target))}</b> · Completed <b class="text-gray-700">${dash(fmtDate(ed.completed))}</b></div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                <button onclick="openPdfFromEditor()" class="bg-pantone text-black text-xs font-black px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">👁 Preview PDF</button>
+                ${link ? `<a href="${esc(link)}" target="_blank" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg no-underline">🔗 Original Report</a>` : ''}
+                ${folder ? `<a href="${esc(folder)}" target="_blank" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg no-underline">📁 Photos</a>` : ''}
+                <button onclick="closeDetail()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer">✕ Close</button>
+            </div>
         </div>
     </div>
 
     <div class="p-6 space-y-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 d-section">
-            ${kv('Date Started', dash(fmtDate(r.started)))}
-            ${kv('Target Completion', `<span class="${overdue ? 'text-red-400' : ''}">${dash(fmtDate(r.target))}</span>`)}
-            ${kv('Date Completion', dash(fmtDate(r.completed)))}
-            ${kv('Report Date', dash(fmtDate(rep['Report Date'])))}
+        <div class="d-section">
+            <div class="d-title"><span class="bar"></span>Rhino-USA Escalation Form</div>
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                ${edField('Report Date', 'report|Report Date', { ph: 'MM/DD/YYYY', span: 'md:col-span-1' })}
+                ${edField('Original Report Link', 'report|Report Link', { ph: 'https://docs.google.com/…', span: 'md:col-span-5' })}
+                ${edField('Supplier Name', 'report|Supplier Name', { span: 'md:col-span-3' })}
+                ${edField('Supplier Address', 'report|Supplier Address', { span: 'md:col-span-3' })}
+                ${edField('Supplier Contact Person', 'report|Supplier Contact', { span: 'md:col-span-3' })}
+                ${edField('Supplier Contact Email', 'report|Supplier Email', { span: 'md:col-span-3' })}
+                ${edField('Product Description', 'report|Product Description', { span: 'md:col-span-3' })}
+                ${edField('SKU Number', 'report|SKU', { mono: true, span: 'md:col-span-2' })}
+                ${edField('UPC Number', 'report|UPC', { mono: true, span: 'md:col-span-1' })}
+            </div>
         </div>
-
-        ${r.report ? `
-        ${dSection('Supplier & Product', `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${kv('Supplier Name', dash(rep['Supplier Name'] || r.supplier))}
-                ${kv('Supplier Address', dash(rep['Supplier Address']))}
-                ${kv('Contact Person', dash(rep['Supplier Contact']))}
-                ${kv('Contact Email', rep['Supplier Email'] ? `<a class="text-blue-400 underline" href="mailto:${esc(rep['Supplier Email'])}">${esc(rep['Supplier Email'])}</a>` : '—')}
-                ${kv('Product Description', dash(rep['Product Description']))}
-                <div class="grid grid-cols-2 gap-4">${kv('SKU', dash(rep['SKU']), true)}${kv('UPC', dash(rep['UPC']), true)}</div>
-            </div>`)}
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${dSection('Issue Description', `<div class="d-text">${dash(rep['Issue Description'])}</div>`, 'md:col-span-2')}
-            ${dSection('Root Cause', `<div class="d-text">${dash(rep['Root Cause'])}</div>`)}
+            <div class="d-section md:col-span-2">
+                <div class="d-title"><span class="bar"></span>Issue Description</div>
+                <textarea class="ed-area" rows="6" data-path="report|Issue Description" oninput="edSet(this)" placeholder="Describe the issue…">${esc(ed.report['Issue Description'])}</textarea>
+            </div>
+            <div class="d-section">
+                <div class="d-title"><span class="bar"></span>Root Cause</div>
+                <textarea class="ed-area" rows="6" data-path="report|Root Cause" oninput="edSet(this)" placeholder="Root cause…">${esc(ed.report['Root Cause'])}</textarea>
+            </div>
         </div>
 
-        ${dSection(`Issue Photos · ${issuePhotos.length}`, grid(issuePhotos))}
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${dSection('Affected PO / Container Numbers', actionTable(acts('affected'), 'affected'))}
-            ${dSection('Affected Team', actionTable(acts('team'), 'team'))}
+        <div class="d-section">
+            <div class="d-title"><span class="bar"></span>Images, Other Detail · ${issueN}</div>
+            ${photoGridEditor('Issue')}
         </div>
-        ${dSection('Corrective Action', actionTable(acts('corrective'), 'corrective'))}
-        ${dSection('Change Implementation', actionTable(acts('change'), 'change'))}
 
-        ${dSection(`Evidences · ${evidencePhotos.length} photo${evidencePhotos.length === 1 ? '' : 's'}`, `
-            ${val(rep['Evidence Notes']) ? `<div class="d-text mb-3">${esc(rep['Evidence Notes'])}</div>` : ''}
-            ${grid(evidencePhotos)}`)}
-        ${otherPhotos.length ? dSection(`Other Photos · ${otherPhotos.length}`, grid(otherPhotos)) : ''}
-        ` : dSection('Escalation Report', `<div class="text-[12px] text-gray-400">No escalation report is linked to this CAR yet. Add the report link on the <b>Items</b> tab of the Master sheet, run <b>QPE → Sync escalation reports</b>, then click 🔄 Sync here.</div>`)}
+        ${actionTableEditor(ACTION_KINDS[0])}
+        ${actionTableEditor(ACTION_KINDS[1])}
+        ${actionTableEditor(ACTION_KINDS[2])}
+        ${actionTableEditor(ACTION_KINDS[3])}
 
-        ${dSection(`Action Items (monday subitems) · ${r.subitems.length}`, subitemsHtml)}
-        ${dSection(`Updates (monday bubbles) · ${r.updates.length}`, updatesHtml)}
+        <div class="d-section">
+            <div class="d-title"><span class="bar"></span>Evidences · ${evidN} photo${evidN === 1 ? '' : 's'}</div>
+            <label class="d-label">Evidence notes</label>
+            <textarea class="ed-area mb-3" rows="4" data-path="report|Evidence Notes" oninput="edSet(this)" placeholder="What was done and how it was verified…">${esc(ed.report['Evidence Notes'])}</textarea>
+            ${photoGridEditor('Evidence')}
+        </div>
+    </div>
+
+    <div class="ed-foot flex items-center justify-between gap-3 px-6 py-3">
+        <div class="text-[11px] text-gray-500 flex items-center gap-2">
+            <span id="ed-dirty">${editorDirty ? '<span class="dirty-dot"></span> Unsaved changes' : '✓ All changes saved'}</span>
+            ${ed.report['Last Synced'] ? `<span class="text-gray-300">|</span><span>Last updated ${esc(ed.report['Last Synced'])}</span>` : ''}
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="closeDetail()" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">Cancel</button>
+            <button id="ed-save-btn" onclick="saveEditor()" class="bg-pantone text-black text-xs font-black px-5 py-2 rounded-lg cursor-pointer hover:opacity-90 shadow">💾 Save changes</button>
+        </div>
     </div>`;
-    document.getElementById('detail-modal').classList.add('show');
-    document.getElementById('detail-modal').scrollTop = 0;
-    document.body.style.overflow = 'hidden';
     hydratePhotos(document.getElementById('detail-box'));
-    history.replaceState(null, '', '#car=' + r.car);
+    if (keepScroll) modal.scrollTop = top;
 }
-function closeDetail() {
+
+function lightStatusPill(s) {
+    const t = val(s);
+    if (!t) return '';
+    const map = {
+        'done': 'background:#ecfdf5;color:#15803d;border-color:#86efac',
+        'working on it': 'background:#fffbeb;color:#b45309;border-color:#fcd34d',
+        'on monitoring': 'background:#f0f9ff;color:#0369a1;border-color:#7dd3fc',
+        'stuck': 'background:#fef2f2;color:#b91c1c;border-color:#fca5a5',
+        'invalidate': 'background:#f3f4f6;color:#4b5563;border-color:#d1d5db',
+    };
+    const st = map[t.toLowerCase()] || 'background:#f3f4f6;color:#374151;border-color:#d1d5db';
+    return `<span class="text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wide whitespace-nowrap" style="${st}">${esc(t)}</span>`;
+}
+
+// Build a record-shaped object from the editor so the PDF preview shows unsaved edits too.
+function editorAsRecord() {
+    const ed = editor;
+    const actions = [];
+    ACTION_KINDS.forEach(k => ed.actions[k.kind].forEach(a => actions.push({ ...a, kind: k.kind, section: k.kind === 'affected' ? ed.affectedLabel : SECTION_LABEL[k.kind] })));
+    return {
+        car: ed.car, name: ed.name, status: ed.status, started: ed.started, target: ed.target, completed: ed.completed,
+        supplier: ed.report['Supplier Name'] || ed.supplier, report: ed.report, actions, photos: ed.photos,
+    };
+}
+function openPdfFromEditor() { openPdfRec(editorAsRecord()); }
+
+function closeDetail(force = false) {
+    if (!force && editorDirty && !confirm('You have unsaved changes on this escalation.\n\nClose without saving? Click Cancel to keep editing.')) return;
     document.getElementById('detail-modal').classList.remove('show');
     document.body.style.overflow = '';
     currentDetailRec = null;
+    editor = null;
+    editorDirty = false;
     history.replaceState(null, '', location.pathname + location.search);
 }
 function openFromHash() {
@@ -889,6 +1086,137 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('pdf-popup').classList.contains('show')) { closePdfPopup(); return; }
     if (document.getElementById('detail-modal').classList.contains('show')) closeDetail();
 });
+window.addEventListener('beforeunload', e => { if (editorDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ── Saving back to the Master sheet ──────────────────────────
+function sheetsUrl(path) { return `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}${path}`; }
+function a1(tab, range) { return encodeURIComponent(`'${tab}'!${range}`); }
+function todayMDY() { const d = new Date(); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
+
+async function findCarRows(tab, car) {
+    const json = await (await gdriveFetch(sheetsUrl(`/values/${a1(tab, 'A:A')}`))).json();
+    const rows = [];
+    (json.values || []).forEach((r, i) => { if (i > 0 && String(r[0] || '').trim() === car) rows.push(i + 1); });
+    return rows;
+}
+// Replace all of one CAR's rows on a tab: delete the old rows, then append the new set.
+async function replaceCarRows(tab, car, newRows) {
+    const existing = await findCarRows(tab, car);
+    if (existing.length) {
+        const sheetId = SHEET_IDS[tab];
+        if (sheetId == null) throw new Error(`Tab "${tab}" not found`);
+        const requests = existing.sort((a, b) => b - a).map(r => ({ deleteDimension: { range: { sheetId, dimension: 'ROWS', startIndex: r - 1, endIndex: r } } }));
+        await gdriveFetch(sheetsUrl(':batchUpdate'), { method: 'POST', body: { requests } });
+    }
+    if (newRows.length) {
+        await gdriveFetch(sheetsUrl(`/values/${a1(tab, 'A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`), { method: 'POST', body: { values: newRows } });
+    }
+}
+
+async function driveList(q) {
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+    return (await (await gdriveFetch(url)).json()).files || [];
+}
+async function driveCreateFolder(name, parent) {
+    const res = await gdriveFetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=id', {
+        method: 'POST', body: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parent] },
+    });
+    return (await res.json()).id;
+}
+async function ensureCarFolder(car) {
+    const folderQ = (name, parent) => `name='${name.replace(/'/g, "\\'")}' and '${parent}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    let root = (await driveList(folderQ(PHOTO_ROOT_NAME, QPE_FOLDER_ID)))[0];
+    const rootId = root ? root.id : await driveCreateFolder(PHOTO_ROOT_NAME, QPE_FOLDER_ID);
+    const sub = (await driveList(folderQ(car, rootId)))[0];
+    return sub ? sub.id : await driveCreateFolder(car, rootId);
+}
+async function uploadPhotoToDrive(blob, name, folderId) {
+    const boundary = 'qpe' + Date.now().toString(36);
+    const meta = JSON.stringify({ name, parents: [folderId] });
+    const enc = new TextEncoder();
+    const head = enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${blob.type || 'image/png'}\r\n\r\n`);
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const tail = enc.encode(`\r\n--${boundary}--`);
+    const body = new Uint8Array(head.length + data.length + tail.length);
+    body.set(head, 0); body.set(data, head.length); body.set(tail, head.length + data.length);
+    const res = await gdriveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,webViewLink', {
+        method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body,
+    });
+    return res.json();
+}
+function folderIdFromUrl(u) { const m = String(u || '').match(/folders\/([a-zA-Z0-9_-]{10,})/); return m ? m[1] : null; }
+
+async function saveEditor() {
+    if (!editor) return;
+    const ed = editor;
+    const btn = document.getElementById('ed-save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    setStatus('💾 Saving…', 'text-blue-400');
+    try {
+        renumberPhotos();
+        // 1) Upload any new photos into this CAR's Drive folder
+        const pending = ed.photos.filter(p => p.pending);
+        if (pending.length) {
+            let folderId = folderIdFromUrl(ed.report['Photos Folder']);
+            if (!folderId) {
+                folderId = await ensureCarFolder(ed.car);
+                ed.report['Photos Folder'] = `https://drive.google.com/drive/folders/${folderId}`;
+            }
+            for (const p of pending) {
+                btn.textContent = `Uploading photo ${pending.indexOf(p) + 1} of ${pending.length}…`;
+                const ext = (p.blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+                const name = `${ed.car}_${p.section}_${p.n}_${Date.now().toString(36)}.${ext}`;
+                const f = await uploadPhotoToDrive(p.blob, name, folderId);
+                photoCache[f.id] = photoCache[p.id];
+                Object.assign(p, { id: f.id, link: f.webViewLink || `https://drive.google.com/file/d/${f.id}/view`, name, pending: false, blob: null });
+            }
+        }
+        btn.textContent = 'Saving…';
+
+        // 2) Escalation Reports row
+        ed.report['CAR No.'] = ed.car;
+        ed.report['Issue Photo Count'] = String(ed.photos.filter(p => p.section === 'Issue').length);
+        ed.report['Evidence Photo Count'] = String(ed.photos.filter(p => p.section === 'Evidence').length);
+        ed.report['Last Synced'] = todayMDY();
+        const repRow = REPORT_HEADERS.map(h => val(ed.report[h]));
+        const repRows = await findCarRows(TABS.reports, ed.car);
+        if (repRows.length) {
+            await gdriveFetch(sheetsUrl(`/values/${a1(TABS.reports, `A${repRows[0]}:Q${repRows[0]}`)}?valueInputOption=RAW`), { method: 'PUT', body: { values: [repRow] } });
+        } else {
+            await gdriveFetch(sheetsUrl(`/values/${a1(TABS.reports, 'A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`), { method: 'POST', body: { values: [repRow] } });
+        }
+
+        // 3) Report Actions (blank rows are dropped)
+        const actionRows = [];
+        ACTION_KINDS.forEach(k => {
+            let seq = 0;
+            ed.actions[k.kind].forEach(a => {
+                if (![a.description, a.owner, a.date, a.comment].some(x => val(x))) return;
+                seq++;
+                const section = k.kind === 'affected' ? (val(ed.affectedLabel) || AFFECTED_DEFAULT) : SECTION_LABEL[k.kind];
+                actionRows.push([ed.car, section, String(seq), val(a.description), k.owner ? val(a.owner) : '', val(a.date), val(a.comment)]);
+            });
+        });
+        ed.otherActions.forEach(a => actionRows.push([ed.car, a.section, a.seq, a.description, a.owner, a.date, a.comment]));
+        await replaceCarRows(TABS.actions, ed.car, actionRows);
+
+        // 4) Report Photos
+        const photoRows = ed.photos.map(p => [ed.car, p.section, String(p.n), p.cell || '', p.name || '', p.link || `https://drive.google.com/file/d/${p.id}/view`]);
+        await replaceCarRows(TABS.photos, ed.car, photoRows);
+
+        editorDirty = false;
+        showToast('✅', `CAR ${ed.car} saved to the Master sheet.`);
+        const car = ed.car;
+        await syncFromCloud();
+        const r = RECORDS.find(x => x.car === car);
+        if (r) openDetail(r.idx);
+    } catch (e) {
+        console.error(e);
+        setStatus('❌ Save failed', 'text-red-400');
+        showToast('⚠️', 'Save failed: ' + e.message, null, null, 12000);
+        btn.disabled = false; btn.textContent = '💾 Save changes';
+    }
+}
 
 // ============================================================
 // PDF REPORT — Rhino-USA Escalation Form on the company letterhead
@@ -896,9 +1224,8 @@ document.addEventListener('keydown', e => {
 const PHOTOS_FIRST_PAGE = 3;   // photos that fit under the text on the form's own page
 const PHOTOS_PER_PAGE = 6;     // photos per continuation page (2 rows x 3)
 
-async function openPdfReport(idx) {
-    const r = RECORDS[idx];
-    if (!r) return;
+function openPdfReport(idx) { const r = RECORDS[idx]; if (r) openPdfRec(r); }
+async function openPdfRec(r) {
     currentPdfRec = r;
     document.getElementById('pdf-popup-title').textContent = `CAR ${r.car} — ${r.name}`;
     document.getElementById('pdf-preview-content').innerHTML = '<div style="color:#9ca3af;text-align:center;padding:60px;font-weight:700">Loading photos…</div>';
