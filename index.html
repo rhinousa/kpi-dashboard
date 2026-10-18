@@ -299,6 +299,7 @@
 
             <!-- Group chips -->
             <div id="group-chips" class="flex flex-wrap gap-2"></div>
+            <div id="enc-chips" class="flex flex-wrap gap-2"></div>
 
             <!-- Search bar -->
             <div class="cs-bar flex items-center gap-3 rounded-xl px-4 py-2.5" style="background:#050805;border:1px solid #1f2a1f">
@@ -365,9 +366,10 @@ const TABS = {
 const QPE_FOLDER_ID = '12AWAEb9gaqwMT7pAYDD8ZXzO8qcHSUpX';   // folder holding the Master sheet
 const PHOTO_ROOT_NAME = 'QPE Report Photos';                    // per-CAR photo folders live in here
 const REPORT_HEADERS = ['CAR No.','Report Link','Report Date','Supplier Name','Supplier Address','Supplier Contact','Supplier Email','Product Description','SKU','UPC','Issue Description','Root Cause','Evidence Notes','Issue Photo Count','Evidence Photo Count','Photos Folder','Last Synced',
-    'Approver Email','Approval Status','Submitted By','Submitted At','Approved By','Approved At','Approval Comment','Show Supplier Acknowledgement','Supplier Acknowledged By / Date'];
+    'Approver Email','Approval Status','Submitted By','Submitted At','Approved By','Approved At','Approval Comment','Show Supplier Acknowledgement','Supplier Acknowledged By / Date','Encountered At'];
+const ENCOUNTERED = ['Customer', 'QC Inspection', 'Product', 'Warehouse'];
 // Only these accounts can edit escalation reports. Approvers can approve/return what is assigned to them.
-const EDITORS = ['kevin.mariano@rhinousainc.com'];
+const EDITORS = ['aivan.tioco@rhinousainc.com', 'kevin.mariano@rhinousainc.com'];
 const ORG_DOMAIN = 'rhinousainc.com';
 // Type-ahead sources
 const SUPPLIER_SHEET = { id: '1tLhjjoD8a2Q613SrlZrHmcMcBKvrrFP93H6nuDdshVA', tab: "Supplier's Contact Infortion" };   // Supplier Name | Address | Contact | Email
@@ -758,6 +760,9 @@ function renderMonitor() {
     const pendingN = count(r => apStatus(r) === 'Pending Approval');
     document.getElementById('group-chips').innerHTML = chip('all', 'All', RECORDS.length) + groups.map(g => chip(g, g, count(r => r.group === g))).join('')
         + chip('pending', '⏳ Pending approval', pendingN) + chip('mine', '✅ My approvals', count(isMyApproval));
+    const echip = (key, label, n) => `<button class="grp-chip ${encFilter === key ? 'active' : ''}" onclick="setEncFilter('${esc(key)}')">${esc(label)} <span class="n">${n}</span></button>`;
+    document.getElementById('enc-chips').innerHTML = '<span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mr-1 self-center">Encountered at</span>'
+        + echip('all', 'All', RECORDS.length) + ENCOUNTERED.map(e => echip(e, e, count(r => encOf(r) === e))).join('') + echip('none', 'Not set', count(r => !encOf(r)));
     const ab = document.getElementById('approvals-count-badge');
     const myN = count(isMyApproval);
     ab.textContent = myN;
@@ -790,7 +795,10 @@ function buildMonitorRow(r) {
         </td>
         <td class="px-3 py-2">
             <div class="text-[11px] text-white font-medium" title="${esc(r.name)}">${esc(r.name) || '—'}</div>
-            ${r.report && r.report['SKU'] ? `<div class="text-[10px] text-gray-500 font-mono mt-0.5">${esc(r.report['SKU'])}</div>` : ''}
+            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                ${encTag(r)}
+                ${r.report && r.report['SKU'] ? `<span class="text-[10px] text-gray-500 font-mono">${esc(r.report['SKU'])}</span>` : ''}
+            </div>
         </td>
         <td class="px-3 py-2">${statusPill(r.status)}${approvalTag(r)}</td>
         <td class="px-3 py-2"><div class="text-[11px] text-gray-400 whitespace-nowrap">${dash(fmtDate(r.started))}</div></td>
@@ -812,6 +820,11 @@ function buildMonitorRow(r) {
     </tr>`;
 }
 
+const ENC_STYLE = { 'Customer': 'text-rose-300 border-rose-500/40 bg-rose-500/10', 'QC Inspection': 'text-sky-300 border-sky-500/40 bg-sky-500/10', 'Product': 'text-violet-300 border-violet-500/40 bg-violet-500/10', 'Warehouse': 'text-amber-300 border-amber-500/40 bg-amber-500/10' };
+function encOf(r) { return val(r.report && r.report['Encountered At']); }
+function encTag(r) { const e = encOf(r); return e ? `<span class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${ENC_STYLE[e] || 'text-gray-400 border-gray-600'}">${esc(e)}</span>` : ''; }
+let encFilter = 'all';
+function setEncFilter(k) { encFilter = k; renderMonitor(); }
 function apStatus(r) { return val(r.report && r.report['Approval Status']); }
 function isMyApproval(r) { return apStatus(r) === 'Pending Approval' && val(r.report['Approver Email']).toLowerCase() === String(currentUser?.email || '').toLowerCase(); }
 function approvalTag(r) {
@@ -835,7 +848,8 @@ function applyFilters() {
         const inGroup = groupFilter === 'all' || rec.group === groupFilter
             || (groupFilter === 'pending' && apStatus(rec) === 'Pending Approval')
             || (groupFilter === 'mine' && isMyApproval(rec));
-        const show = inGroup && tokens.every(t => (hay + ' ' + rec.qe).toLowerCase().includes(t));
+        const inEnc = encFilter === 'all' || encOf(rec) === encFilter || (encFilter === 'none' && !encOf(rec));
+        const show = inGroup && inEnc && tokens.every(t => (hay + ' ' + rec.qe + ' ' + encOf(rec)).toLowerCase().includes(t));
         row.style.display = show ? '' : 'none';
         if (show) { visible++; visibleByGroup[rec.group] = (visibleByGroup[rec.group] || 0) + 1; }
     });
@@ -927,7 +941,11 @@ function edField(label, path, opts = {}) {
     const ro = roAttr();
     const cls = `ed-input ${opts.mono ? 'mono' : ''} ${ro ? 'ro' : ''}`;
     let ctl;
-    if (opts.area) {
+    if (opts.select) {
+        ctl = ro
+            ? `<input class="${cls}" value="${esc(v)}" readonly tabindex="-1">`
+            : `<select class="ed-input" data-path="${esc(path)}" onchange="edSet(this)"><option value="">— Select —</option>${opts.select.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+    } else if (opts.area) {
         ctl = `<textarea class="ed-area ${ro ? 'ro' : ''}" rows="${opts.rows || 2}" data-path="${esc(path)}" oninput="edSet(this);autoGrow(this)" ${ro} placeholder="${esc(ro ? '' : (opts.ph || ''))}">${esc(v)}</textarea>`;
     } else if (opts.suggest && !ro) {
         ctl = `<div class="relative">
@@ -1324,7 +1342,8 @@ function renderEditor(keepScroll = false) {
             <div class="d-title"><span class="bar"></span>Rhino-USA Escalation Form</div>
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
                 ${edField('Report Date', 'report|Report Date', { ph: 'MM/DD/YYYY', span: 'md:col-span-2' })}
-                <div class="md:col-span-4"></div>
+                ${edField('Encountered At', 'report|Encountered At', { select: ENCOUNTERED, span: 'md:col-span-2' })}
+                <div class="md:col-span-2"></div>
                 ${edField('Supplier Name', 'report|Supplier Name', { span: 'md:col-span-3', suggest: 'supplier', ph: 'Search supplier…' })}
                 ${edField('Supplier Address', 'report|Supplier Address', { span: 'md:col-span-3', area: true, rows: 1 })}
                 ${edField('Supplier Contact Person', 'report|Supplier Contact', { span: 'md:col-span-3' })}
@@ -1766,13 +1785,15 @@ function buildReportHTML(rec, urls) {
         <tr><td style="${L}">Contact Person</td><td colspan="2" style="${V}">${dash(rep['Supplier Contact'])}</td><td style="${L}">Contact Email</td><td colspan="2" style="${V}">${dash(rep['Supplier Email'])}</td></tr>
         <tr><td colspan="3" style="${L}">Product Description</td><td colspan="2" style="${L}">SKU Number</td><td style="${L}">UPC Number</td></tr>
         <tr><td colspan="3" style="${V}">${dash(rep['Product Description'])}</td><td colspan="2" style="${V};font-family:monospace">${dash(rep['SKU'])}</td><td style="${V};font-family:monospace">${dash(rep['UPC'])}</td></tr>
-        <tr><td style="${L}">QE In Charge</td><td colspan="2" style="${V}">${dash(rec.qe)}</td><td style="${L}">Status</td><td colspan="2" style="${V}">${dash(rec.status)}</td></tr>
+        <tr><td style="${L}">QE In Charge</td><td colspan="2" style="${V}">${dash(rec.qe)}</td><td style="${L}">Encountered At</td><td colspan="2" style="${V}">${dash(rep['Encountered At'])}</td></tr>
         ${bandRow('Issue Description')}
         ${textRow(rep['Issue Description'])}
         ${bandRow('Root Cause')}
         ${textRow(rep['Root Cause'])}`;
 
-    const signoff = `
+    // Sign-off only prints once an approver is involved; supplier acknowledgement only when switched on.
+    const showSignoff = !!val(rep['Approver Email']) || !!st;
+    const signoff = !showSignoff ? '' : `
         ${bandRow('Sign-off')}
         <tr><td colspan="2" style="${L}">Prepared by (QE in charge)</td><td colspan="2" style="${L}">Approved by</td><td colspan="2" style="${L}">Approval date</td></tr>
         <tr><td colspan="2" style="${V}">${dash(rec.qe)}</td>
@@ -1796,10 +1817,14 @@ function buildReportHTML(rec, urls) {
         ${bandRow('Evidences')}
         ${textRow(rep['Evidence Notes'])}
         ${signoff}
-        ${ack}`;
+        ${evid.length ? '' : ack}`;
 
     const issuePages = chunks(issue, 4), evidPages = chunks(evid, 4);
-    const total = 2 + issuePages.length + evidPages.length;
+    // Acknowledgement goes after the Evidences: on the last evidence page if there is room (≤ 2 photos), else on its own page.
+    const lastEvid = evidPages[evidPages.length - 1];
+    const ackOwnPage = ackOn && evid.length > 0 && lastEvid.length > 2;
+    const ackOnLastEvid = ackOn && evid.length > 0 && lastEvid.length <= 2;
+    const total = 2 + issuePages.length + evidPages.length + (ackOwnPage ? 1 : 0);
     let pageNum = 1;
     const page = inner => `
     <div class="report-page">
@@ -1811,14 +1836,15 @@ function buildReportHTML(rec, urls) {
         <img src="${REPORT_LETTERHEAD_FOOTER}" style="width:calc(100% + 60px);max-width:none;display:block;margin:14px -30px -20px -30px">
     </div>
     </div>`;
-    const photoPage = (title, c, i, n) => page(`${titleRow(title)}${n > 4 ? bandRow(`Photos ${i * 4 + 1}–${i * 4 + c.length} of ${n}`) : ''}${photoRows(c)}`);
+    const photoPage = (title, c, i, n, extra = '') => page(`${titleRow(title)}${n > 4 ? bandRow(`Photos ${i * 4 + 1}–${i * 4 + c.length} of ${n}`) : ''}${photoRows(c)}${extra}`);
 
     // Order: form → Images, Other Detail → Containment & Corrective Action → Evidences
     return [
         page(formInner),
         ...issuePages.map((c, i) => photoPage('Images, Other Detail', c, i, issue.length)),
         page(actionsInner),
-        ...evidPages.map((c, i) => photoPage('Evidences', c, i, evid.length)),
+        ...evidPages.map((c, i) => photoPage('Evidences', c, i, evid.length, ackOnLastEvid && i === evidPages.length - 1 ? ack : '')),
+        ...(ackOwnPage ? [page(ack)] : []),
     ].join('');
 }
 
