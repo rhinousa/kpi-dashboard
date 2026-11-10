@@ -1245,10 +1245,8 @@ function openPdfReport(idx) {
 // SKU AUTO-LOOKUP — Live from Google Sheets
 // ============================================================
 const GSHEETS_API_KEY = ''; // Not needed — OAuth token used instead
-const GSHEETS_ID = '1ZUrFW3zYJlz_f6UFxIJmMKLa_EOy378f8YO9-njtctU';        // Master Data IMPORTRANGE
-const GSHEETS_RANGE = 'IMPORTRANGE_MASTERDATA';
-const GSHEETS_ID_FALLBACK = '1MrcrTQp-Ttp7yhJ0LhsklnQCMQOhg9CUX-r7OLSjUpk';   // original Product Master Data Catalogue
-const GSHEETS_RANGE_FALLBACK = 'Sheet1';
+const GSHEETS_ID = '1MrcrTQp-Ttp7yhJ0LhsklnQCMQOhg9CUX-r7OLSjUpk';   // Product Master Data Catalogue
+const GSHEETS_RANGE = 'Sheet1';
 let sheetCache = null;
 let sheetCacheTime = 0;
 let skuLookupTimer = null;
@@ -1274,8 +1272,7 @@ async function fetchSheetData() {
     const now = Date.now();
     if (sheetCache && (now - sheetCacheTime) < 300000) return sheetCache;
 
-    // Newest master first ("Master Data IMPORTRANGE"), then the original catalogue as a fallback.
-    const sources = [[GSHEETS_ID, GSHEETS_RANGE], [GSHEETS_ID_FALLBACK, GSHEETS_RANGE_FALLBACK]];
+    const sources = [[GSHEETS_ID, GSHEETS_RANGE]];
     let res = null;
     for (const [sid, srange] of sources) {
         let url, headers = {};
@@ -1310,7 +1307,8 @@ async function fetchSheetData() {
 
     const idxSKU     = 0; // SKU is always first column
     const idxASIN    = col('asin');
-    const idxDesc    = col('product description');
+    // The header is now just "Description" (column D); older copies said "Product Description".
+    const idxDesc    = (() => { let i = col('product description'); if (i < 0) i = colHeaders.findIndex(h => h === 'description'); if (i < 0) i = 3; return i; })();
     const idxUPC     = col('upc');
     const idxABC     = col('abc class');
     const idxGBL     = col('gift box length cm');
