@@ -255,17 +255,14 @@
 
     <!-- Persistence controls — pinned to bottom -->
     <div class="p-3 border-t border-gray-800 space-y-2 shrink-0">
-        <div class="flex items-center justify-between">
-            <span id="drive-save-indicator" class="text-[10px] text-gray-600 font-bold"></span>
-            <button onclick="syncFromCloud()" class="text-[10px] text-gray-500 hover:text-pantone cursor-pointer font-bold transition flex items-center gap-1">🔄 Sync</button>
-        </div>
+        <span id="drive-save-indicator" class="block text-[10px] text-gray-600 font-bold"></span>
+        <button onclick="syncFromCloud()" class="text-[10px] text-gray-500 hover:text-pantone cursor-pointer font-bold transition flex items-center gap-1 px-0">🔄 Sync</button>
         <div id="gdrive-connect-btn" class="hidden">
             <button onclick="connectGDrive('reconnect')" class="w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/50 text-blue-300 text-[9px] font-bold py-1.5 rounded-lg cursor-pointer transition">
                 🔗 Connect Google Drive
             </button>
         </div>
-        <button onclick="reportStuckBase64Photos()" title="Rarely needed: Submit now uploads leftover photos automatically" class="w-full text-gray-600 hover:text-gray-400 text-[8px] py-1 cursor-pointer transition">🧹 Maintenance: stuck photos</button>
-        <p class="text-[9px] text-gray-700 leading-tight">Saves to Google Drive when connected</p>
+        <p class="text-[9px] text-gray-600 leading-tight">Saves to the Google Sheet when connected</p>
     </div>
 
     <!-- User info + Sign Out — very bottom -->
@@ -1248,8 +1245,10 @@ function openPdfReport(idx) {
 // SKU AUTO-LOOKUP — Live from Google Sheets
 // ============================================================
 const GSHEETS_API_KEY = ''; // Not needed — OAuth token used instead
-const GSHEETS_ID = '1MrcrTQp-Ttp7yhJ0LhsklnQCMQOhg9CUX-r7OLSjUpk';
-const GSHEETS_RANGE = 'Sheet1';
+const GSHEETS_ID = '1ZUrFW3zYJlz_f6UFxIJmMKLa_EOy378f8YO9-njtctU';        // Master Data IMPORTRANGE
+const GSHEETS_RANGE = 'IMPORTRANGE_MASTERDATA';
+const GSHEETS_ID_FALLBACK = '1MrcrTQp-Ttp7yhJ0LhsklnQCMQOhg9CUX-r7OLSjUpk';   // original Product Master Data Catalogue
+const GSHEETS_RANGE_FALLBACK = 'Sheet1';
 let sheetCache = null;
 let sheetCacheTime = 0;
 let skuLookupTimer = null;
@@ -1275,18 +1274,23 @@ async function fetchSheetData() {
     const now = Date.now();
     if (sheetCache && (now - sheetCacheTime) < 300000) return sheetCache;
 
-    // Use OAuth token if Drive is connected, otherwise fall back to API key
-    let url, headers = {};
-    if (gdriveEnabled && gdriveToken) {
-        url = `https://sheets.googleapis.com/v4/spreadsheets/${GSHEETS_ID}/values/${GSHEETS_RANGE}`;
-        headers = { 'Authorization': 'Bearer ' + gdriveToken };
-    } else if (GSHEETS_API_KEY) {
-        url = `https://sheets.googleapis.com/v4/spreadsheets/${GSHEETS_ID}/values/${GSHEETS_RANGE}?key=${GSHEETS_API_KEY}`;
-    } else {
-        throw new Error('No authentication available — connect Google Drive first');
+    // Newest master first ("Master Data IMPORTRANGE"), then the original catalogue as a fallback.
+    const sources = [[GSHEETS_ID, GSHEETS_RANGE], [GSHEETS_ID_FALLBACK, GSHEETS_RANGE_FALLBACK]];
+    let res = null;
+    for (const [sid, srange] of sources) {
+        let url, headers = {};
+        if (gdriveEnabled && gdriveToken) {
+            url = `https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(srange)}`;
+            headers = { 'Authorization': 'Bearer ' + gdriveToken };
+        } else if (GSHEETS_API_KEY) {
+            url = `https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(srange)}?key=${GSHEETS_API_KEY}`;
+        } else {
+            throw new Error('No authentication available — connect Google Drive first');
+        }
+        try { res = await fetch(url, { headers }); } catch (e) { res = null; continue; }
+        if (res.ok) break;
     }
-
-    const res = await fetch(url, { headers });
+    if (!res) throw new Error('Could not reach the master data sheet');
 
     if (!res.ok) {
         let errBody = '';
@@ -1358,10 +1362,16 @@ async function fetchSheetData() {
 async function autoFillFromSKU(sku) {
     setLookupStatus('🔍 Looking up…', 'text-blue-400');
     try {
-        const map = await fetchSheetData();
-        const row = map[sku];
+        let map;
+        try { map = await fetchSheetData(); }
+        catch (e1) {
+            if (/401|Unauthorized|UNAUTHENTICATED/i.test(String(e1.message)) && await silentReconnectGDrive().catch(() => false)) { sheetCache = null; map = await fetchSheetData(); }
+            else throw e1;
+        }
+        let row = map[sku];
+        if (!row) { const k = Object.keys(map).find(x => x.trim().toLowerCase() === sku.trim().toLowerCase()); if (k) row = map[k]; }
         if (!row) {
-            setLookupStatus('⚠️ SKU not found in sheet', 'text-orange-400');
+            setLookupStatus('⚠️ SKU not found in the Fulfil master sheet — type the description manually', 'text-orange-400');
             return;
         }
         let filled = 0;
@@ -6510,6 +6520,54 @@ function sdbScheduleDetailRebuild(items) {
     })();
 }
 console.log('Sheet-backed database layer active');
+
+// ============================================================
+// EXIT with unsaved changes: Submit now / Keep editing / Discard draft
+// ============================================================
+function askThree({ title, sub, a, b, c }) {
+    return new Promise(resolve => {
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Arial,sans-serif';
+        const done = (v) => { ov.remove(); resolve(v); };
+        ov.innerHTML = `<div style="background:#111827;border:1px solid #374151;border-radius:14px;max-width:440px;width:100%;padding:22px;color:#e5e7eb">
+            <div style="font-weight:900;font-size:15px;margin-bottom:6px">${escHtmlS(title)}</div>
+            <div style="font-size:12px;color:#9ca3af;line-height:1.5;margin-bottom:16px">${escHtmlS(sub)}</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <button data-v="a" style="background:#44D62C;color:#000;font-weight:900;border:0;border-radius:9px;padding:9px;cursor:pointer;font-size:13px">${escHtmlS(a)}</button>
+                <button data-v="b" style="background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:9px;padding:9px;cursor:pointer;font-size:13px;font-weight:700">${escHtmlS(b)}</button>
+                <button data-v="c" style="background:transparent;color:#f87171;border:1px solid #7f1d1d;border-radius:9px;padding:9px;cursor:pointer;font-size:13px;font-weight:700">${escHtmlS(c)}</button>
+            </div></div>`;
+        ov.querySelectorAll('button').forEach(btn => btn.onclick = () => done(btn.getAttribute('data-v')));
+        document.body.appendChild(ov);
+    });
+}
+(function installExit() {
+    const orig = window.exitEditor;
+    window.exitEditor = async function () {
+        if (!editorHasChanges()) return orig.apply(this, arguments);        // nothing to lose: original behaviour
+        const pick = await askThree({
+            title: 'You have unsaved changes',
+            sub: 'Submit them now, keep editing, or discard this draft. Discarding removes your draft and any unfinished row it created in the sheet.',
+            a: 'Submit now', b: 'Keep editing', c: 'Discard draft'
+        });
+        if (pick === 'a') { submitToConsolidated(true); return; }
+        if (pick !== 'c') return;
+        const sku = editorItem && editorItem.sku_no;
+        showSubmitBusy('Discarding draft…');
+        try {
+            await sdbAbandonLive();                 // new item: delete its row; existing item: put the original back
+            try { await clearEditorDraft(sku); } catch (e) {}
+        } finally { hideSubmitBusy(); }
+        editingIdx = null;
+        editorItem = createBlankItem((currentData.main_items.length + 1).toString());
+        editorSnapshot = JSON.stringify(editorItem);
+        updateEditTabVisibility();
+        switchSheet('consolidated');
+        buildConsolidatedView();
+        showToast('🗑', 'Draft discarded.');
+    };
+})();
+
 
 // ============================================================
 // DRAFTS IN THE GOOGLE SHEET — a "Drafts" tab (one row per in-progress item per person) replaces the old Drive
