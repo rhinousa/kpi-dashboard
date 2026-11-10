@@ -6949,8 +6949,27 @@ function muRender(progress) {
             <button onclick="muClose()" style="color:#9ca3af;cursor:pointer;background:none;border:0;font-size:16px">✕</button>
         </div>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:10px">Name files <b>SKU-CODE</b>, e.g. <code>${escHtmlS(editorItem.sku_no)}-P-FRONT.jpg</code>. Photos upload to Drive and fill the matching slot; BOM names also fill the measurements.</div>
-        <details style="font-size:10px;color:#9ca3af;margin-bottom:10px"><summary style="cursor:pointer">Naming codes</summary>
-          <div style="line-height:1.7;margin-top:6px">MI · PC (Qty 2 - Item 1, Qty 1 - Item 2) · P-FRONT / P-REAR / P-LEFT / P-RIGHT / P-TOP / P-BOT · OB-ISO / OB-FRONT / OB-TOP / OB-SIDE or P-SIDE (master carton) · GB-FRONT / GB-REAR / GB-LEFT / GB-RIGHT / GB-TOP / GB-BOT · CTQ1, CTQ2… · BOM: <i>Item description - L25.5, W4, H24</i> (L W H T=thickness V=volume WT=weight D=diameter EA=elevation/angle)</div></details>
+        ${(() => {
+            const S = escHtmlS(editorItem.sku_no);
+            const th = 'text-align:left;padding:4px 8px;color:#9ca3af;font-weight:700';
+            const td = 'padding:4px 8px;border-top:1px solid #1f2937;vertical-align:top';
+            const code = c => `<code style="color:#44D62C">${c}</code>`;
+            const row = (sec, codes, ex) => `<tr><td style="${td};color:#e5e7eb;white-space:nowrap">${sec}</td><td style="${td}">${codes}</td><td style="${td};color:#9ca3af">${ex}</td></tr>`;
+            return `<div style="border:1px solid #374151;border-radius:10px;margin-bottom:12px;overflow:hidden">
+              <div style="background:#1f2937;padding:6px 10px;font-size:11px;font-weight:900;color:#e5e7eb">📋 Naming guide — file name = <span style="color:#44D62C">${S}</span> + dash + code (case doesn't matter)</div>
+              <table style="width:100%;font-size:10.5px;border-collapse:collapse">
+                <tr><th style="${th}">Section</th><th style="${th}">Code</th><th style="${th}">Example file name</th></tr>
+                ${row('1 · Marketing Image', code('MI'), `${S}-MI.jpg`)}
+                ${row('2 · Package Contents', code('PC (Qty 2 - Item A, Qty 1 - Item B)'), `${S}-PC (Qty 2 - Ratchet Handle, Qty 1 - Bag).jpg`)}
+                ${row('3 · Product views', [code('P-FRONT'), code('P-REAR'), code('P-LEFT'), code('P-RIGHT'), code('P-TOP'), code('P-BOT')].join(' · '), `${S}-P-FRONT.jpg`)}
+                ${row('4 · Master carton (Outer Box)', [code('OB-ISO'), code('OB-FRONT'), code('OB-TOP'), code('OB-SIDE')].join(' · ') + ' <span style="color:#6b7280">(P-SIDE also = carton side)</span>', `${S}-OB-ISO.jpg`)}
+                ${row('5 · Gift box', [code('GB-FRONT'), code('GB-REAR'), code('GB-LEFT'), code('GB-RIGHT'), code('GB-TOP'), code('GB-BOT')].join(' · '), `${S}-GB-FRONT.jpg`)}
+                ${row('6 · BOM component + measurements', code('Item description - L25.5, W4, H24'), `${S}-Ratchet Handle - L25.5, W4, H24.jpg`)}
+                ${row('7 · CTQ', code('CTQ1') + ' · ' + code('CTQ2') + ' · …', `${S}-CTQ1.jpg`)}
+              </table>
+              <div style="padding:6px 10px;font-size:10px;color:#9ca3af;border-top:1px solid #1f2937">BOM letters: <b>L</b> length · <b>W</b> width · <b>H</b> height · <b>T</b> thickness · <b>V</b> volume · <b>WT</b>/<b>KG</b> weight · <b>D</b> diameter · <b>C</b> circumference · <b>EA</b>/<b>A</b> elevation/angle. Same item name again = updates that component. Each file shows ✔ or ✖ below before you upload.</div>
+            </div>`;
+        })()}
         <div id="mu-drop" ondragover="event.preventDefault();this.style.borderColor='#44D62C'" ondragleave="this.style.borderColor='#374151'" ondrop="event.preventDefault();this.style.borderColor='#374151';muAddFiles(event.dataTransfer.files)"
              onclick="document.getElementById('mu-input').click()" style="border:2px dashed #374151;border-radius:12px;padding:22px;text-align:center;cursor:pointer;color:#9ca3af;font-size:12px">
             Drop photos here or click to choose<input id="mu-input" type="file" accept="image/*" multiple style="display:none" onchange="muAddFiles(this.files);this.value=''">
